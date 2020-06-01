@@ -1,0 +1,17 @@
+[package]
+name = "universal-piano-roll"
+version = "0.1.0"
+authors = ["Azorlogh <bott.alix@gmail.com>"]
+edition = "2018"
+
+
+[profile.release]
+debug = true
+
+[dependencies]
+druid = "0.6.0"
+cpal = "0.11.0"
+meval = "0.2.0"
+derive_more = "0.99.7"
+generational-arena = "0.2"
+nalgebra = "0.21.0"
