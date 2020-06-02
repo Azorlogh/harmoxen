@@ -1,5 +1,5 @@
 [package]
-name = "universal-piano-roll"
+name = "xenharmonic-piano-roll"
 version = "0.1.0"
 authors = ["Azorlogh <bott.alix@gmail.com>"]
 edition = "2018"

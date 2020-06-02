@@ -24,7 +24,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 	to_server.send(server::Event::SetTempo(state.sheet_editor.tempo)).unwrap();
 
 	let main_window = WindowDesc::new(|| ui::build())
-		.title(LocalizedString::new("Universal Piano Roll"))
+		.title(LocalizedString::new("Xenharmonic Piano Roll"))
 		.window_size(Size::new(800.0, 500.0));
 
 	let delegate = Delegate { to_server };
