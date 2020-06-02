@@ -51,30 +51,3 @@ pub fn apply(env: &mut Env, _data: &crate::state::State) {
 	env.set(NOTE_HEIGHT, 18.0);
 	env.set(NOTE_SCALE_KNOB, 32.0);
 }
-
-// pub fn apply(env: &mut Env) {
-// 	env.set(COLOR_0, color(0x09DBDB));
-// 	env.set(COLOR_1, color(0x1C5151));
-// 	env.set(COLOR_2, color(0x5FACAC));
-// 	env.set(COLOR_3, color(0x6F7A7A));
-// 	env.set(COLOR_4, color(0x6F7A7A));
-
-// 	env.set(FEATURE_COLOR, color(0xFFA50B));
-// 	env.set(SELECTED_COLOR, color(0xFFD58C));
-
-// 	env.set(BACKGROUND_0, color(0x243959));
-// 	env.set(BACKGROUND_1, color(0x7B7F86));
-// 	env.set(BACKGROUND_2, color(0x47515F));
-// }
-
-// pub fn apply(env: &mut Env) {
-// 	env.set(COLOR_0, Color::rgb8(0x86, 0x86, 0x86));
-// 	env.set(COLOR_1, Color::rgb8(0x24, 0x24, 0x24));
-// 	env.set(COLOR_2, Color::rgb8(0x64, 0x64, 0x64));
-
-// 	env.set(FEATURE_COLOR, Color::rgb8(0x40, 0x9E, 0xA4));
-
-// 	env.set(BACKGROUND_0, Color::rgb8(0x32, 0x32, 0x32));
-// 	env.set(BACKGROUND_1, Color::rgb8(0xA4, 0xA4, 0xA4));
-// 	env.set(BACKGROUND_2, Color::rgb8(0x76, 0x76, 0x76));
-// }

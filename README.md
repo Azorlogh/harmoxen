@@ -30,8 +30,10 @@ How to use:
 - Delete notes with right click.
 - Add relative notes by double clicking a note.
 - Navigate the board with the scrollbars, or with the mouse wheel (Ctrl/Shift/Alt to change the behavior of the wheel)
+- Play the sheet with the spacebar
 
 The layout of the piano roll can be altered in many different ways using the `Layout` button.
+Layout markers can be added by right clicking the cursor bar.
 
 
 ## TODO
