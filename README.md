@@ -1,4 +1,4 @@
-# Universal Piano Roll
+# Xenharmonic Piano Roll
 
 **This is mostly an experiment.** \
 It may never go anywhere, or it may become somehow useful one day.

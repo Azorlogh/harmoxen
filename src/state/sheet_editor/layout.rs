@@ -1,18 +1,7 @@
 use super::sheet::{Note, Pitch};
 
-pub type TimePattern = Option<(Vec<f64>, usize)>;
-pub type FreqPattern = Option<Vec<f64>>;
-
-// the elements of each component are assumed to be sorted
-#[derive(Clone, Debug, Default)]
-pub struct Pattern {
-	pub time: TimePattern,
-	pub freq: FreqPattern,
-}
-
-impl Pattern {
-	pub const EMPTY: Pattern = Pattern { time: None, freq: None };
-}
+mod pattern;
+pub use pattern::*;
 
 #[derive(Debug)]
 pub struct Layout {
@@ -82,7 +71,7 @@ impl Layout {
 				None => std::f64::NEG_INFINITY,
 			};
 			pattern
-				.0
+				.values
 				.iter()
 				.map(|&x| vec![x - 1.0, x, x + 1.0])
 				.flatten()
@@ -101,9 +90,15 @@ impl Layout {
 	pub fn quantize_freq(&self, at: f64, mut freq: f64) -> f64 {
 		let pattern = &self.get_marker_at(at, None).1;
 		if let Some(pattern) = &pattern.freq {
-			freq = pattern
-				.iter()
-				.fold(0.0, |acc, &x| if (x - freq).abs() < (acc - freq).abs() { x } else { acc });
+			let period = pattern.period();
+			let base = pattern.base * period.powf((freq / pattern.base).log(period).floor());
+			freq = pattern.values.iter().fold(0.0, |acc, x| {
+				if (base * x - freq).abs() < (acc - freq).abs() {
+					base * x
+				} else {
+					acc
+				}
+			});
 		}
 		freq
 	}

@@ -5,15 +5,16 @@ use std::rc::Rc;
 use super::LayoutParseError;
 use crate::state::sheet_editor::layout::FreqPattern;
 
-pub fn make_freq_pattern(input: &FreqInput) -> Result<FreqPattern, LayoutParseError> {
+pub fn make_freq_pattern(input: &FreqInput) -> Result<Option<FreqPattern>, LayoutParseError> {
 	match input.clone() {
 		FreqInput::None => Ok(None),
 		FreqInput::Equal { ndiv, interval, base } => {
-			let min = (ndiv as f64 * (20.0 / base).log(interval)).ceil() as isize;
-			let max = (ndiv as f64 * (20000.0 / base).log(interval)).ceil() as isize;
-			Ok(Some(
-				(min..max).map(|k| base * interval.powf(k as f64 / ndiv as f64)).collect(),
-			))
+			// let min = (ndiv as f64 * (20.0 / base).log(interval)).ceil() as isize;
+			// let max = (ndiv as f64 * (20000.0 / base).log(interval)).ceil() as isize;
+			Ok(Some(FreqPattern::new(
+				base,
+				(0..ndiv + 1).map(|k| interval.powf(k as f64 / ndiv as f64)).collect(),
+			)))
 		}
 		FreqInput::Enumeration { base, enumeration } => {
 			if enumeration.0.len() == 0 {
@@ -21,36 +22,14 @@ pub fn make_freq_pattern(input: &FreqInput) -> Result<FreqPattern, LayoutParseEr
 			}
 			let first = enumeration.0[0] as f64;
 			let values = enumeration.0.iter().map(|&x| x as f64 / first).collect::<Vec<f64>>();
-			let period = values[values.len() - 1];
-			let min = (20.0 / base).log(period) as isize - 1;
-			let max = (20000.0 / base).log(period) as isize + 1;
-			Ok(Some(
-				(min..max)
-					.map(|k| {
-						let base = base * period.powf(k as f64);
-						values.iter().map(|x| base * x).collect::<Vec<f64>>()
-					})
-					.flatten()
-					.collect(),
-			))
+			Ok(Some(FreqPattern::new(base, values)))
 		}
 		FreqInput::HarmonicSegment { base, from, to } => {
 			if from >= to {
 				return Err(LayoutParseError);
 			}
 			let values = (from..to).map(|x| x as f64 / from as f64).collect::<Vec<f64>>();
-			let period = to as f64 / from as f64;
-			let min = (20.0 / base).log(period) as isize - 1;
-			let max = (20000.0 / base).log(period) as isize + 1;
-			Ok(Some(
-				(min..max)
-					.map(|k| {
-						let base = base * period.powf(k as f64);
-						values.iter().map(|x| base * x).collect::<Vec<f64>>()
-					})
-					.flatten()
-					.collect(),
-			))
+			Ok(Some(FreqPattern::new(base, values)))
 		}
 	}
 }

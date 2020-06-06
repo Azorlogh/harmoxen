@@ -1,4 +1,4 @@
-use druid::{kurbo::Line, Color, Env, PaintCtx, Point, Rect, RenderContext};
+use druid::{kurbo::Line, Color, Env, PaintCtx, Rect, RenderContext};
 
 use crate::state::sheet_editor::layout::*;
 use crate::theme;
@@ -11,6 +11,7 @@ impl SheetEditor {
 		let size = ctx.size();
 		let view_width = coord.frame.x.view.size();
 		let view_height = coord.frame.y.view.size();
+
 		// get visible markers
 		let mut markers = vec![&(-1.0, Pattern::EMPTY)];
 		for marker in &layout.markers {
@@ -30,8 +31,12 @@ impl SheetEditor {
 			let s_end = markers.get(i + 1).map(|x| coord.to_screen_x(x.0)).unwrap_or(size.width);
 			let pattern = &markers[i].1;
 
-			if let Some((positions, bpb /* beats per bar */)) = &pattern.time {
-				let s_bar_size = coord.to_screen_w(*bpb as f64);
+			if let Some(TimePattern {
+				values: positions,
+				nbeats, /* beats per bar */
+			}) = &pattern.time
+			{
+				let s_bar_size = coord.to_screen_w(*nbeats as f64);
 				let s_bars_start = if s_start < 0.0 {
 					-((-s_start) % s_bar_size) // start drawing the bars just at the left of the view
 				} else {
@@ -55,7 +60,7 @@ impl SheetEditor {
 					ctx.fill(bg, bg_col);
 
 					if view_width < 128.0 {
-						for beat in 0..*bpb {
+						for beat in 0..*nbeats {
 							let s_beat_start = s_bar_start + coord.to_screen_w(beat as f64);
 							if view_width < 48.0 {
 								for pos in positions {
@@ -79,13 +84,33 @@ impl SheetEditor {
 			}
 
 			// draw frequency snap lines
-			if let Some(positions) = &pattern.freq {
-				for pos in positions {
-					let s_pos = coord.to_screen_y(pos.log2());
-					if s_pos > 0.0 && s_pos < size.height {
-						let p0 = Point::new(s_start.max(0.0), s_pos);
-						let p1 = Point::new(s_end.min(size.width), s_pos);
-						ctx.stroke(Line::new(p0, p1), &env.get(theme::BACKGROUND_1), 2.0 / view_height);
+			if let Some(pattern) = &pattern.freq {
+				let period = pattern.period();
+				let min_freq = 2f64.powf(coord.frame.y.view.0);
+				let max_freq = 2f64.powf(coord.frame.y.view.1);
+				let min = (min_freq / pattern.base).log(period).floor() as isize;
+				let max = (max_freq / pattern.base).log(period).ceil() as isize;
+				for i in min..max {
+					let base = pattern.base * period.powf(i as f64);
+					let s_base = coord.to_screen_y(base.log2());
+
+					if s_base > 0.0 && s_base < size.height {
+						ctx.stroke(
+							Line::new((s_start.max(0.0), s_base), (s_end.min(size.width), s_base)),
+							&env.get(theme::COLOR_1),
+							4.0 / view_height,
+						);
+					}
+
+					for val in pattern.values.iter().skip(1) {
+						let s_pos = coord.to_screen_y((base * val).log2());
+						if s_pos > 0.0 && s_pos < size.height {
+							ctx.stroke(
+								Line::new((s_start.max(0.0), s_pos), (s_end.min(size.width), s_pos)),
+								&env.get(theme::BACKGROUND_1),
+								2.0 / view_height,
+							);
+						}
 					}
 				}
 			}

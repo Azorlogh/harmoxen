@@ -41,16 +41,16 @@ pub fn build() -> impl Widget<State> {
 		.with_child(
 			Selector::new(vec![
 				TimeInput::None,
-				TimeInput::Regular { ndiv: 4, nrepeat: 4 },
+				TimeInput::Regular { ndiv: 4, nbeats: 4 },
 				TimeInput::Formula {
 					ndiv: 4,
-					nrepeat: 4,
+					nbeats: 4,
 					formula: "i/4 + (i%2)*0.2".into(),
 				},
 				TimeInput::Poly {
 					ndiv0: 4,
 					ndiv1: 5,
-					nrepeat: 4,
+					nbeats: 4,
 				},
 			])
 			.fix_width(100.0)
@@ -64,14 +64,14 @@ pub fn build() -> impl Widget<State> {
 						TimeInput::None => Flex::row().with_child(Label::new("The time axis will be free")),
 						TimeInput::Regular { .. } => Flex::row()
 							.with_child(make_field("#divisions", enum_lens!(TimeInput::Regular, ndiv)))
-							.with_child(make_field("#repetitions", enum_lens!(TimeInput::Regular, nrepeat))),
+							.with_child(make_field("#repetitions", enum_lens!(TimeInput::Regular, nbeats))),
 						TimeInput::Poly { .. } => Flex::row()
 							.with_child(make_field("#divisions (a)", enum_lens!(TimeInput::Poly, ndiv0)))
 							.with_child(make_field("#divisions (b)", enum_lens!(TimeInput::Poly, ndiv1)))
-							.with_child(make_field("#repetitions", enum_lens!(TimeInput::Poly, nrepeat))),
+							.with_child(make_field("#repetitions", enum_lens!(TimeInput::Poly, nbeats))),
 						TimeInput::Formula { .. } => Flex::row()
 							.with_child(make_field("#divisions", enum_lens!(TimeInput::Formula, ndiv)))
-							.with_child(make_field("#repetitions", enum_lens!(TimeInput::Formula, nrepeat)))
+							.with_child(make_field("#repetitions", enum_lens!(TimeInput::Formula, nbeats)))
 							.with_child(make_field("#formula", enum_lens!(TimeInput::Formula, formula))),
 					})
 				},
