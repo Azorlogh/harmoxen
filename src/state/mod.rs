@@ -1,20 +1,27 @@
 use druid::{Data, Lens};
-use std::rc::Rc;
+use std::{cell::RefCell, rc::Rc};
 
-pub mod layout_input;
-pub mod sheet_editor;
+pub mod editors;
+pub mod history;
+pub use history::History;
+pub mod project;
+pub use project::Project;
 
-#[derive(Default, Clone, Data, Lens)]
+#[derive(Clone, Data, Lens)]
 pub struct State {
 	pub main_window: Option<Rc<druid::WindowId>>,
-	pub sheet_editor: sheet_editor::State,
-	pub layout_input: layout_input::State,
+	pub editors: editors::State,
+	pub history: Rc<RefCell<history::History>>,
 }
 
-pub fn apply_layout(data: &State) -> Result<(), layout_input::LayoutParseError> {
-	let curr_marker = data.sheet_editor.curr_marker;
-	let mut layout = data.sheet_editor.layout.borrow_mut();
-	let pattern = layout_input::make_pattern(&data.layout_input)?;
-	layout.set_marker_pattern(curr_marker, pattern);
-	Ok(())
+impl State {
+	pub fn new() -> State {
+		let editors = editors::State::new();
+		let project = Project::from_editors(&editors);
+		State {
+			main_window: None,
+			editors,
+			history: Rc::new(RefCell::new(History::new(project))),
+		}
+	}
 }

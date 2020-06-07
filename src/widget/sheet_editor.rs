@@ -9,11 +9,11 @@ use generational_arena::Index;
 use std::time::Instant;
 
 use crate::commands;
-use crate::icp;
-use crate::state::sheet_editor::{
+use crate::data::{
+	icp,
 	sheet::{Interval, Note, Pitch},
-	State,
 };
+use crate::state::editors::sheet_editor::State;
 use crate::theme;
 use crate::util::coord::Coord;
 use crate::widget::common::{ParseLazy, TextBox};
@@ -41,22 +41,24 @@ impl EditAction {
 
 pub struct SheetEditor {
 	hover: EditAction,
-	state: EditAction,
+	action: EditAction,
 	note_len: f64,
 	last_left_click: (Point, Instant), // until druid supports multi-clicks
 	prev_mouse_b_pos: Option<Point>,   // previous mouse position in board coordinates
 	interval_input: Option<(Index, WidgetPod<State, Box<dyn Widget<State>>>)>,
+	action_effective: bool, // true if the current action state has changed the sheet
 }
 
 impl SheetEditor {
 	pub fn new() -> SheetEditor {
 		SheetEditor {
 			hover: Idle,
-			state: Idle,
+			action: Idle,
 			note_len: 1.0,
 			last_left_click: ((f64::INFINITY, f64::INFINITY).into(), Instant::now()),
 			prev_mouse_b_pos: None,
 			interval_input: None,
+			action_effective: false,
 		}
 	}
 }
@@ -105,6 +107,7 @@ impl Widget<State> for SheetEditor {
 			}
 		}
 		let mut sheet_changed = false;
+		let mut history_save = false;
 		let size = ctx.size();
 
 		let coord = Coord::new(data.frame.clone(), size);
@@ -127,14 +130,15 @@ impl Widget<State> for SheetEditor {
 						let mut sheet = data.sheet.borrow_mut();
 						let id = sheet.add_note(note);
 						action = Moving(id, 0.0);
+						history_save = true;
 						sheet_changed = true;
 					}
-					self.state = action;
-					if let Some(id) = self.state.note_id() {
+					self.action = action;
+					if let Some(id) = self.action.note_id() {
 						let note = data.sheet.borrow().get_note(id).unwrap();
 						self.note_len = note.length;
 					}
-					if let Moving(id, _) = self.state {
+					if let Moving(id, _) = self.action {
 						let sheet = data.sheet.borrow();
 						let note = sheet.get_note(id).unwrap();
 						let note_freq = sheet.get_freq(note.pitch);
@@ -166,12 +170,13 @@ impl Widget<State> for SheetEditor {
 				let pos = coord.to_board_p(mouse.pos);
 				if mouse.buttons.has_left() {
 					ctx.set_handled();
-					match self.state {
+					match self.action {
 						Scaling(id) => {
 							let time = data.layout.borrow().quantize_time(pos.x, false);
 							let note = data.sheet.borrow().get_note(id).unwrap();
-							if time > note.start {
+							if time > note.start && time != note.end() {
 								data.sheet.borrow_mut().resize_note_to(id, time);
+								self.action_effective = true;
 								sheet_changed = true;
 								self.note_len = time - note.start;
 							}
@@ -181,14 +186,19 @@ impl Widget<State> for SheetEditor {
 								.layout
 								.borrow()
 								.quantize_position((pos.x - anchor).max(0.0), 2f64.powf(pos.y));
-							data.sheet.borrow_mut().move_note(id, start, freq);
-							sheet_changed = true;
-							let sheet = data.sheet.borrow_mut();
+							let mut sheet = data.sheet.borrow_mut();
 							let note = sheet.get_note(id).unwrap();
-							let cmd = Command::new(commands::ICP, icp::Event::NoteChangeFreq(2000, sheet.get_freq(note.pitch)));
-							ctx.submit_command(cmd, ctx.window_id());
-							if let Pitch::Relative(_, _) = note.pitch {
-								ctx.request_layout();
+							if note.start != start || sheet.get_freq(note.pitch) != freq {
+								sheet.move_note(id, start, freq);
+								sheet_changed = true;
+								self.action_effective = true;
+								let note = sheet.get_note(id).unwrap();
+								let cmd =
+									Command::new(commands::ICP, icp::Event::NoteChangeFreq(2000, sheet.get_freq(note.pitch)));
+								ctx.submit_command(cmd, ctx.window_id());
+								if let Pitch::Relative(_, _) = note.pitch {
+									ctx.request_layout();
+								}
 							}
 						}
 						_ => {}
@@ -200,20 +210,13 @@ impl Widget<State> for SheetEditor {
 				}
 				self.hover = hover;
 			}
-			Event::MouseUp(mouse) if mouse.button.is_left() => {
-				self.state = Idle;
-				ctx.set_active(false);
-				self.prev_mouse_b_pos = None;
-				ctx.request_paint();
-				let cmd = Command::new(commands::ICP, icp::Event::NoteStop(2000));
-				ctx.submit_command(cmd, ctx.window_id());
-			}
 			Event::MouseDown(mouse) if mouse.button.is_right() => {
 				let point = coord.to_board_p(mouse.pos);
 				self.interval_input = None;
 				let mut sheet = data.sheet.borrow_mut();
 				if let Some(id) = sheet.get_note_at(point, coord.to_board_h(env.get(theme::NOTE_HEIGHT))) {
 					sheet.remove_note(id);
+					self.action_effective = true;
 					sheet_changed = true;
 				} else {
 					self.prev_mouse_b_pos = Some(point);
@@ -223,17 +226,29 @@ impl Widget<State> for SheetEditor {
 			Event::MouseMove(mouse) if mouse.buttons.has_right() => {
 				let point = coord.to_board_p(mouse.pos);
 				if let Some(prev_point) = self.prev_mouse_b_pos {
-					data.sheet
-						.borrow_mut()
-						.remove_notes_along(Line::new(prev_point, point), coord.to_board_h(env.get(theme::NOTE_HEIGHT)));
+					let mut sheet = data.sheet.borrow_mut();
+					let notes_len_before = sheet.notes.len();
+					sheet.remove_notes_along(Line::new(prev_point, point), coord.to_board_h(env.get(theme::NOTE_HEIGHT)));
+					if notes_len_before != sheet.notes.len() {
+						self.action_effective = true;
+						sheet_changed = true;
+					}
 					self.prev_mouse_b_pos = Some(point);
-					sheet_changed = true;
 				}
 			}
-			Event::KeyDown(KeyEvent {
-				key_code: KeyCode::Space,
-				..
-			}) => {
+			Event::MouseUp(mouse) if mouse.button.is_left() => {
+				if self.action_effective {
+					history_save = true;
+					self.action_effective = false;
+				}
+				self.action = Idle;
+				ctx.set_active(false);
+				self.prev_mouse_b_pos = None;
+				ctx.request_paint();
+				let cmd = Command::new(commands::ICP, icp::Event::NoteStop(2000));
+				ctx.submit_command(cmd, ctx.window_id());
+			}
+			Event::KeyDown(key) if key.key_code == KeyCode::Space => {
 				let command = if !data.playing {
 					commands::PLAY_START
 				} else {
@@ -241,13 +256,27 @@ impl Widget<State> for SheetEditor {
 				};
 				ctx.submit_command(command, ctx.window_id());
 			}
+			Event::KeyDown(key) if key.mods.ctrl && key.key_code == KeyCode::KeyZ => {
+				ctx.submit_command(commands::HISTORY_UNDO, ctx.window_id());
+			}
+			Event::KeyDown(key) if key.mods.ctrl && key.key_code == KeyCode::KeyY => {
+				ctx.submit_command(commands::HISTORY_REDO, ctx.window_id());
+			}
 			Event::WindowSize(_) => {
 				ctx.request_layout();
 				ctx.request_paint();
 			}
-			Event::Command(cmd) if cmd.is(commands::SHEET_EDITOR_REDRAW) || cmd.is(commands::LAYOUT_CHANGED) => {
+			Event::Command(cmd) if cmd.is(commands::REDRAW) || cmd.is(commands::SHEET_EDITOR_REDRAW) => {
 				ctx.request_layout();
 				ctx.request_paint();
+				if let Some(interval_input) = &mut self.interval_input {
+					let mut sheet = data.sheet.borrow_mut();
+					if sheet.get_note_mut(interval_input.0).is_none() {
+						self.interval_input = None;
+					}
+				}
+				let bounds = data.sheet.borrow().get_bounds();
+				data.frame.x.bounds.1 = ((bounds.0).1 * 1.25).max(5.0);
 			}
 			Event::Command(ref cmd) if cmd.is(commands::SHEET_EDITOR_ADD_RELATIVE_NOTE) => {
 				let (root, time) = *cmd.get_unchecked(commands::SHEET_EDITOR_ADD_RELATIVE_NOTE);
@@ -263,16 +292,15 @@ impl Widget<State> for SheetEditor {
 			Event::Command(ref cmd) if cmd.is(commands::SHEET_EDITOR_DELETE_NOTE) => {
 				let id = *cmd.get_unchecked(commands::SHEET_EDITOR_DELETE_NOTE);
 				data.sheet.borrow_mut().remove_note(id);
+				sheet_changed = true;
 			}
 			_ => {}
 		}
 		if sheet_changed {
-			ctx.request_paint();
-			let bounds = data.sheet.borrow().get_bounds();
-			data.frame.x.bounds.1 = ((bounds.0).1 * 1.25).max(5.0);
-			if data.playing {
-				ctx.submit_command(Command::new(commands::SHEET_CHANGED, ()), ctx.window_id());
-			}
+			ctx.submit_command(commands::SHEET_CHANGED, ctx.window_id());
+		}
+		if history_save {
+			ctx.submit_command(commands::HISTORY_SAVE, ctx.window_id());
 		}
 	}
 

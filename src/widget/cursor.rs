@@ -8,7 +8,7 @@ use druid::{
 use crate::theme;
 
 use crate::commands;
-use crate::state::sheet_editor::State;
+use crate::state::editors::sheet_editor::State;
 
 pub struct Cursor {
 	origin: Option<f64>,

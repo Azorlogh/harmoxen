@@ -1,9 +1,10 @@
-use super::sheet::{Note, Pitch};
-
 mod pattern;
 pub use pattern::*;
 
-#[derive(Debug)]
+use super::sheet::{Note, Pitch};
+use serde::{Deserialize, Serialize};
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Layout {
 	pub markers: Vec<(f64, Pattern)>,
 }

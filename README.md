@@ -38,9 +38,7 @@ Layout markers can be added by right clicking the cursor bar.
 
 ## TODO
 
-- Visual clues to navigate the frequency axis
 - File operations
-- Undo
 - Selection
 - Display errors on invalid input
 - Control note volume

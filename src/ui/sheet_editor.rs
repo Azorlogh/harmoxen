@@ -5,7 +5,7 @@ use crate::commands;
 use crate::util::{Frame, Frame2};
 use crate::widget::{common::*, *};
 
-use crate::state::sheet_editor::{Menu, State};
+use crate::state::editors::sheet_editor::{Menu, State};
 
 const SCROLLBAR_THICKNESS: f64 = 32.0;
 const TIMELINE_THICKNESS: f64 = 16.0;
@@ -64,7 +64,7 @@ pub fn build() -> impl Widget<State> {
 	let board = {
 		let xrange = RangeSlider::horizontal((true, false)).lens(Frame2::x).lens(State::frame);
 		let yrange = RangeSlider::vertical((false, false)).lens(Frame2::y).lens(State::frame);
-		let timeline = Stack::new().with_child(Cursor::new()).with_child(MarkerEditor);
+		let timeline = Stack::new().with_child(Cursor::new()).with_child(MarkerEditor::new());
 		let editor = ScrollView::new(SheetEditor::new(), State::frame);
 
 		Flex::column()

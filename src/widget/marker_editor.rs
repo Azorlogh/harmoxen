@@ -6,13 +6,19 @@ use druid::{
 use std::cell::RefMut;
 
 use crate::commands;
-use crate::state::sheet_editor::{
-	layout::{Layout, Pattern},
-	State,
-};
+use crate::data::layout::{Layout, Pattern};
+use crate::state::editors::sheet_editor::State;
 use crate::util::coord::Coord;
 
-pub struct MarkerEditor;
+pub struct MarkerEditor {
+	action_effective: bool,
+}
+
+impl MarkerEditor {
+	pub fn new() -> MarkerEditor {
+		MarkerEditor { action_effective: false }
+	}
+}
 
 pub fn get_hover(x: f64, coord: Coord, layout: RefMut<Layout>) -> Option<usize> {
 	let extent = coord.to_board_w(8.0);
@@ -29,6 +35,7 @@ impl Widget<State> for MarkerEditor {
 	fn event(&mut self, ctx: &mut EventCtx, event: &Event, data: &mut State, _env: &Env) {
 		let mut layout = data.layout.borrow_mut();
 		let coord = Coord::new(data.frame.clone(), ctx.size());
+		let mut history_save = false;
 		match event {
 			Event::MouseDown(mouse) if mouse.button.is_left() => {
 				let board_x = coord.to_board_x(mouse.pos.x);
@@ -56,6 +63,7 @@ impl Widget<State> for MarkerEditor {
 					if !mods.ctrl {
 						time = layout.quantize_time_exclude(time, false, idx);
 					}
+					self.action_effective = true;
 					let new_idx = layout.set_marker_time(idx, time);
 					data.curr_marker = new_idx;
 					ctx.request_paint();
@@ -63,23 +71,32 @@ impl Widget<State> for MarkerEditor {
 				}
 			}
 			Event::MouseUp(_) => {
+				if ctx.is_active() {
+					history_save = true;
+					self.action_effective = false;
+				}
 				ctx.set_active(false);
 				ctx.request_paint();
 			}
 			Event::Command(ref cmd) if cmd.is(commands::MARKER_ADD) => {
 				let pos = *cmd.get_unchecked(commands::MARKER_ADD);
 				let idx = layout.add_marker(pos, Pattern::default());
+				history_save = true;
 				data.curr_marker = idx;
 				ctx.submit_command(commands::LAYOUT_APPLY, ctx.window_id());
 				ctx.request_paint();
 			}
 			Event::Command(ref cmd) if cmd.is(commands::MARKER_DELETE) => {
 				let id = *cmd.get_unchecked(commands::MARKER_DELETE);
+				history_save = true;
 				layout.delete_marker(id);
 				ctx.request_paint();
 				ctx.submit_command(commands::LAYOUT_CHANGED, ctx.window_id());
 			}
 			_ => {}
+		}
+		if history_save {
+			ctx.submit_command(commands::HISTORY_SAVE, ctx.window_id());
 		}
 	}
 

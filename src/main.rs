@@ -4,24 +4,24 @@ use druid::{AppDelegate, AppLauncher, Command, DelegateCtx, Env, LocalizedString
 use std::rc::Rc;
 use std::sync::mpsc::*;
 
+mod commands;
+mod data;
+mod server;
 mod state;
 mod theme;
-use state::State;
-mod commands;
-mod icp;
-mod server;
 mod ui;
 mod util;
 mod widget;
+use state::State;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-	let mut state = State::default();
-
-	state::apply_layout(&mut state).unwrap();
+	let state = State::new();
 
 	let to_server = server::launch()?;
 
-	to_server.send(server::Event::SetTempo(state.sheet_editor.tempo)).unwrap();
+	to_server
+		.send(server::Event::SetTempo(state.editors.sheet_editor.tempo))
+		.unwrap();
 
 	let main_window = WindowDesc::new(|| ui::build())
 		.title(LocalizedString::new("Xenharmonic Piano Roll"))
@@ -44,32 +44,27 @@ struct Delegate {
 
 impl AppDelegate<State> for Delegate {
 	fn command(&mut self, ctx: &mut DelegateCtx, _target: Target, cmd: &Command, data: &mut State, _env: &Env) -> bool {
-		match cmd {
+		let mut project_changed = false;
+		let propagate = match cmd {
 			_ if cmd.is(commands::TEMPO_CHANGED) => {
 				let tempo = *cmd.get_unchecked(commands::TEMPO_CHANGED);
 				self.to_server.send(server::Event::SetTempo(tempo)).unwrap();
 				true
 			}
 			_ if cmd.is(commands::PLAY_START) => {
-				data.sheet_editor.playing = true;
+				data.editors.sheet_editor.playing = true;
 				self.to_server
 					.send(server::Event::PlayStart(
-						data.sheet_editor.sheet.borrow().clone(),
-						data.sheet_editor.cursor,
+						data.editors.sheet_editor.sheet.borrow().clone(),
+						data.editors.sheet_editor.cursor,
 					))
 					.unwrap();
 				true
 			}
 			_ if cmd.is(commands::PLAY_STOP) => {
-				data.sheet_editor.playing = false;
+				data.editors.sheet_editor.playing = false;
 				self.to_server.send(server::Event::PlayStop).unwrap();
 				true
-			}
-			_ if cmd.is(commands::SHEET_CHANGED) => {
-				self.to_server
-					.send(server::Event::SheetChanged(data.sheet_editor.sheet.borrow().clone()))
-					.unwrap();
-				false
 			}
 			_ if cmd.is(commands::ICP) => {
 				let icp_event = *cmd.get_unchecked(commands::ICP);
@@ -84,13 +79,45 @@ impl AppDelegate<State> for Delegate {
 				false
 			}
 			_ if cmd.is(commands::LAYOUT_APPLY) => {
-				if let Ok(()) = state::apply_layout(data) {
+				if let Ok(()) = data.editors.apply_layout() {
 					ctx.submit_command(commands::LAYOUT_CHANGED, Target::Global);
 				}
 				false
 			}
+			_ if cmd.is(commands::SHEET_CHANGED) => {
+				self.to_server
+					.send(server::Event::SheetChanged(data.editors.sheet_editor.sheet.borrow().clone()))
+					.unwrap();
+				project_changed = true;
+				true
+			}
+			_ if cmd.is(commands::LAYOUT_CHANGED) => {
+				project_changed = true;
+				true
+			}
+			_ if cmd.is(commands::HISTORY_SAVE) => {
+				let project = state::Project::from_editors(&data.editors);
+				data.history.borrow_mut().save(project);
+				false
+			}
+			_ if cmd.is(commands::HISTORY_UNDO) => {
+				let project = data.history.borrow_mut().undo();
+				project.open(&mut data.editors);
+				ctx.submit_command(commands::REDRAW, Target::Global);
+				false
+			}
+			_ if cmd.is(commands::HISTORY_REDO) => {
+				let project = data.history.borrow_mut().redo();
+				project.open(&mut data.editors);
+				ctx.submit_command(commands::REDRAW, Target::Global);
+				false
+			}
 			_ => true,
+		};
+		if project_changed {
+			ctx.submit_command(commands::REDRAW, Target::Global);
 		}
+		propagate
 	}
 
 	fn window_added(&mut self, id: WindowId, data: &mut State, _env: &Env, _ctx: &mut DelegateCtx) {

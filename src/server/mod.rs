@@ -2,8 +2,7 @@ use std::error::Error;
 use std::sync::mpsc::*;
 use std::thread;
 
-use crate::icp;
-use crate::state::sheet_editor::sheet::*;
+use crate::data::{icp, sheet::*};
 use crate::util::*;
 
 pub fn launch() -> Result<Sender<Event>, Box<dyn Error>> {

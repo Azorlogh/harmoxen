@@ -6,7 +6,7 @@ use druid::{
 };
 
 use crate::commands;
-use crate::icp;
+use crate::data::icp;
 use crate::util::Range;
 
 pub struct Preview {

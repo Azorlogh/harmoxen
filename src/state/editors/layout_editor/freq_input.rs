@@ -3,7 +3,7 @@ use druid::Data;
 use std::rc::Rc;
 
 use super::LayoutParseError;
-use crate::state::sheet_editor::layout::FreqPattern;
+use crate::data::layout::FreqPattern;
 
 pub fn make_freq_pattern(input: &FreqInput) -> Result<Option<FreqPattern>, LayoutParseError> {
 	match input.clone() {

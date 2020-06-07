@@ -7,7 +7,7 @@ use time_input::TimeInput;
 pub mod freq_input;
 use freq_input::FreqInput;
 
-use crate::state::sheet_editor::layout::Pattern;
+use crate::data::layout::Pattern;
 
 #[derive(Clone, Data, Lens)]
 pub struct State {

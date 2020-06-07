@@ -1,9 +1,10 @@
 use derive_more::Display;
 use druid::Data;
+use serde::{Deserialize, Serialize};
 use std::error::Error;
 use std::ops::Mul;
 
-#[derive(Clone, Copy, Debug, Data)]
+#[derive(Clone, Copy, Debug, PartialEq, Data, Deserialize, Serialize)]
 pub enum Interval {
 	Ratio(usize, usize),
 	Float(f64),

@@ -1,6 +1,6 @@
 use druid::{kurbo::Line, Color, Env, PaintCtx, Point, RenderContext};
 
-use crate::state::sheet_editor::sheet::*;
+use crate::data::sheet::*;
 use crate::theme;
 use crate::util::coord::Coord;
 
@@ -54,7 +54,7 @@ impl SheetEditor {
 				}
 				_ => {}
 			}
-			match self.state {
+			match self.action {
 				Scaling(id) if id == index => {
 					color = env.get(theme::HIGHLIGHTED_COLOR);
 				}
@@ -65,7 +65,7 @@ impl SheetEditor {
 			}
 			ctx.stroke(line, &color, note_height);
 
-			if self.hover == Scaling(index) || self.state == Scaling(index) {
+			if self.hover == Scaling(index) || self.action == Scaling(index) {
 				let line = Line::new(
 					Point::new((s_start + s_length - note_scale_knob).max(s_start + s_length * 0.60), spos),
 					p1,

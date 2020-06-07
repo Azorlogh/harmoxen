@@ -2,7 +2,7 @@ use derive_more::Display;
 use druid::Data;
 
 use super::LayoutParseError;
-use crate::state::sheet_editor::layout::TimePattern;
+use crate::data::layout::TimePattern;
 
 pub fn make_time_pattern(input: &TimeInput) -> Result<Option<TimePattern>, LayoutParseError> {
 	match input.clone() {

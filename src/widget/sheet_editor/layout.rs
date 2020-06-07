@@ -1,6 +1,6 @@
 use druid::{kurbo::Line, Color, Env, PaintCtx, Rect, RenderContext};
 
-use crate::state::sheet_editor::layout::*;
+use crate::data::layout::*;
 use crate::theme;
 
 use super::SheetEditor;

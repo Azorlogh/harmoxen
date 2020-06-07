@@ -6,7 +6,7 @@ use druid::{
 use std::str::FromStr;
 
 use crate::commands;
-use crate::state::layout_input::{
+use crate::state::editors::layout_editor::{
 	freq_input::{self, FreqInput},
 	time_input::TimeInput,
 	State,

@@ -1,4 +1,4 @@
-use crate::icp::*;
+use crate::data::icp::*;
 
 mod adsr;
 use adsr::ADSR;

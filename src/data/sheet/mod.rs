@@ -1,41 +1,16 @@
-use crate::icp;
+mod interval;
+pub use interval::*;
+
+mod note;
+pub use note::*;
+
+use crate::data::icp;
 use crate::util::{intersect, Range};
 use druid::{kurbo::Line, Point, Rect};
 use generational_arena::{Arena, Index};
+use serde::{Deserialize, Serialize};
 
-mod interval;
-pub use interval::Interval;
-
-pub type Freq = f64;
-
-#[derive(Debug, Clone, Copy)]
-pub enum Pitch {
-	Absolute(Freq),
-	Relative(Index, Interval),
-}
-
-#[derive(Debug, Clone, Copy)]
-pub struct Note {
-	pub pitch: Pitch,
-	pub start: f64,
-	pub length: f64,
-}
-
-impl Note {
-	pub fn new(pos: Point, note_len: f64) -> Note {
-		Note {
-			start: pos.x,
-			length: note_len,
-			pitch: Pitch::Absolute(2f64.powf(pos.y)),
-		}
-	}
-
-	pub fn end(&self) -> f64 {
-		self.start + self.length
-	}
-}
-
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, Deserialize, Serialize)]
 pub struct Sheet {
 	pub notes: Arena<Note>,
 }
