@@ -1,4 +1,5 @@
 use druid::{Data, Lens};
+use std::path::PathBuf;
 use std::{cell::RefCell, rc::Rc};
 
 pub mod editors;
@@ -12,6 +13,7 @@ pub struct State {
 	pub main_window: Option<Rc<druid::WindowId>>,
 	pub editors: editors::State,
 	pub history: Rc<RefCell<history::History>>,
+	pub save_path: Option<Rc<PathBuf>>,
 }
 
 impl State {
@@ -22,6 +24,7 @@ impl State {
 			main_window: None,
 			editors,
 			history: Rc::new(RefCell::new(History::new(project))),
+			save_path: None,
 		}
 	}
 }

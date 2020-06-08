@@ -5,7 +5,8 @@ authors = ["Azorlogh <bott.alix@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-druid = "0.6.0"
+# druid = "0.6.0"
+druid = { git = "https://github.com/xi-editor/druid" }
 cpal = "0.11.0"
 meval = "0.2.0"
 derive_more = "0.99.7"

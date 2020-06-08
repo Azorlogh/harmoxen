@@ -262,6 +262,18 @@ impl Widget<State> for SheetEditor {
 			Event::KeyDown(key) if key.mods.ctrl && key.key_code == KeyCode::KeyY => {
 				ctx.submit_command(commands::HISTORY_REDO, ctx.window_id());
 			}
+			Event::KeyDown(key) if key.mods.ctrl && key.key_code == KeyCode::KeyN => {
+				ctx.submit_command(commands::PROJECT_NEW, ctx.window_id());
+			}
+			Event::KeyDown(key) if key.mods.ctrl && key.key_code == KeyCode::KeyO => {
+				ctx.submit_command(commands::PROJECT_OPEN, ctx.window_id());
+			}
+			Event::KeyDown(key) if key.mods.ctrl && key.mods.shift && key.key_code == KeyCode::KeyS => {
+				ctx.submit_command(commands::PROJECT_SAVE_AS, ctx.window_id());
+			}
+			Event::KeyDown(key) if key.mods.ctrl && key.key_code == KeyCode::KeyS => {
+				ctx.submit_command(commands::PROJECT_SAVE, ctx.window_id());
+			}
 			Event::WindowSize(_) => {
 				ctx.request_layout();
 				ctx.request_paint();

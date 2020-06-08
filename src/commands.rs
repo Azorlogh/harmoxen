@@ -4,6 +4,11 @@ use druid::Selector;
 use generational_arena::Index;
 
 // general
+pub const PROJECT_NEW: Selector = Selector::new("project-new");
+pub const PROJECT_SAVE: Selector = Selector::new("project-save");
+pub const PROJECT_OPEN: Selector = Selector::new("project-open");
+pub const PROJECT_SAVE_AS: Selector = Selector::new("project-save-as");
+
 pub const HISTORY_SAVE: Selector = Selector::new("history-save");
 pub const HISTORY_UNDO: Selector = Selector::new("history-undo");
 pub const HISTORY_REDO: Selector = Selector::new("history-redo");

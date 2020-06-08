@@ -1,6 +1,11 @@
 #![feature(tau_constant)]
 
-use druid::{AppDelegate, AppLauncher, Command, DelegateCtx, Env, LocalizedString, Size, Target, WindowDesc, WindowId};
+use druid::commands as sys_cmds;
+use druid::{
+	AppDelegate, AppLauncher, Command, DelegateCtx, Env, FileDialogOptions, FileSpec, LocalizedString, Size, Target,
+	WindowDesc, WindowId,
+};
+use std::fs;
 use std::rc::Rc;
 use std::sync::mpsc::*;
 
@@ -111,6 +116,68 @@ impl AppDelegate<State> for Delegate {
 				project.open(&mut data.editors);
 				ctx.submit_command(commands::REDRAW, Target::Global);
 				false
+			}
+			_ if cmd.is(commands::PROJECT_NEW) => {
+				let mut state = State::new();
+				state.main_window = data.main_window.clone();
+				*data = state;
+				false
+			}
+			_ if cmd.is(commands::PROJECT_OPEN) => {
+				ctx.submit_command(
+					Command::new(
+						sys_cmds::SHOW_OPEN_PANEL,
+						FileDialogOptions::new().allowed_types(vec![FileSpec::new("Xenoroll Project", &["xrp"])]),
+					),
+					Target::Window(*data.main_window.clone().unwrap()),
+				);
+				false
+			}
+			_ if cmd.is(commands::PROJECT_SAVE_AS) => {
+				ctx.submit_command(
+					Command::new(
+						sys_cmds::SHOW_SAVE_PANEL,
+						FileDialogOptions::new().allowed_types(vec![FileSpec::new("Xenoroll Project", &["xrp"])]),
+					),
+					Target::Window(*data.main_window.clone().unwrap()),
+				);
+				false
+			}
+			_ if cmd.is(commands::PROJECT_SAVE) => {
+				if let Some(path) = data.save_path.clone() {
+					let project = state::Project::from_editors(&data.editors);
+					let data = ron::to_string(&project).unwrap();
+					fs::write(&*path, data).ok();
+				} else {
+					let xrp = FileSpec::new("Xenoroll project", &["xrp"]);
+					ctx.submit_command(
+						Command::new(
+							sys_cmds::SHOW_SAVE_PANEL,
+							FileDialogOptions::new().allowed_types(vec![xrp]).default_type(xrp),
+						),
+						Target::Window(*data.main_window.clone().unwrap()),
+					);
+				}
+				false
+			}
+			_ if cmd.is(sys_cmds::SAVE_FILE) => {
+				if let Some(file_info) = cmd.get_unchecked(sys_cmds::SAVE_FILE) {
+					data.save_path = Some(Rc::new(file_info.path().into()));
+					let project = state::Project::from_editors(&data.editors);
+					let data = ron::to_string(&project).unwrap();
+					fs::write(file_info.path(), data).ok();
+				}
+				true
+			}
+			_ if cmd.is(sys_cmds::OPEN_FILE) => {
+				let file_info = cmd.get_unchecked(sys_cmds::OPEN_FILE);
+				if let Ok(project_string) = fs::read_to_string(file_info.path()) {
+					if let Ok(project) = ron::from_str::<state::Project>(&project_string) {
+						project.open(&mut data.editors);
+						ctx.submit_command(commands::REDRAW, Target::Global);
+					}
+				}
+				true
 			}
 			_ => true,
 		};

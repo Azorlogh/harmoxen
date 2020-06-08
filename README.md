@@ -38,7 +38,7 @@ Layout markers can be added by right clicking the cursor bar.
 
 ## TODO
 
-- File operations
+- Improve UI
 - Selection
 - Display errors on invalid input
 - Control note volume

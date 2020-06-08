@@ -16,6 +16,7 @@ pub struct State {
 	pub tempo: f64,
 	pub interval_input: Interval,
 	pub curr_marker: usize,
+	pub confirm: ConfirmState,
 }
 impl Default for State {
 	fn default() -> State {
@@ -38,6 +39,7 @@ impl Default for State {
 			tempo: 172.0,
 			interval_input: Interval::Ratio(3, 2),
 			curr_marker: 0,
+			confirm: ConfirmState::None,
 		}
 	}
 }
@@ -46,4 +48,12 @@ impl Default for State {
 pub enum Menu {
 	File,
 	Edit,
+}
+
+// Temporary
+#[derive(Clone, Copy, PartialEq, Data)]
+pub enum ConfirmState {
+	None,
+	New,
+	Open,
 }

@@ -5,7 +5,7 @@ use crate::commands;
 use crate::util::{Frame, Frame2};
 use crate::widget::{common::*, *};
 
-use crate::state::editors::sheet_editor::{Menu, State};
+use crate::state::editors::sheet_editor::*;
 
 const SCROLLBAR_THICKNESS: f64 = 32.0;
 const TIMELINE_THICKNESS: f64 = 16.0;
@@ -42,7 +42,57 @@ pub fn build() -> impl Widget<State> {
 		|data: &State, _| std::mem::discriminant(&data.open_menu),
 		|_, data, _| {
 			Box::new(match data.open_menu {
-				Menu::File => Flex::row().with_child(Label::new("File placeholder")).with_flex_spacer(1.0),
+				Menu::File => Flex::row()
+					.with_child(
+						Button::new("New")
+							.on_click(|_, data: &mut State, _| data.confirm = ConfirmState::New)
+							.fix_width(80.0)
+							.padding(3.0),
+					)
+					.with_child(
+						Button::new("Open")
+							.on_click(|_, data: &mut State, _| data.confirm = ConfirmState::Open)
+							.fix_width(80.0)
+							.padding(3.0),
+					)
+					.with_child(
+						Button::new("Save")
+							.on_click(|ctx, _, _| ctx.submit_command(commands::PROJECT_SAVE, None))
+							.fix_width(80.0)
+							.padding(3.0),
+					)
+					.with_child(
+						Button::new("Save As")
+							.on_click(|ctx, _, _| ctx.submit_command(commands::PROJECT_SAVE_AS, None))
+							.fix_width(80.0)
+							.padding(3.0),
+					)
+					.with_flex_spacer(1.0)
+					.with_child(ViewSwitcher::new(
+						|data: &State, _| std::mem::discriminant(&data.confirm),
+						|_, data, _| match data.confirm {
+							ConfirmState::None => Flex::row().fix_width(0.0).boxed(),
+							ConfirmState::New => Flex::row()
+								.with_child(Label::new("Close this project ?"))
+								.with_child(
+									Button::new("❌").on_click(|_, data: &mut State, _| data.confirm = ConfirmState::None),
+								)
+								.with_child(
+									Button::new("✔").on_click(|ctx, _, _| ctx.submit_command(commands::PROJECT_NEW, None)),
+								)
+								.boxed(),
+							ConfirmState::Open => Flex::row()
+								.with_child(Label::new("Close this project ?"))
+								.with_child(
+									Button::new("❌").on_click(|_, data: &mut State, _| data.confirm = ConfirmState::None),
+								)
+								.with_child(Button::new("✔").on_click(|ctx, data: &mut State, _| {
+									data.confirm = ConfirmState::None;
+									ctx.submit_command(commands::PROJECT_OPEN, None);
+								}))
+								.boxed(),
+						},
+					)),
 				Menu::Edit => Flex::row().with_child(Label::new("Edit placeholder")).with_flex_spacer(1.0),
 			})
 		},

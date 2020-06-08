@@ -36,11 +36,10 @@ impl Sheet {
 		self.notes.get_mut(id)
 	}
 
-	// get closest note to point in board coordinates
 	pub fn get_note_at(&self, pos: Point, note_height: f64) -> Option<Index> {
 		let mut closest = (None, f64::INFINITY);
 		for (index, note) in &self.notes {
-			let dist = (pos.y - self.get_freq(note.pitch).log2()).abs();
+			let dist = (pos.y - self.get_y(note.pitch)).abs();
 			if note.start < pos.x && pos.x < note.start + note.length && dist < note_height / 2.0 && dist <= closest.1 {
 				closest = (Some(index), dist);
 			}
@@ -54,7 +53,7 @@ impl Sheet {
 		for (index, note) in &self.notes {
 			if note.start < pos.x
 				&& note.start + note.length > pos.x
-				&& (pos.y - self.get_freq(note.pitch).log2()).abs() < note_height / 2.0
+				&& (pos.y - self.get_y(note.pitch)).abs() < note_height / 2.0
 			{
 				out.push(index);
 			}
@@ -122,7 +121,7 @@ impl Sheet {
 	pub fn remove_notes_along(&mut self, line: Line, note_height: f64) {
 		let mut notes = self.notes.clone();
 		notes.retain(|_, note| {
-			let b_freq = self.get_freq(note.pitch).log2(); // freq in board coordinates
+			let b_freq = self.get_y(note.pitch);
 			let rect = Rect::from_points(
 				Point::new(note.start, b_freq - note_height / 2.0),
 				Point::new(note.start + note.length, b_freq + note_height / 2.0),
