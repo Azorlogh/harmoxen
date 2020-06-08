@@ -40,7 +40,7 @@ Layout markers can be added by right clicking the cursor bar.
 
 - Improve UI
 - Selection
-- Display errors on invalid input
+- More feedback: display errors/warnings/infos
 - Control note volume
 
 ## License

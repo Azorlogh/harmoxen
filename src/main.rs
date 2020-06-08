@@ -174,6 +174,7 @@ impl AppDelegate<State> for Delegate {
 				if let Ok(project_string) = fs::read_to_string(file_info.path()) {
 					if let Ok(project) = ron::from_str::<state::Project>(&project_string) {
 						project.open(&mut data.editors);
+						data.save_path = Some(Rc::new(file_info.path().into()));
 						ctx.submit_command(commands::REDRAW, Target::Global);
 					}
 				}
