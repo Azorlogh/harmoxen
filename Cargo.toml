@@ -1,12 +1,11 @@
 [package]
-name = "xenharmonic-piano-roll"
-version = "0.1.0"
+name = "harmoxen"
+version = "0.2.0"
 authors = ["Azorlogh <bott.alix@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-# druid = "0.6.0"
-druid = { git = "https://github.com/xi-editor/druid" }
+druid = "0.6.0"
 cpal = "0.11.0"
 meval = "0.2.0"
 derive_more = "0.99.7"

@@ -29,14 +29,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 		.unwrap();
 
 	let main_window = WindowDesc::new(|| ui::build())
-		.title(LocalizedString::new("Xenharmonic Piano Roll"))
+		.title(LocalizedString::new("Harmoxen v0.2.0"))
 		.window_size(Size::new(800.0, 500.0));
 
 	let delegate = Delegate { to_server };
 
 	AppLauncher::with_window(main_window)
 		.delegate(delegate)
-		.use_simple_logger()
 		.configure_env(theme::apply)
 		.launch(state)
 		.expect("launch failed");
@@ -127,7 +126,7 @@ impl AppDelegate<State> for Delegate {
 				ctx.submit_command(
 					Command::new(
 						sys_cmds::SHOW_OPEN_PANEL,
-						FileDialogOptions::new().allowed_types(vec![FileSpec::new("Xenoroll Project", &["xrp"])]),
+						FileDialogOptions::new().allowed_types(vec![FileSpec::new("Harmoxen project", &["hxp"])]),
 					),
 					Target::Window(*data.main_window.clone().unwrap()),
 				);
@@ -137,7 +136,7 @@ impl AppDelegate<State> for Delegate {
 				ctx.submit_command(
 					Command::new(
 						sys_cmds::SHOW_SAVE_PANEL,
-						FileDialogOptions::new().allowed_types(vec![FileSpec::new("Xenoroll Project", &["xrp"])]),
+						FileDialogOptions::new().allowed_types(vec![FileSpec::new("Harmoxen project", &["hxp"])]),
 					),
 					Target::Window(*data.main_window.clone().unwrap()),
 				);
@@ -149,7 +148,7 @@ impl AppDelegate<State> for Delegate {
 					let data = ron::to_string(&project).unwrap();
 					fs::write(&*path, data).ok();
 				} else {
-					let xrp = FileSpec::new("Xenoroll project", &["xrp"]);
+					let xrp = FileSpec::new("Harmoxen project", &["hxp"]);
 					ctx.submit_command(
 						Command::new(
 							sys_cmds::SHOW_SAVE_PANEL,

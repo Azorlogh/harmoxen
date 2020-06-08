@@ -1,10 +1,10 @@
-# Xenharmonic Piano Roll
-
-**This is mostly an experiment.** \
-It may never go anywhere, or it may become somehow useful one day.
+# Harmoxen
 
 This software is an experimental piano roll that has a continuous y axis.
 Notes can be placed at any frequency, or at any interval from another note.
+
+**This is mostly an experiment.** \
+It may never go anywhere, or it may become somehow useful one day.
 
 **It is barely usable in its current state.** \
 You can still play around with it but many parts are missing.
@@ -15,7 +15,7 @@ The goals of this project haven't been fully fleshed out yet, but for now, my on
 
 ## Building
 
-On Windows, the project can be built simply by running `cargo run` with Rust installed.
+On Windows, the project can be built simply by running `cargo run` with Rust nightly installed.
 
 For other platforms, if this doesn't work, see the requirements of the [druid](https://github.com/xi-editor/druid) library.
 
