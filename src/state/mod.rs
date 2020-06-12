@@ -14,6 +14,7 @@ pub struct State {
 	pub editors: editors::State,
 	pub history: Rc<RefCell<history::History>>,
 	pub save_path: Option<Rc<PathBuf>>,
+	pub up_to_date: bool,
 }
 
 impl State {
@@ -25,6 +26,7 @@ impl State {
 			editors,
 			history: Rc::new(RefCell::new(History::new(project))),
 			save_path: None,
+			up_to_date: true,
 		}
 	}
 }

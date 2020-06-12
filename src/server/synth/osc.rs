@@ -45,5 +45,4 @@ fn poly_blep(mut t: f64, delta: f64) -> f64 {
 	} else {
 		0.0
 	}
-	// 0.0
 }

@@ -5,8 +5,8 @@ use generational_arena::Index;
 
 // general
 pub const PROJECT_NEW: Selector = Selector::new("project-new");
-pub const PROJECT_SAVE: Selector = Selector::new("project-save");
 pub const PROJECT_OPEN: Selector = Selector::new("project-open");
+pub const PROJECT_SAVE: Selector = Selector::new("project-save");
 pub const PROJECT_SAVE_AS: Selector = Selector::new("project-save-as");
 
 pub const HISTORY_SAVE: Selector = Selector::new("history-save");
@@ -25,11 +25,6 @@ pub const TEMPO_CHANGED: Selector<f64> = Selector::new("tempo-changed");
 
 // board
 pub const SCROLL_VIEW_MOVE: Selector<Frame2> = Selector::new("scroll-view-move");
-
-// sheet
-pub const SHEET_EDITOR_REDRAW: Selector = Selector::new("sheet-editor-redraw");
-pub const SHEET_EDITOR_ADD_RELATIVE_NOTE: Selector<(Index, f64)> = Selector::new("sheet-editor-add-relative-note");
-pub const SHEET_EDITOR_DELETE_NOTE: Selector<Index> = Selector::new("sheet-editor-delete-note");
 
 // marker editor
 pub const MARKER_ADD: Selector<f64> = Selector::new("marker-add");

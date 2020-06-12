@@ -11,94 +11,6 @@ const SCROLLBAR_THICKNESS: f64 = 32.0;
 const TIMELINE_THICKNESS: f64 = 16.0;
 
 pub fn build() -> impl Widget<State> {
-	let menu_selector = {
-		Flex::row()
-			.with_child(
-				Setter::new("File", Menu::File)
-					.lens(State::open_menu)
-					.fix_width(80.0)
-					.padding(3.0),
-			)
-			.with_child(
-				Setter::new("Edit", Menu::Edit)
-					.lens(State::open_menu)
-					.fix_width(80.0)
-					.padding(3.0),
-			)
-			.with_child(
-				Button::new("Layout")
-					.on_click(|ctx, _, _| ctx.submit_command(commands::OPEN_LAYOUT_EDITOR, ctx.window_id()))
-					.lens(State::open_menu)
-					.fix_width(120.0)
-					.padding(3.0),
-			)
-			.with_flex_spacer(1.0)
-			.with_child(Label::new("BPM:"))
-			.with_child(ParseLazy::new(TextBox::new()).lens(State::tempo).padding(3.0))
-			.expand_width()
-	};
-
-	let menu = ViewSwitcher::new(
-		|data: &State, _| std::mem::discriminant(&data.open_menu),
-		|_, data, _| {
-			Box::new(match data.open_menu {
-				Menu::File => Flex::row()
-					.with_child(
-						Button::new("New")
-							.on_click(|_, data: &mut State, _| data.confirm = ConfirmState::New)
-							.fix_width(80.0)
-							.padding(3.0),
-					)
-					.with_child(
-						Button::new("Open")
-							.on_click(|_, data: &mut State, _| data.confirm = ConfirmState::Open)
-							.fix_width(80.0)
-							.padding(3.0),
-					)
-					.with_child(
-						Button::new("Save")
-							.on_click(|ctx, _, _| ctx.submit_command(commands::PROJECT_SAVE, None))
-							.fix_width(80.0)
-							.padding(3.0),
-					)
-					.with_child(
-						Button::new("Save As")
-							.on_click(|ctx, _, _| ctx.submit_command(commands::PROJECT_SAVE_AS, None))
-							.fix_width(80.0)
-							.padding(3.0),
-					)
-					.with_flex_spacer(1.0)
-					.with_child(ViewSwitcher::new(
-						|data: &State, _| std::mem::discriminant(&data.confirm),
-						|_, data, _| match data.confirm {
-							ConfirmState::None => Flex::row().fix_width(0.0).boxed(),
-							ConfirmState::New => Flex::row()
-								.with_child(Label::new("Close this project ?"))
-								.with_child(
-									Button::new("❌").on_click(|_, data: &mut State, _| data.confirm = ConfirmState::None),
-								)
-								.with_child(
-									Button::new("✔").on_click(|ctx, _, _| ctx.submit_command(commands::PROJECT_NEW, None)),
-								)
-								.boxed(),
-							ConfirmState::Open => Flex::row()
-								.with_child(Label::new("Close this project ?"))
-								.with_child(
-									Button::new("❌").on_click(|_, data: &mut State, _| data.confirm = ConfirmState::None),
-								)
-								.with_child(Button::new("✔").on_click(|ctx, data: &mut State, _| {
-									data.confirm = ConfirmState::None;
-									ctx.submit_command(commands::PROJECT_OPEN, None);
-								}))
-								.boxed(),
-						},
-					)),
-				Menu::Edit => Flex::row().with_child(Label::new("Edit placeholder")).with_flex_spacer(1.0),
-			})
-		},
-	)
-	.padding(3.0);
-
 	let preview = {
 		Flex::column()
 			.with_flex_child(SizedBox::empty().height(SCROLLBAR_THICKNESS + TIMELINE_THICKNESS), 0.0)
@@ -141,8 +53,5 @@ pub fn build() -> impl Widget<State> {
 	let view = Flex::row().with_child(preview.fix_width(96.0)).with_flex_child(board, 1.0);
 
 	// editor
-	Flex::column()
-		.with_child(menu_selector.fix_height(40.0))
-		.with_child(menu.fix_height(40.0))
-		.with_flex_child(view, 1.0)
+	Flex::column().with_flex_child(view, 1.0)
 }

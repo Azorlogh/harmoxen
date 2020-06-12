@@ -48,6 +48,6 @@ pub fn apply(env: &mut Env, _data: &crate::state::State) {
 
 	env.set(druid::theme::WINDOW_BACKGROUND_COLOR, color(0x323232));
 
-	env.set(NOTE_HEIGHT, 18.0);
+	env.set(NOTE_HEIGHT, 24.0);
 	env.set(NOTE_SCALE_KNOB, 32.0);
 }

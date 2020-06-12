@@ -1,7 +1,7 @@
 use druid::kurbo::Line;
 use druid::{
 	BoxConstraints, Color, Command, ContextMenu, Data, Env, Event, EventCtx, KeyCode, KeyEvent, LayoutCtx, LifeCycle,
-	LifeCycleCtx, LocalizedString, MenuDesc, MenuItem, PaintCtx, Point, Rect, RenderContext, Size, UpdateCtx, Widget,
+	LifeCycleCtx, LocalizedString, MenuDesc, MenuItem, PaintCtx, Point, Rect, RenderContext, Selector, Size, UpdateCtx, Widget,
 	WidgetExt, WidgetPod,
 };
 
@@ -20,6 +20,11 @@ use crate::widget::common::{ParseLazy, TextBox};
 
 mod layout;
 mod notes;
+
+pub const REDRAW: Selector = Selector::new("sheet-editor.redraw");
+pub const ADD_RELATIVE_NOTE: Selector<(Index, f64)> = Selector::new("sheet-editor.add-relative-note");
+pub const DUPLICATE_NOTE: Selector<(Index, f64)> = Selector::new("sheet-editor.duplicate-note");
+pub const DELETE_NOTE: Selector<Index> = Selector::new("sheet-editor.delete-note");
 
 #[derive(PartialEq)]
 pub enum EditAction {
@@ -278,7 +283,7 @@ impl Widget<State> for SheetEditor {
 				ctx.request_layout();
 				ctx.request_paint();
 			}
-			Event::Command(cmd) if cmd.is(commands::REDRAW) || cmd.is(commands::SHEET_EDITOR_REDRAW) => {
+			Event::Command(cmd) if cmd.is(commands::REDRAW) || cmd.is(REDRAW) => {
 				ctx.request_layout();
 				ctx.request_paint();
 				if let Some(interval_input) = &mut self.interval_input {
@@ -290,8 +295,8 @@ impl Widget<State> for SheetEditor {
 				let bounds = data.sheet.borrow().get_bounds();
 				data.frame.x.bounds.1 = ((bounds.0).1 * 1.25).max(5.0);
 			}
-			Event::Command(ref cmd) if cmd.is(commands::SHEET_EDITOR_ADD_RELATIVE_NOTE) => {
-				let (root, time) = *cmd.get_unchecked(commands::SHEET_EDITOR_ADD_RELATIVE_NOTE);
+			Event::Command(ref cmd) if cmd.is(ADD_RELATIVE_NOTE) => {
+				let (root, time) = *cmd.get_unchecked(ADD_RELATIVE_NOTE);
 				let note = data.layout.borrow().quantize_note(Note {
 					start: time,
 					length: self.note_len,
@@ -301,8 +306,21 @@ impl Widget<State> for SheetEditor {
 				sheet.add_note(note);
 				sheet_changed = true;
 			}
-			Event::Command(ref cmd) if cmd.is(commands::SHEET_EDITOR_DELETE_NOTE) => {
-				let id = *cmd.get_unchecked(commands::SHEET_EDITOR_DELETE_NOTE);
+			Event::Command(ref cmd) if cmd.is(DUPLICATE_NOTE) => {
+				let mut sheet = data.sheet.borrow_mut();
+				let (original, time) = *cmd.get_unchecked(DUPLICATE_NOTE);
+				if let Some(original) = sheet.get_note(original) {
+					let note = data.layout.borrow().quantize_note(Note {
+						start: time,
+						length: original.length,
+						pitch: original.pitch,
+					});
+					sheet.add_note(note);
+					sheet_changed = true;
+				}
+			}
+			Event::Command(ref cmd) if cmd.is(DELETE_NOTE) => {
+				let id = *cmd.get_unchecked(DELETE_NOTE);
 				data.sheet.borrow_mut().remove_note(id);
 				sheet_changed = true;
 			}
@@ -395,14 +413,14 @@ fn make_note_context_menu<T: Data>(id: Index, time: f64) -> MenuDesc<T> {
 	MenuDesc::empty()
 		.append(MenuItem::new(
 			LocalizedString::new("Add relative note"),
-			Command::new(commands::SHEET_EDITOR_ADD_RELATIVE_NOTE, (id, time)),
+			Command::new(ADD_RELATIVE_NOTE, (id, time)),
 		))
-		// .append(MenuItem::new(
-		// 	LocalizedString::new("Duplicate note"),
-		// 	Command::new(commands::EDITOR_DUPLICATE_NOTE, (id, time)),
-		// ))
+		.append(MenuItem::new(
+			LocalizedString::new("Duplicate note"),
+			Command::new(DUPLICATE_NOTE, (id, time)),
+		))
 		.append(MenuItem::new(
 			LocalizedString::new("Delete note"),
-			Command::new(commands::SHEET_EDITOR_DELETE_NOTE, id),
+			Command::new(DELETE_NOTE, id),
 		))
 }

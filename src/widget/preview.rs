@@ -67,19 +67,19 @@ impl Widget<State> for Preview {
 
 	fn update(&mut self, _ctx: &mut UpdateCtx, _old_data: &State, _data: &State, _env: &Env) {}
 
-	fn layout(&mut self, _layout_ctx: &mut LayoutCtx, bc: &BoxConstraints, _data: &State, _env: &Env) -> Size {
+	fn layout(&mut self, _ctx: &mut LayoutCtx, bc: &BoxConstraints, _data: &State, _env: &Env) -> Size {
 		bc.max()
 	}
 
-	fn paint(&mut self, paint_ctx: &mut PaintCtx, data: &State, _env: &Env) {
+	fn paint(&mut self, ctx: &mut PaintCtx, data: &State, _env: &Env) {
 		let range = &*data;
-		let size = paint_ctx.size();
+		let size = ctx.size();
 
 		let rect = Rect::from_origin_size(Point::ORIGIN, size);
 
-		paint_ctx.clip(rect);
+		ctx.clip(rect);
 
-		paint_ctx.fill(rect, &Color::rgb8(0x70, 0x70, 0x70));
+		ctx.fill(rect, &Color::rgb8(0x70, 0x70, 0x70));
 
 		if let Some(freq) = self.playing {
 			let vpos = (freq.log2() - range.0) / range.size();
@@ -87,7 +87,7 @@ impl Widget<State> for Preview {
 			let p0 = Point::new(0.0, spos);
 			let p1 = Point::new(size.width, spos);
 			let line = Line::new(p0, p1);
-			paint_ctx.stroke(line, &Color::rgb8(0xE0, 0xE0, 0xE0), 1.0 / range.size());
+			ctx.stroke(line, &Color::rgb8(0xE0, 0xE0, 0xE0), 1.0 / range.size());
 		}
 	}
 }
