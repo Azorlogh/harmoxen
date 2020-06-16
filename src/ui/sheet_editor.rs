@@ -1,7 +1,6 @@
-use druid::widget::{Button, Flex, Label, SizedBox, TextBox, ViewSwitcher, WidgetExt};
+use druid::widget::{Flex, Label, SizedBox, WidgetExt};
 use druid::Widget;
 
-use crate::commands;
 use crate::util::{Frame, Frame2};
 use crate::widget::{common::*, *};
 

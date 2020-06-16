@@ -1,7 +1,7 @@
 //! Instrument control protocol
 //! Interface between the piano roll and the audio server
 
-type NoteId = usize;
+pub type NoteId = usize;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Note {

@@ -1,5 +1,6 @@
 use crate::util::{Frame, Frame2, Range};
 use druid::{Data, Lens};
+use generational_arena::Index;
 use std::{cell::RefCell, rc::Rc};
 
 use crate::data::layout::Layout;
@@ -12,11 +13,10 @@ pub struct State {
 	pub cursor: f64,
 	pub playing: bool,
 	pub layout: Rc<RefCell<Layout>>,
-	pub open_menu: Menu,
 	pub tempo: f64,
 	pub interval_input: Interval,
 	pub curr_marker: usize,
-	pub confirm: ConfirmState,
+	pub selection: Rc<RefCell<Vec<Index>>>,
 }
 impl Default for State {
 	fn default() -> State {
@@ -35,25 +35,10 @@ impl Default for State {
 			cursor: 0.0,
 			playing: false,
 			layout: Rc::new(RefCell::new(Layout::default())),
-			open_menu: Menu::File,
 			tempo: 172.0,
 			interval_input: Interval::Ratio(3, 2),
 			curr_marker: 0,
-			confirm: ConfirmState::None,
+			selection: Rc::new(RefCell::new(vec![])),
 		}
 	}
-}
-
-#[derive(Clone, Copy, PartialEq, Data)]
-pub enum Menu {
-	File,
-	Edit,
-}
-
-// Temporary
-#[derive(Clone, Copy, PartialEq, Data)]
-pub enum ConfirmState {
-	None,
-	New,
-	Open,
 }

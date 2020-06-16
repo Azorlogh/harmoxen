@@ -1,7 +1,7 @@
 use druid::{
 	theme,
 	widget::{Button, Flex, Label},
-	BoxConstraints, Command, Env, Selector, Widget, WidgetExt,
+	BoxConstraints, Env, Selector, Widget, WidgetExt,
 };
 
 use crate::commands;

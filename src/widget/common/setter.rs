@@ -1,3 +1,7 @@
+// used to set the data to a specific value
+
+#![allow(unused)]
+
 use druid::kurbo::{Point, RoundedRect, Size};
 use druid::theme;
 use druid::widget::{Label, LabelText};

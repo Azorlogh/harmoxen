@@ -1,14 +1,8 @@
-use druid::kurbo::Line;
-use druid::{
-	BoxConstraints, Color, Command, Data, Env, Event, EventCtx, LayoutCtx, LifeCycle, LifeCycleCtx, MouseButton, MouseEvent,
-	PaintCtx, Point, Rect, RenderContext, Selector, Size, UpdateCtx, Widget, WidgetPod,
-};
-use std::any::Any;
-
-use crate::commands;
-use crate::data::icp;
 use crate::state::State;
-use crate::util::Range;
+use druid::{
+	BoxConstraints, Env, Event, EventCtx, LayoutCtx, LifeCycle, LifeCycleCtx, PaintCtx, Point, Rect, Selector, Size, UpdateCtx,
+	Widget, WidgetPod,
+};
 
 type ChildBuilder = Box<dyn Fn(&Env) -> Box<dyn Widget<State>>>;
 

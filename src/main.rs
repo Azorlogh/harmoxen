@@ -17,7 +17,7 @@ use delegate::Delegate;
 fn main() -> Result<(), Box<dyn std::error::Error>> {
 	let state = State::new();
 
-	let to_server = server::launch()?;
+	let to_server = server::audio::launch()?;
 
 	to_server
 		.send(server::Event::SetTempo(state.editors.sheet_editor.tempo))

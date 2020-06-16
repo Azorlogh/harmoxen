@@ -1,6 +1,6 @@
 use druid::commands as sys_cmds;
 use druid::{
-	AppDelegate, Command, DelegateCtx, Env, FileDialogOptions, FileSpec, LocalizedString, Selector, Size, Target, WindowDesc,
+	AppDelegate, Command, DelegateCtx, Env, FileDialogOptions, FileSpec, LocalizedString, Selector, Target, WindowDesc,
 	WindowId,
 };
 
@@ -36,6 +36,16 @@ impl AppDelegate<State> for Delegate {
 		let main_window = *data.main_window.clone().unwrap();
 		let mut project_changed = false;
 		let propagate = match cmd {
+			_ if cmd.is(cmds::BACKEND_SET_AUDIO) => {
+				self.to_server.send(server::Event::Shutdown).unwrap();
+				self.to_server = server::audio::launch().unwrap();
+				false
+			}
+			_ if cmd.is(cmds::BACKEND_SET_MPE) => {
+				self.to_server.send(server::Event::Shutdown).unwrap();
+				self.to_server = server::midi::launch().unwrap();
+				false
+			}
 			_ if cmd.is(cmds::TEMPO_CHANGED) => {
 				let tempo = *cmd.get_unchecked(cmds::TEMPO_CHANGED);
 				self.to_server.send(server::Event::SetTempo(tempo)).unwrap();

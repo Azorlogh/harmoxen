@@ -5,7 +5,6 @@ use druid::widget::{Flex, Label, LabelText};
 use druid::{
 	Affine, Command, Data, Insets, LinearGradient, Point, Rect, RenderContext, Selector, UnitPoint, Widget, WidgetExt,
 };
-use std::{cell::RefCell, rc::Rc};
 
 use crate::widget::common::Button;
 

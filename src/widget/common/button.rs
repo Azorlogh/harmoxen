@@ -16,6 +16,8 @@
 
 // ..to which I (Azorlogh) added some ctx.set_handled()
 
+#![allow(unused)]
+
 use druid::theme;
 use druid::widget::prelude::*;
 use druid::widget::{Click, ControllerHost, Label, LabelText};

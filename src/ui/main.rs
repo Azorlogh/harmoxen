@@ -1,7 +1,6 @@
 use druid::{
-	theme,
 	widget::{Button, Flex, Label},
-	BoxConstraints, Command, Size, Widget, WidgetExt,
+	Widget, WidgetExt,
 };
 
 use crate::commands;
@@ -28,6 +27,17 @@ pub fn build() -> impl Widget<State> {
 						ctx.submit_command(commands::PROJECT_SAVE_AS, None)
 					}))
 					.fix_width(80.0)
+					.padding(3.0),
+			)
+			.with_child(
+				DropDown::new("Backend")
+					.with_item(dropdown::Item::new("Integrated synth", |ctx, _, _| {
+						ctx.submit_command(commands::BACKEND_SET_AUDIO, None);
+					}))
+					.with_item(dropdown::Item::new("MPE (experimental)", |ctx, _, _| {
+						ctx.submit_command(commands::BACKEND_SET_MPE, None);
+					}))
+					.fix_width(150.0)
 					.padding(3.0),
 			)
 			.with_child(

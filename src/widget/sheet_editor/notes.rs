@@ -6,7 +6,7 @@ use crate::util::coord::Coord;
 
 use super::SheetEditor;
 
-use super::EditAction::*;
+use super::{EditState, HoverState};
 
 impl SheetEditor {
 	pub fn draw_notes(&self, ctx: &mut PaintCtx, coord: &Coord, sheet: &Sheet, env: &Env) {
@@ -49,23 +49,23 @@ impl SheetEditor {
 			let line = Line::new(p0, p1);
 			let mut color = env.get(theme::FEATURE_COLOR);
 			match self.hover {
-				Moving(id, _) if id == index => {
+				HoverState::Move(id, _) if id == index => {
 					color = env.get(theme::HIGHLIGHTED_COLOR);
 				}
 				_ => {}
 			}
 			match self.action {
-				Scaling(id) if id == index => {
+				EditState::Scale(id) if id == index => {
 					color = env.get(theme::HIGHLIGHTED_COLOR);
 				}
-				Moving(id, _) if id == index => {
+				EditState::Move(id, _) if id == index => {
 					color = env.get(theme::HIGHLIGHTED_COLOR);
 				}
 				_ => {}
 			}
 			ctx.stroke(line, &color, note_height);
 
-			if self.hover == Scaling(index) || self.action == Scaling(index) {
+			if self.hover == HoverState::Scale(index) || self.action == EditState::Scale(index) {
 				let line = Line::new(
 					Point::new((s_start + s_length - note_scale_knob).max(s_start + s_length * 0.60), spos),
 					p1,
