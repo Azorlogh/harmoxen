@@ -1,0 +1,42 @@
+name: Build release binaries
+
+on: release
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [linux, windows, macOS]
+        rust: [stable]
+    steps:
+    - uses: hecrj/setup-rust-action@v1
+      with:
+        rust-version: ${{ matrix.rust }}
+    - uses: actions/checkout@master
+    - uses: Shopify/upload-to-release@master
+      if: matrix.os != 'windows-latest'
+      with:
+        name: ${{ matrix.os }}
+        path: target/release/main
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+    - uses: Shopify/upload-to-release@master
+      if: matrix.os == 'windows-latest'
+      with:
+        name: ${{ matrix.os }}.exe
+        path: target/release/main.exe
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+    - if: matrix.os == 'ubuntu-latest'
+      run: |
+          sudo apt update
+          sudo apt install libx11-dev libgtk-3-dev
+          sudo apt install libasound2-dev
+    - if: matrix.os == 'macOS-latest'
+      run: |
+          brew install cairo
+    - name: Build
+      run: cargo build --release
+      
