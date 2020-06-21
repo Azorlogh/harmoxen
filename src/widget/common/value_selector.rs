@@ -19,7 +19,7 @@ enum Side {
 }
 use Side::*;
 
-pub struct Selector<T> {
+pub struct ValueSelector<T> {
 	label: Label<String>,
 	label_size: Size,
 	choices: Vec<T>,
@@ -27,9 +27,9 @@ pub struct Selector<T> {
 	hover: Side,
 }
 
-impl<T: Data + Clone> Selector<T> {
-	pub fn new(choices: Vec<T>) -> Selector<T> {
-		Selector {
+impl<T: Data + Clone> ValueSelector<T> {
+	pub fn new(choices: Vec<T>) -> ValueSelector<T> {
+		ValueSelector {
 			label: Label::new(|data: &String, _env: &Env| data.clone().into()),
 			label_size: Size::ZERO,
 			choices,
@@ -39,20 +39,7 @@ impl<T: Data + Clone> Selector<T> {
 	}
 }
 
-// impl<T: Data + Clone> Selector<T> {
-// 	pub fn new(choices: Vec<T>) -> Selector<T> {
-// 		let initia_idx = choices
-// 		Selector {
-// 			label: Label::new(|data: &String, _env: &Env| data.clone().into()),
-// 			label_size: Size::ZERO,
-// 			choices,
-// 			curr_idx: 0,
-// 			hover: None,
-// 		}
-// 	}
-// }
-
-impl<T: Data + Display> Widget<T> for Selector<T> {
+impl<T: Data + Display> Widget<T> for ValueSelector<T> {
 	fn event(&mut self, ctx: &mut EventCtx, event: &Event, data: &mut T, _env: &Env) {
 		let width = ctx.size().width;
 		match event {
@@ -83,7 +70,7 @@ impl<T: Data + Display> Widget<T> for Selector<T> {
 					}
 				}
 			}
-			_ => (),
+			_ => {}
 		}
 	}
 

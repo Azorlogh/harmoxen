@@ -1,13 +1,16 @@
-use druid::{Data, Lens};
-
 pub mod layout_editor;
+pub mod settings;
 pub mod sheet_editor;
 
 #[derive(Default, Clone, Data, Lens)]
 pub struct State {
 	pub sheet_editor: sheet_editor::State,
 	pub layout_editor: layout_editor::State,
+	pub settings: settings::State,
 }
+
+use crate::commands as cmds;
+use druid::{Command, Data, DelegateCtx, Lens};
 
 impl State {
 	pub fn new() -> State {
@@ -22,5 +25,16 @@ impl State {
 		let pattern = layout_editor::make_pattern(&self.layout_editor)?;
 		layout.set_marker_pattern(curr_marker, pattern);
 		Ok(())
+	}
+
+	pub fn apply_settings(&mut self, ctx: &mut DelegateCtx) {
+		match self.settings.backend {
+			settings::Backend::Audio => {
+				ctx.submit_command(cmds::BACKEND_SET_AUDIO, None);
+			}
+			settings::Backend::MPE { port } => {
+				ctx.submit_command(Command::new(cmds::BACKEND_SET_MPE, port), None);
+			}
+		}
 	}
 }

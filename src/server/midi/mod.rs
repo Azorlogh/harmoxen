@@ -1,28 +1,34 @@
+use super::Event;
+use crate::data::{icp, sheet::*};
+use crate::util::*;
+use midir::{MidiOutput, MidiOutputConnection};
 use std::error::Error;
 use std::sync::mpsc::*;
 use std::thread;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
-use crate::data::{icp, sheet::*};
-use crate::util::*;
-
-use super::Event;
-
-pub fn launch() -> Result<Sender<Event>, Box<dyn Error>> {
+pub fn launch(device_id: usize) -> Result<Sender<Event>, Box<dyn Error>> {
 	let (sender, receiver) = channel();
 	thread::spawn(move || {
-		run(receiver);
+		if let Err(err) = run(receiver, device_id) {
+			println!("Error with the mpe server: {}", err);
+		}
 	});
-
 	Ok(sender)
 }
 
-use std::time::Instant;
+pub fn get_port_names() -> Result<Vec<String>, Box<dyn Error>> {
+	let midi_out = MidiOutput::new("midir mpe output")?;
+	let ports = (0..midi_out.port_count())
+		.map(|id| midi_out.port_name(id))
+		.collect::<Result<_, _>>()?;
+	Ok(ports)
+}
 
 const UPDATE_RATE: f64 = 0.04;
 
-pub fn run(receiver: Receiver<Event>) {
-	let mut engine = Engine::new().unwrap();
+pub fn run(receiver: Receiver<Event>, device_id: usize) -> Result<(), Box<dyn Error>> {
+	let mut engine = Engine::new(device_id)?;
 
 	let mut last_instant = Instant::now();
 	let mut until_update = 0.0;
@@ -72,15 +78,18 @@ pub fn run(receiver: Receiver<Event>) {
 		}
 		thread::sleep(Duration::from_millis((until_update * 1000.0) as u64));
 	}
+	Ok(())
 }
+
+const PITCH_BEND_RANGE: f64 = 2.0; // in semitones
+const PITCH_BEND_SEMITONES: u8 = PITCH_BEND_RANGE as u8;
+const PITCH_BEND_CENTS: u8 = ((PITCH_BEND_RANGE % 1.0) * 100.0) as u8;
 
 #[derive(Clone, Copy, Default)]
 struct Channel {
 	current: Option<icp::NoteId>,
 	note_number: u8,
 }
-
-use midir::{MidiOutput, MidiOutputConnection};
 
 struct Engine {
 	conn: MidiOutputConnection,
@@ -92,18 +101,9 @@ struct Engine {
 }
 
 impl Engine {
-	pub fn new() -> Result<Engine, Box<dyn Error>> {
+	pub fn new(device_id: usize) -> Result<Engine, Box<dyn Error>> {
 		let midi_out = MidiOutput::new("midir mpe output")?;
-		println!("Available output ports:");
-		for i in 0..midi_out.port_count() {
-			println!("{}: {}", i, midi_out.port_name(i)?);
-		}
-		print!("Please select output port: ");
-		let mut input = String::new();
-		std::io::stdin().read_line(&mut input)?;
-		let out_port: usize = input.trim().parse()?;
-		println!("\nOpening connections");
-		let conn = midi_out.connect(out_port, "midir mpe")?;
+		let conn = midi_out.connect(device_id, "midir mpe")?;
 
 		Ok(Engine {
 			conn,
@@ -130,8 +130,8 @@ impl Engine {
 			// PITCH BEND RANGE SETUP
 			self.conn.send(&[0xB0 + i, 0x64, 0x00])?; // start control
 			self.conn.send(&[0xB0 + i, 0x65, 0x00])?;
-			self.conn.send(&[0xB0 + i, 0x06, 0x01])?; // semitones
-			self.conn.send(&[0xB0 + i, 0x26, 0x00])?; // cents
+			self.conn.send(&[0xB0 + i, 0x06, PITCH_BEND_SEMITONES])?;
+			self.conn.send(&[0xB0 + i, 0x26, PITCH_BEND_CENTS])?;
 			self.conn.send(&[0xB0 + i, 0x64, 0x7F])?; // stop control
 			self.conn.send(&[0xB0 + i, 0x65, 0x7F])?;
 			self.conn.send(&[0xE0 + i, 0b0000000, 0b1000000])?;
@@ -176,9 +176,15 @@ impl Engine {
 			}
 			icp::Event::NoteChangeFreq(id, freq) => {
 				for ch in 0..self.channels.len() {
-					if self.channels[ch].current == Some(id) {
-						self.note_off(ch).unwrap();
-						self.note_on(ch, icp::Note { id, freq }).unwrap();
+					let channel = self.channels[ch];
+					if channel.current == Some(id) {
+						let pitch_bend = ((freq / 440.0).log2() * 12.0 + 69.0) - channel.note_number as f64;
+						if pitch_bend.abs() < PITCH_BEND_RANGE {
+							self.conn.send(&pitch_bend_msg(ch, pitch_bend)).unwrap();
+						} else {
+							self.note_off(ch).unwrap();
+							self.note_on(ch, icp::Note { id, freq }).unwrap();
+						}
 					}
 				}
 			}
@@ -203,6 +209,6 @@ impl Engine {
 }
 
 fn pitch_bend_msg(ch: usize, t: f64) -> [u8; 3] {
-	let n = (t * 8191.0 + 8192.0) as usize;
+	let n = (t * 8191.0 / PITCH_BEND_RANGE + 8192.0) as usize;
 	[0xE1 + ch as u8, (n & 0b1111111) as u8, (n >> 7 & 0b1111111) as u8]
 }

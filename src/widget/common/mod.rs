@@ -4,8 +4,11 @@ pub use range_slider::*;
 mod setter;
 pub use setter::*;
 
-mod selector;
-pub use selector::*;
+mod value_selector;
+pub use value_selector::*;
+
+pub mod index_selector;
+pub use index_selector::IndexSelector;
 
 mod stack;
 pub use stack::*;

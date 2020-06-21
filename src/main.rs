@@ -2,13 +2,15 @@
 
 use druid::{AppLauncher, LocalizedString, Size, WindowDesc};
 
+#[macro_use]
+mod util;
+
 mod commands;
 mod data;
 mod server;
 mod state;
 mod theme;
 mod ui;
-mod util;
 mod widget;
 use state::State;
 mod delegate;
@@ -32,7 +34,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 	AppLauncher::with_window(main_window)
 		.delegate(delegate)
 		.configure_env(theme::apply)
-		.use_simple_logger()
 		.launch(state)
 		.expect("launch failed");
 	Ok(())

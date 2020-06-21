@@ -26,7 +26,7 @@ pub fn build() -> impl Widget<State> {
 		let xrange = RangeSlider::horizontal((true, false)).lens(Frame2::x).lens(State::frame);
 		let yrange = RangeSlider::vertical((false, false)).lens(Frame2::y).lens(State::frame);
 		let timeline = Stack::new().with_child(Cursor::new()).with_child(MarkerEditor::new());
-		let editor = ScrollView::new(SheetEditor::new(), State::frame);
+		let editor = SheetEditor::new();
 
 		Flex::column()
 			.with_flex_child(
@@ -49,7 +49,10 @@ pub fn build() -> impl Widget<State> {
 			)
 	};
 
-	let view = Flex::row().with_child(preview.fix_width(96.0)).with_flex_child(board, 1.0);
+	let view = ScrollView::new(
+		Flex::row().with_child(preview.fix_width(96.0)).with_flex_child(board, 1.0),
+		State::frame,
+	);
 
 	// editor
 	Flex::column().with_flex_child(view, 1.0)

@@ -30,14 +30,9 @@ pub fn build() -> impl Widget<State> {
 					.padding(3.0),
 			)
 			.with_child(
-				DropDown::new("Backend")
-					.with_item(dropdown::Item::new("Integrated synth", |ctx, _, _| {
-						ctx.submit_command(commands::BACKEND_SET_AUDIO, None);
-					}))
-					.with_item(dropdown::Item::new("MPE (experimental)", |ctx, _, _| {
-						ctx.submit_command(commands::BACKEND_SET_MPE, None);
-					}))
-					.fix_width(150.0)
+				Button::new("Settings")
+					.on_click(|ctx, _, _| ctx.submit_command(commands::OPEN_SETTINGS, None))
+					.fix_width(100.0)
 					.padding(3.0),
 			)
 			.with_child(

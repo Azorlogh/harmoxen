@@ -41,12 +41,10 @@ impl Widget<State> for Preview {
 			Event::MouseMove(mouse) if mouse.buttons.has_left() => {
 				if let Some(prev_freq) = &mut self.playing {
 					let freq = 2f64.powf((mouse.pos.y / size.height) * range.size() + range.0);
-					if range.contains((mouse.pos.y / size.height) * range.size() + range.0) {
-						*prev_freq = freq;
-						ctx.request_paint();
-						let cmd = Command::new(commands::ICP, icp::Event::NoteChangeFreq(1000, freq));
-						ctx.submit_command(cmd, ctx.window_id());
-					}
+					*prev_freq = freq;
+					ctx.request_paint();
+					let cmd = Command::new(commands::ICP, icp::Event::NoteChangeFreq(1000, freq));
+					ctx.submit_command(cmd, ctx.window_id());
 				}
 			}
 			Event::MouseUp(MouseEvent {

@@ -1,10 +1,8 @@
-use druid::{kurbo::Line, Color, Env, PaintCtx, Rect, RenderContext};
-
+use super::SheetEditor;
 use crate::data::layout::*;
 use crate::theme;
-
-use super::SheetEditor;
 use crate::util::coord::Coord;
+use druid::{kurbo::Line, Color, Env, PaintCtx, Rect, RenderContext};
 
 impl SheetEditor {
 	pub fn draw_layout(&self, ctx: &mut PaintCtx, coord: &Coord, layout: &Layout, env: &Env) {
@@ -59,10 +57,10 @@ impl SheetEditor {
 					ctx.clip(bg);
 					ctx.fill(bg, bg_col);
 
-					if view_width < 128.0 {
+					if view_width < 64.0 {
 						for beat in 0..*nbeats {
 							let s_beat_start = s_bar_start + coord.to_screen_w(beat as f64);
-							if view_width < 48.0 {
+							if view_width < 24.0 {
 								for pos in positions {
 									let s_div = s_beat_start + coord.to_screen_w(*pos);
 									ctx.stroke(
@@ -94,6 +92,7 @@ impl SheetEditor {
 					let base = pattern.base * period.powf(i as f64);
 					let s_base = coord.to_screen_y(base.log2());
 
+					// draw base line
 					if s_base > 0.0 && s_base < size.height {
 						ctx.stroke(
 							Line::new((s_start.max(0.0), s_base), (s_end.min(size.width), s_base)),
@@ -102,14 +101,17 @@ impl SheetEditor {
 						);
 					}
 
-					for val in pattern.values.iter().skip(1) {
-						let s_pos = coord.to_screen_y((base * val).log2());
-						if s_pos > 0.0 && s_pos < size.height {
-							ctx.stroke(
-								Line::new((s_start.max(0.0), s_pos), (s_end.min(size.width), s_pos)),
-								&env.get(theme::BACKGROUND_1),
-								2.0 / view_height,
-							);
+					// draw scale lines
+					if view_height < 3.0 {
+						for val in pattern.values.iter().skip(1) {
+							let s_pos = coord.to_screen_y((base * val).log2());
+							if s_pos > 0.0 && s_pos < size.height {
+								ctx.stroke(
+									Line::new((s_start.max(0.0), s_pos), (s_end.min(size.width), s_pos)),
+									&env.get(theme::BACKGROUND_1),
+									2.0 / view_height,
+								);
+							}
 						}
 					}
 				}

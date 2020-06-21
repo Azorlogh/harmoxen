@@ -1,13 +1,3 @@
-use druid::kurbo::Line;
-use druid::{
-	BoxConstraints, Color, Command, ContextMenu, Data, Env, Event, EventCtx, KeyCode, KeyEvent, LayoutCtx, LifeCycle,
-	LifeCycleCtx, LocalizedString, MenuDesc, MenuItem, PaintCtx, Point, Rect, RenderContext, Selector, Size, UpdateCtx, Widget,
-	WidgetExt, WidgetPod,
-};
-
-use generational_arena::Index;
-use std::time::Instant;
-
 use crate::commands;
 use crate::data::{
 	icp,
@@ -17,6 +7,14 @@ use crate::state::editors::sheet_editor::State;
 use crate::theme;
 use crate::util::coord::Coord;
 use crate::widget::common::{ParseLazy, TextBox};
+use druid::kurbo::Line;
+use druid::{
+	BoxConstraints, Color, Command, ContextMenu, Data, Env, Event, EventCtx, KeyCode, KeyEvent, LayoutCtx, LifeCycle,
+	LifeCycleCtx, LocalizedString, MenuDesc, MenuItem, PaintCtx, Point, Rect, RenderContext, Selector, Size, UpdateCtx, Widget,
+	WidgetExt, WidgetPod,
+};
+use generational_arena::Index;
+use std::time::Instant;
 
 mod layout;
 mod notes;
@@ -213,10 +211,23 @@ impl Widget<State> for SheetEditor {
 								sheet.move_note(id, start, freq);
 								sheet_changed = true;
 								self.action_effective = true;
-								let note = sheet.get_note(id).unwrap();
-								let cmd =
-									Command::new(commands::ICP, icp::Event::NoteChangeFreq(2000, sheet.get_freq(note.pitch)));
-								ctx.submit_command(cmd, ctx.window_id());
+								if sheet.get_freq(note.pitch) != freq {
+									let note = sheet.get_note(id).unwrap();
+									ctx.submit_command(
+										Command::new(commands::ICP, icp::Event::NoteStop(2000)),
+										ctx.window_id(),
+									);
+									ctx.submit_command(
+										Command::new(
+											commands::ICP,
+											icp::Event::NotePlay(icp::Note {
+												id: 2000,
+												freq: sheet.get_freq(note.pitch),
+											}),
+										),
+										ctx.window_id(),
+									);
+								}
 								if let Pitch::Relative(_, _) = note.pitch {
 									ctx.request_layout();
 								}

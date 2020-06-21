@@ -1,12 +1,9 @@
-use druid::{kurbo::Line, Color, Env, PaintCtx, Point, RenderContext};
-
+use super::SheetEditor;
+use super::{EditState, HoverState};
 use crate::data::sheet::*;
 use crate::theme;
 use crate::util::coord::Coord;
-
-use super::SheetEditor;
-
-use super::{EditState, HoverState};
+use druid::{kurbo::Line, Color, Env, PaintCtx, Point, RenderContext};
 
 impl SheetEditor {
 	pub fn draw_notes(&self, ctx: &mut PaintCtx, coord: &Coord, sheet: &Sheet, env: &Env) {
