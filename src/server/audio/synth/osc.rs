@@ -1,3 +1,5 @@
+const TAU: f64 = std::f64::consts::PI * 2.0;
+
 #[derive(Clone)]
 #[allow(dead_code)]
 pub enum Mode {

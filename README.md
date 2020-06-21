@@ -15,7 +15,7 @@ The goals of this project haven't been fully fleshed out yet, but for now, my on
 
 ## Building
 
-On Windows, the project can be built simply by running `cargo run` with Rust nightly installed.
+On Windows, the project can be built simply by running `cargo run` with Rust installed.
 
 For other platforms, if this doesn't work, see the requirements of the [druid](https://github.com/xi-editor/druid) library.
 

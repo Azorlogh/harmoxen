@@ -1,5 +1,3 @@
-#![feature(tau_constant)]
-
 use druid::{AppLauncher, LocalizedString, Size, WindowDesc};
 
 #[macro_use]
