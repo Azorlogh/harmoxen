@@ -32,18 +32,18 @@ jobs:
     - uses: Shopify/upload-to-release@master
       if: matrix.os == 'windows-latest'
       with:
-        name: harmoxen-${{ github.ref }}_win64.exe
+        name: harmoxen-${{ github.event.release.tag_name }}_win64.exe
         path: target/release/harmoxen.exe
         repo-token: ${{ secrets.GITHUB_TOKEN }}
     - uses: Shopify/upload-to-release@master
       if: matrix.os == 'ubuntu-latest'
       with:
-        name: harmoxen_${{ github.ref }}_linux
+        name: harmoxen-${{ github.event.release.tag_name }}_linux
         path: target/release/harmoxen
         repo-token: ${{ secrets.GITHUB_TOKEN }}
     - uses: Shopify/upload-to-release@master
       if: matrix.os == 'macos-latest'
       with:
-        name: harmoxen_${{ github.ref }}_macos
+        name: harmoxen-${{ github.event.release.tag_name }}_macos
         path: target/release/harmoxen
         repo-token: ${{ secrets.GITHUB_TOKEN }}
