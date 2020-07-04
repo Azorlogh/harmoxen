@@ -39,8 +39,8 @@ impl Sheet {
 	pub fn get_note_at(&self, pos: Point, note_height: f64) -> Option<Index> {
 		let mut closest = (None, f64::INFINITY);
 		for (index, note) in &self.notes {
-			let dist = (pos.y - self.get_y(note.pitch)).abs();
-			if note.start < pos.x && pos.x < note.start + note.length && dist < note_height / 2.0 && dist <= closest.1 {
+			let dist = (pos.y - note.y(self)).abs();
+			if note.start <= pos.x && pos.x <= note.start + note.length && dist <= note_height / 2.0 && dist <= closest.1 {
 				closest = (Some(index), dist);
 			}
 		}
@@ -51,9 +51,26 @@ impl Sheet {
 	pub fn get_notes_at(&self, pos: Point, note_height: f64) -> Vec<Index> {
 		let mut out = vec![];
 		for (index, note) in &self.notes {
-			if note.start < pos.x
-				&& note.start + note.length > pos.x
-				&& (pos.y - self.get_y(note.pitch)).abs() < note_height / 2.0
+			if note.start <= pos.x && note.start + note.length >= pos.x && (pos.y - note.y(self)).abs() <= note_height / 2.0 {
+				out.push(index);
+			}
+		}
+		out
+	}
+
+	// get notes intersecting a rect in board coordinates
+	pub fn get_notes_rect(&self, rect: Rect, note_height: f64) -> Vec<Index> {
+		let mut out = vec![];
+		for (index, note) in &self.notes {
+			let note_y = note.y(self);
+			if intersect::rect_rect(
+				Rect::from_points(
+					Point::new(note.start, note_y - note_height / 2.0),
+					Point::new(note.start + note.length, note_y + note_height / 2.0),
+				),
+				rect,
+			)
+			.is_some()
 			{
 				out.push(index);
 			}
@@ -87,11 +104,11 @@ impl Sheet {
 		index
 	}
 
-	pub fn move_note(&mut self, id: Index, start: f64, freq: f64) {
+	pub fn move_note(&mut self, id: Index, start: f64, y: f64) {
 		if let Some(note) = self.notes.get_mut(id) {
 			note.start = start;
 			if let Pitch::Absolute(_) = note.pitch {
-				note.pitch = Pitch::Absolute(freq);
+				note.pitch = Pitch::Absolute(2f64.powf(y));
 			}
 		}
 	}
@@ -121,12 +138,12 @@ impl Sheet {
 	pub fn remove_notes_along(&mut self, line: Line, note_height: f64) {
 		let mut notes = self.notes.clone();
 		notes.retain(|_, note| {
-			let b_freq = self.get_y(note.pitch);
+			let note_y = note.y(self);
 			let rect = Rect::from_points(
-				Point::new(note.start, b_freq - note_height / 2.0),
-				Point::new(note.start + note.length, b_freq + note_height / 2.0),
+				Point::new(note.start, note_y - note_height / 2.0),
+				Point::new(note.start + note.length, note_y + note_height / 2.0),
 			);
-			intersect::line_rect(line, rect).is_none()
+			!intersect::line_rect(line, rect)
 		});
 		let mut unlocked = vec![];
 		for (index, note) in &notes {

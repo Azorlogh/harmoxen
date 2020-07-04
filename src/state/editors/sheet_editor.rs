@@ -1,10 +1,11 @@
+use crate::data::{
+	layout::Layout,
+	sheet::{Interval, Sheet},
+};
 use crate::util::{Frame, Frame2, Range};
 use druid::{Data, Lens};
 use generational_arena::Index;
-use std::{cell::RefCell, rc::Rc};
-
-use crate::data::layout::Layout;
-use crate::data::sheet::{Interval, Sheet};
+use std::{cell::RefCell, collections::HashSet, rc::Rc};
 
 #[derive(Clone, Data, Lens)]
 pub struct State {
@@ -16,7 +17,7 @@ pub struct State {
 	pub tempo: f64,
 	pub interval_input: Interval,
 	pub curr_marker: usize,
-	pub selection: Rc<RefCell<Vec<Index>>>,
+	pub selection: Rc<RefCell<HashSet<Index>>>,
 }
 impl Default for State {
 	fn default() -> State {
@@ -38,7 +39,7 @@ impl Default for State {
 			tempo: 172.0,
 			interval_input: Interval::Ratio(3, 2),
 			curr_marker: 0,
-			selection: Rc::new(RefCell::new(vec![])),
+			selection: Rc::new(RefCell::new(HashSet::new())),
 		}
 	}
 }

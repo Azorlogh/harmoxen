@@ -1,3 +1,4 @@
+use crate::util::color;
 use druid::{Color, Env, Key};
 
 pub const COLOR_0: Key<Color> = Key::new("color_0");
@@ -21,6 +22,12 @@ pub const BACKGROUND_2: Key<Color> = Key::new("background_2");
 
 pub const NOTE_HEIGHT: Key<f64> = Key::new("note_height");
 pub const NOTE_SCALE_KNOB: Key<f64> = Key::new("note_scale_knob");
+
+// derived
+pub const SELECTION_ADD_BORDER: Key<Color> = Key::new("selection_add_border");
+pub const SELECTION_ADD_INSIDE: Key<Color> = Key::new("selection_add_inside");
+pub const SELECTION_REMOVE_BORDER: Key<Color> = Key::new("selection_remove_border");
+pub const SELECTION_REMOVE_INSIDE: Key<Color> = Key::new("selection_remove_inside");
 
 fn color(code: usize) -> Color {
 	Color::rgb8((code >> 16) as u8, (code >> 8) as u8, code as u8)
@@ -50,4 +57,12 @@ pub fn apply(env: &mut Env, _data: &crate::state::State) {
 
 	env.set(NOTE_HEIGHT, 24.0);
 	env.set(NOTE_SCALE_KNOB, 32.0);
+
+	env.set(SELECTION_ADD_BORDER, env.get(SELECTED_COLOR));
+	env.set(SELECTION_ADD_INSIDE, color::mul_alpha(&env.get(SELECTED_COLOR), 0.3));
+	env.set(SELECTION_REMOVE_BORDER, color::invert_hue(&env.get(SELECTED_COLOR)));
+	env.set(
+		SELECTION_REMOVE_INSIDE,
+		color::mul_alpha(&color::invert_hue(&env.get(SELECTED_COLOR)), 0.3),
+	);
 }

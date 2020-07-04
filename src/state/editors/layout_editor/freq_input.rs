@@ -8,14 +8,10 @@ use crate::data::layout::FreqPattern;
 pub fn make_freq_pattern(input: &FreqInput) -> Result<Option<FreqPattern>, LayoutParseError> {
 	match input.clone() {
 		FreqInput::None => Ok(None),
-		FreqInput::Equal { ndiv, interval, base } => {
-			// let min = (ndiv as f64 * (20.0 / base).log(interval)).ceil() as isize;
-			// let max = (ndiv as f64 * (20000.0 / base).log(interval)).ceil() as isize;
-			Ok(Some(FreqPattern::new(
-				base,
-				(0..ndiv + 1).map(|k| interval.powf(k as f64 / ndiv as f64)).collect(),
-			)))
-		}
+		FreqInput::Equal { ndiv, interval, base } => Ok(Some(FreqPattern::new(
+			base,
+			(0..ndiv + 1).map(|k| interval.powf(k as f64 / ndiv as f64)).collect(),
+		))),
 		FreqInput::Enumeration { base, enumeration } => {
 			if enumeration.0.len() == 0 {
 				return Err(LayoutParseError);
@@ -28,7 +24,7 @@ pub fn make_freq_pattern(input: &FreqInput) -> Result<Option<FreqPattern>, Layou
 			if from >= to {
 				return Err(LayoutParseError);
 			}
-			let values = (from..to).map(|x| x as f64 / from as f64).collect::<Vec<f64>>();
+			let values = (from..to + 1).map(|x| x as f64 / from as f64).collect::<Vec<f64>>();
 			Ok(Some(FreqPattern::new(base, values)))
 		}
 	}

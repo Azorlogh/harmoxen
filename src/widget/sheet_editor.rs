@@ -10,11 +10,14 @@ use crate::widget::common::{ParseLazy, TextBox};
 use druid::kurbo::Line;
 use druid::{
 	BoxConstraints, Color, Command, ContextMenu, Data, Env, Event, EventCtx, KeyCode, KeyEvent, LayoutCtx, LifeCycle,
-	LifeCycleCtx, LocalizedString, MenuDesc, MenuItem, PaintCtx, Point, Rect, RenderContext, Selector, Size, UpdateCtx, Widget,
-	WidgetExt, WidgetPod,
+	LifeCycleCtx, LocalizedString, MenuDesc, MenuItem, PaintCtx, Point, Rect, RenderContext, Selector, Size, UpdateCtx, Vec2,
+	Widget, WidgetExt, WidgetPod,
 };
 use generational_arena::Index;
-use std::time::Instant;
+use std::{
+	collections::{HashMap, HashSet},
+	time::Instant,
+};
 
 mod layout;
 mod notes;
@@ -24,37 +27,37 @@ pub const ADD_RELATIVE_NOTE: Selector<(Index, f64)> = Selector::new("sheet-edito
 pub const DUPLICATE_NOTE: Selector<(Index, f64)> = Selector::new("sheet-editor.duplicate-note");
 pub const DELETE_NOTE: Selector<Index> = Selector::new("sheet-editor.delete-note");
 
-#[derive(PartialEq)]
-pub enum HoverState {
+#[derive(Debug, PartialEq)]
+pub enum Hover {
 	Idle,
-	Move(Index, f64),
+	Move(Index),
 	Scale(Index),
 }
-
-impl HoverState {
-	pub fn note_id(&self) -> Option<Index> {
+impl Hover {
+	pub fn note_idx(&self) -> Option<Index> {
 		match self {
-			HoverState::Idle => None,
-			HoverState::Move(id, _) => Some(*id),
-			HoverState::Scale(id) => Some(*id),
+			Hover::Move(id) => Some(*id),
+			Hover::Scale(id) => Some(*id),
+			_ => None,
 		}
 	}
 }
 
-#[derive(PartialEq)]
-pub enum EditState {
+#[derive(Debug, PartialEq)]
+pub enum Action {
 	Idle,
-	Move(Index, f64),
-	Scale(Index),
-	//SelectionAdd(Point),
+	Move(Index, HashMap<Index, Vec2>, Rect), // root note, offsets to mouse, extent of selection around mouse
+	Scale(Index, HashMap<Index, f64>),       // root note, original lengths of notes
+	DeleteNotes(Point),
+	SelectionAdd(Point, Point),
+	SelectionRemove(Point, Point),
 }
 
 pub struct SheetEditor {
-	hover: HoverState,
-	action: EditState,
+	hover: Hover,
+	action: Action,
 	note_len: f64,
 	last_left_click: (Point, Instant), // until druid supports multi-clicks
-	prev_mouse_b_pos: Option<Point>,   // previous mouse position in board coordinates
 	interval_input: Option<(Index, WidgetPod<State, Box<dyn Widget<State>>>)>,
 	action_effective: bool, // true if the current action state has changed the sheet
 }
@@ -62,36 +65,35 @@ pub struct SheetEditor {
 impl SheetEditor {
 	pub fn new() -> SheetEditor {
 		SheetEditor {
-			hover: HoverState::Idle,
-			action: EditState::Idle,
+			hover: Hover::Idle,
+			action: Action::Idle,
 			note_len: 1.0,
 			last_left_click: ((f64::INFINITY, f64::INFINITY).into(), Instant::now()),
-			prev_mouse_b_pos: None,
 			interval_input: None,
 			action_effective: false,
 		}
 	}
 }
 
-fn get_hover(pos: Point, coord: Coord, sheet: &Sheet, env: &Env) -> HoverState {
-	let hovered_note_id = sheet.get_note_at(pos, coord.to_board_h(env.get(theme::NOTE_HEIGHT)));
-	let hover_state = match hovered_note_id {
-		None => HoverState::Idle,
-		Some(id) => {
-			let note = sheet.get_note(id).unwrap();
+fn get_hover(pos: Point, coord: Coord, sheet: &Sheet, env: &Env) -> Hover {
+	let hovered_note_idx = sheet.get_note_at(pos, coord.to_board_h(env.get(theme::NOTE_HEIGHT)));
+	match hovered_note_idx {
+		None => Hover::Idle,
+		Some(idx) => {
+			let note = sheet.get_note(idx).unwrap();
 			if pos.x > note.end() - coord.to_board_w(env.get(theme::NOTE_SCALE_KNOB)) && pos.x > note.start + note.length * 0.60
 			{
-				HoverState::Scale(id)
+				Hover::Scale(idx)
 			} else {
-				HoverState::Move(id, pos.x - note.start)
+				Hover::Move(idx)
 			}
 		}
-	};
-	hover_state
+	}
 }
 
 impl Widget<State> for SheetEditor {
 	fn event(&mut self, ctx: &mut EventCtx, event: &Event, data: &mut State, env: &Env) {
+		// send events to the interval input widget
 		if let Some(interval_input) = &mut self.interval_input {
 			if let Event::KeyDown(KeyEvent {
 				key_code: KeyCode::Return,
@@ -114,124 +116,222 @@ impl Widget<State> for SheetEditor {
 			}
 		}
 
+		// handle events
 		let mut sheet = data.sheet.borrow_mut();
+		let layout = data.layout.borrow();
 		let mut sheet_changed = false;
 		let mut history_save = false;
 		let size = ctx.size();
 		let coord = Coord::new(data.frame.clone(), size);
 		match event {
-			Event::MouseDown(mouse) if mouse.button.is_left() => {
+			Event::MouseDown(mouse) => {
 				ctx.request_focus();
-				let is_double_click = mouse.pos == self.last_left_click.0 && self.last_left_click.1.elapsed().as_millis() < 500;
-				self.last_left_click = (mouse.pos, Instant::now()); // remove this once druid has multi-clicks
 				let pos = coord.to_board_p(mouse.pos);
-				if is_double_click {
-					if let Some(id) = get_hover(pos, coord, &sheet, env).note_id() {
-						let menu = ContextMenu::new(make_note_context_menu::<crate::state::State>(id, pos.x), mouse.window_pos);
-						ctx.show_context_menu(menu);
+
+				// Selection actions
+				if mouse.mods.ctrl {
+					if mouse.button.is_left() {
+						self.action = Action::SelectionAdd(pos, pos);
+						ctx.set_active(true);
+					} else if mouse.button.is_right() {
+						self.action = Action::SelectionRemove(pos, pos);
+						ctx.set_active(true);
 					}
+
+				// General actions
 				} else {
-					match get_hover(pos, coord, &sheet, env) {
-						HoverState::Idle => {
-							let note = data.layout.borrow().quantize_note(Note::new(pos, self.note_len));
-							let id = sheet.add_note(note);
-							ctx.submit_command(
-								Command::new(
-									commands::ICP,
-									icp::Event::NotePlay(icp::Note {
-										id: 2000,
-										freq: sheet.get_freq(note.pitch),
-									}),
-								),
-								ctx.window_id(),
-							);
-							self.action = EditState::Move(id, 0.0);
-							history_save = true;
-							sheet_changed = true;
+					if let Some(idx) = self.hover.note_idx() {
+						if !data.selection.borrow().contains(&idx) {
+							data.selection.borrow_mut().clear();
 						}
-						HoverState::Move(idx, offset) => {
-							self.action = EditState::Move(idx, offset);
-							let note = sheet.get_note(idx).unwrap();
-							self.note_len = note.length;
-							let note_freq = sheet.get_freq(note.pitch);
-							ctx.submit_command(
-								Command::new(
-									commands::ICP,
-									icp::Event::NotePlay(icp::Note {
-										id: 2000,
-										freq: note_freq,
-									}),
-								),
-								ctx.window_id(),
-							);
-							if let Pitch::Relative(_, interval) = note.pitch {
-								let widget = WidgetPod::new(
-									ParseLazy::new(TextBox::new())
-										.lens(State::interval_input)
-										.background(Color::rgb8(255, 0, 0)),
-								)
-								.boxed();
-								data.interval_input = interval;
-								self.interval_input = Some((idx, widget));
-								ctx.children_changed();
-								ctx.request_layout();
-							}
-						}
-						HoverState::Scale(idx) => {
-							let note = sheet.get_note(idx).unwrap();
-							self.note_len = note.length;
-							self.action = EditState::Scale(idx);
-						}
+					} else {
+						data.selection.borrow_mut().clear();
+						ctx.request_paint();
 					}
 					ctx.set_active(true);
+					if mouse.button.is_left() {
+						let is_double_click =
+							mouse.pos == self.last_left_click.0 && self.last_left_click.1.elapsed().as_millis() < 500;
+						self.last_left_click = (mouse.pos, Instant::now()); // remove this once druid has multi-clicks
+						if is_double_click {
+							if let Some(id) = get_hover(pos, coord, &sheet, env).note_idx() {
+								let menu = ContextMenu::new(
+									make_note_context_menu::<crate::state::State>(id, pos.x),
+									mouse.window_pos,
+								);
+								ctx.show_context_menu(menu);
+							}
+						} else {
+							match self.hover {
+								Hover::Idle => {
+									let note = layout.quantize_note(Note::new(pos, self.note_len));
+									if sheet.get_note_at(Point::new(note.start, note.y(&sheet)), 0.01).is_none() {
+										let idx = sheet.add_note(note);
+										ctx.submit_command(
+											Command::new(
+												commands::ICP,
+												icp::Event::NotePlay(icp::Note {
+													id: 2000,
+													freq: sheet.get_freq(note.pitch),
+												}),
+											),
+											ctx.window_id(),
+										);
+										let mut notes = HashMap::new();
+										notes.insert(idx, Vec2::ZERO);
+										let note_y = sheet.get_y(note.pitch);
+										self.action =
+											Action::Move(idx, notes, Rect::new(note.start, note_y, note.end(), note_y));
+										history_save = true;
+										sheet_changed = true;
+									}
+								}
+								Hover::Move(idx) => {
+									let selection = data.selection.borrow();
+									if selection.len() > 0 {
+										let mut notes = HashMap::new();
+										let root = sheet.get_note(idx).unwrap();
+										let mut rect = root.rect(&sheet, 0.0);
+										for idx in data.selection.borrow().iter() {
+											let note = sheet.get_note(*idx).expect("selection contained a dead note");
+											let offset = Vec2::new(note.start, sheet.get_y(note.pitch)) - pos.to_vec2();
+											rect = rect.union(note.rect(&sheet, 0.0));
+											notes.insert(*idx, offset);
+										}
+										rect = rect + -pos.to_vec2();
+										self.action = Action::Move(idx, notes, rect);
+									} else {
+										let note = sheet.get_note(idx).unwrap();
+										let mut notes = HashMap::new();
+										notes.insert(idx, Vec2::new(note.start, sheet.get_y(note.pitch)) - pos.to_vec2());
+										self.action = Action::Move(idx, notes, note.rect(&sheet, 0.0));
+										let note = sheet.get_note(idx).unwrap();
+										self.note_len = note.length;
+										let note_freq = sheet.get_freq(note.pitch);
+										ctx.submit_command(
+											Command::new(
+												commands::ICP,
+												icp::Event::NotePlay(icp::Note {
+													id: 2000,
+													freq: note_freq,
+												}),
+											),
+											ctx.window_id(),
+										);
+										if let Pitch::Relative(_, interval) = note.pitch {
+											let widget = WidgetPod::new(
+												ParseLazy::new(TextBox::new())
+													.lens(State::interval_input)
+													.background(Color::rgb8(255, 0, 0)),
+											)
+											.boxed();
+											data.interval_input = interval;
+											self.interval_input = Some((idx, widget));
+											ctx.children_changed();
+											ctx.request_layout();
+										}
+									}
+								}
+								Hover::Scale(idx) => {
+									let selection = data.selection.borrow();
+									if selection.len() > 0 {
+										let mut notes = HashMap::new();
+										for &idx in selection.iter() {
+											notes.insert(
+												idx,
+												sheet.get_note(idx).expect("selection contained a dead note").length,
+											);
+										}
+										self.action = Action::Scale(idx, notes);
+									} else {
+										let note = sheet.get_note(idx).unwrap();
+										self.note_len = note.length;
+										self.action = Action::Scale(idx, [(idx, note.length)].iter().cloned().collect());
+									}
+								}
+							}
+						}
+					} else if mouse.button.is_right() {
+						self.interval_input = None;
+						if let Some(id) = sheet.get_note_at(pos, coord.to_board_h(env.get(theme::NOTE_HEIGHT))) {
+							sheet.remove_note(id);
+							self.action_effective = true;
+							sheet_changed = true;
+						} else {
+							self.action = Action::DeleteNotes(pos);
+						}
+					}
 				}
 			}
-			Event::MouseMove(mouse) if !mouse.buttons.has_right() => {
+			Event::MouseMove(mouse) => {
 				let pos = coord.to_board_p(mouse.pos);
-				if mouse.buttons.has_left() {
+				if ctx.is_active() {
 					ctx.set_handled();
-					match self.action {
-						EditState::Scale(id) => {
-							let time = data.layout.borrow().quantize_time(pos.x, false);
-							let note = sheet.get_note(id).unwrap();
+					match &mut self.action {
+						Action::Move(root_idx, offsets, bounds) => {
+							let root_offset = offsets[&root_idx];
+							let mut anchor = layout.quantize_position(pos + root_offset) - root_offset;
+							anchor.x = anchor.x.max(-bounds.min_x());
+							for (idx, offset) in offsets {
+								let note = sheet.get_note(*idx).unwrap();
+								let pos = anchor + *offset;
+								if note.start != pos.x || note.y(&sheet) != pos.y {
+									sheet.move_note(*idx, pos.x, pos.y);
+									sheet_changed = true;
+									self.action_effective = true;
+									if sheet.get_y(note.pitch) != pos.y {
+										let note = sheet.get_note(*idx).unwrap();
+										ctx.submit_command(
+											Command::new(commands::ICP, icp::Event::NoteStop(2000)),
+											ctx.window_id(),
+										);
+										ctx.submit_command(
+											Command::new(
+												commands::ICP,
+												icp::Event::NotePlay(icp::Note {
+													id: 2000,
+													freq: sheet.get_freq(note.pitch),
+												}),
+											),
+											ctx.window_id(),
+										);
+									}
+									if let Pitch::Relative(_, _) = note.pitch {
+										ctx.request_layout();
+									}
+								}
+							}
+						}
+						Action::Scale(idx, lengths) => {
+							let time = layout.quantize_time(pos.x, false);
+							let note = sheet.get_note(*idx).unwrap();
 							if time > note.start && time != note.end() {
-								sheet.resize_note_to(id, time);
+								let dist = time - (note.start + lengths[idx]);
+								for (idx, length) in lengths {
+									let note = sheet.get_note_mut(*idx).unwrap();
+									note.length = *length + dist;
+								}
 								self.action_effective = true;
 								sheet_changed = true;
 								self.note_len = time - note.start;
 							}
 						}
-						EditState::Move(id, anchor) => {
-							let (start, freq) = data
-								.layout
-								.borrow()
-								.quantize_position((pos.x - anchor).max(0.0), 2f64.powf(pos.y));
-							let note = sheet.get_note(id).unwrap();
-							if note.start != start || sheet.get_freq(note.pitch) != freq {
-								sheet.move_note(id, start, freq);
-								sheet_changed = true;
+						Action::DeleteNotes(ref mut prev_pos) => {
+							let notes_len_before = sheet.notes.len();
+							sheet.remove_notes_along(Line::new(*prev_pos, pos), coord.to_board_h(env.get(theme::NOTE_HEIGHT)));
+							if notes_len_before != sheet.notes.len() {
 								self.action_effective = true;
-								if sheet.get_freq(note.pitch) != freq {
-									let note = sheet.get_note(id).unwrap();
-									ctx.submit_command(
-										Command::new(commands::ICP, icp::Event::NoteStop(2000)),
-										ctx.window_id(),
-									);
-									ctx.submit_command(
-										Command::new(
-											commands::ICP,
-											icp::Event::NotePlay(icp::Note {
-												id: 2000,
-												freq: sheet.get_freq(note.pitch),
-											}),
-										),
-										ctx.window_id(),
-									);
-								}
-								if let Pitch::Relative(_, _) = note.pitch {
-									ctx.request_layout();
-								}
+								sheet_changed = true;
 							}
+							*prev_pos = pos;
+						}
+						Action::SelectionAdd(_, ref mut to) => {
+							*to = pos;
+							ctx.request_paint();
+						}
+						Action::SelectionRemove(_, ref mut to) => {
+							*to = pos;
+							ctx.request_paint();
 						}
 						_ => {}
 					}
@@ -242,38 +342,34 @@ impl Widget<State> for SheetEditor {
 				}
 				self.hover = hover;
 			}
-			Event::MouseDown(mouse) if mouse.button.is_right() => {
-				let point = coord.to_board_p(mouse.pos);
-				self.interval_input = None;
-				if let Some(id) = sheet.get_note_at(point, coord.to_board_h(env.get(theme::NOTE_HEIGHT))) {
-					sheet.remove_note(id);
-					self.action_effective = true;
-					sheet_changed = true;
-				} else {
-					self.prev_mouse_b_pos = Some(point);
-				}
-				ctx.request_focus();
-			}
-			Event::MouseMove(mouse) if mouse.buttons.has_right() => {
-				let point = coord.to_board_p(mouse.pos);
-				if let Some(prev_point) = self.prev_mouse_b_pos {
-					let notes_len_before = sheet.notes.len();
-					sheet.remove_notes_along(Line::new(prev_point, point), coord.to_board_h(env.get(theme::NOTE_HEIGHT)));
-					if notes_len_before != sheet.notes.len() {
-						self.action_effective = true;
-						sheet_changed = true;
+			Event::MouseUp(_) => {
+				match self.action {
+					Action::SelectionAdd(p0, p1) => {
+						let notes =
+							sheet.get_notes_rect(Rect::from_points(p0, p1), coord.to_board_h(env.get(theme::NOTE_HEIGHT)));
+						if notes.len() != 0 {
+							let mut selection = data.selection.borrow_mut();
+							selection.extend(notes);
+							self.action_effective = true;
+						}
 					}
-					self.prev_mouse_b_pos = Some(point);
+					Action::SelectionRemove(p0, p1) => {
+						let notes =
+							sheet.get_notes_rect(Rect::from_points(p0, p1), coord.to_board_h(env.get(theme::NOTE_HEIGHT)));
+						if notes.len() != 0 {
+							let mut selection = data.selection.borrow_mut();
+							*selection = &*selection - &notes.into_iter().collect::<HashSet<_>>();
+							self.action_effective = true;
+						}
+					}
+					_ => {}
 				}
-			}
-			Event::MouseUp(mouse) if mouse.button.is_left() => {
 				if self.action_effective {
 					history_save = true;
 					self.action_effective = false;
 				}
-				self.action = EditState::Idle;
+				self.action = Action::Idle;
 				ctx.set_active(false);
-				self.prev_mouse_b_pos = None;
 				ctx.request_paint();
 				let cmd = Command::new(commands::ICP, icp::Event::NoteStop(2000));
 				ctx.submit_command(cmd, ctx.window_id());
@@ -321,7 +417,7 @@ impl Widget<State> for SheetEditor {
 			}
 			Event::Command(ref cmd) if cmd.is(ADD_RELATIVE_NOTE) => {
 				let (root, time) = *cmd.get_unchecked(ADD_RELATIVE_NOTE);
-				let note = data.layout.borrow().quantize_note(Note {
+				let note = layout.quantize_note(Note {
 					start: time,
 					length: self.note_len,
 					pitch: Pitch::Relative(root, Interval::Ratio(3, 2)),
@@ -332,7 +428,7 @@ impl Widget<State> for SheetEditor {
 			Event::Command(ref cmd) if cmd.is(DUPLICATE_NOTE) => {
 				let (original, time) = *cmd.get_unchecked(DUPLICATE_NOTE);
 				if let Some(original) = sheet.get_note(original) {
-					let note = data.layout.borrow().quantize_note(Note {
+					let note = layout.quantize_note(Note {
 						start: time,
 						length: original.length,
 						pitch: original.pitch,
@@ -417,7 +513,32 @@ impl Widget<State> for SheetEditor {
 
 		// NOTES
 		let sheet = data.sheet.borrow();
-		self.draw_notes(ctx, &coord, &sheet, env);
+		let selection = data.selection.borrow();
+		self.draw_notes(ctx, &coord, &sheet, &selection, env);
+
+		// SELECTION EDITING
+		if let Action::SelectionAdd(p0, p1) = self.action {
+			ctx.fill(
+				Rect::from_points(coord.to_screen_p(p0), coord.to_screen_p(p1)),
+				&env.get(theme::SELECTION_ADD_INSIDE),
+			);
+			ctx.stroke(
+				Rect::from_points(coord.to_screen_p(p0), coord.to_screen_p(p1)),
+				&env.get(theme::SELECTION_ADD_BORDER),
+				1.0,
+			);
+		}
+		if let Action::SelectionRemove(p0, p1) = self.action {
+			ctx.fill(
+				Rect::from_points(coord.to_screen_p(p0), coord.to_screen_p(p1)),
+				&env.get(theme::SELECTION_REMOVE_INSIDE),
+			);
+			ctx.stroke(
+				Rect::from_points(coord.to_screen_p(p0), coord.to_screen_p(p1)),
+				&env.get(theme::SELECTION_REMOVE_BORDER),
+				1.0,
+			);
+		}
 
 		// CURSOR
 		let cursor = coord.to_screen_x(data.cursor);

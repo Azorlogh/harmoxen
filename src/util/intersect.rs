@@ -23,15 +23,24 @@ pub fn line_line(l0: Line, l1: Line) -> Option<Point> {
 	Some(l0.p0 + t * b)
 }
 
-pub fn line_rect(l: Line, r: Rect) -> Option<Point> {
+pub fn line_rect(l: Line, r: Rect) -> bool {
 	let c00 = Point::new(r.x0, r.y0);
 	let c01 = Point::new(r.x0, r.y1);
 	let c10 = Point::new(r.x1, r.y0);
 	let c11 = Point::new(r.x1, r.y1);
-	let mut out = None;
-	out = out.or(line_line(l, Line::new(c00, c01)));
-	out = out.or(line_line(l, Line::new(c01, c11)));
-	out = out.or(line_line(l, Line::new(c11, c10)));
-	out = out.or(line_line(l, Line::new(c10, c00)));
+	let mut out = false;
+	out = out || line_line(l, Line::new(c00, c01)).is_some();
+	out = out || line_line(l, Line::new(c01, c11)).is_some();
+	out = out || line_line(l, Line::new(c11, c10)).is_some();
+	out = out || line_line(l, Line::new(c10, c00)).is_some();
 	out
+}
+
+pub fn rect_rect(r0: Rect, r1: Rect) -> Option<Rect> {
+	let out = r0.intersect(r1);
+	if out.area() == 0.0 {
+		None
+	} else {
+		Some(out)
+	}
 }

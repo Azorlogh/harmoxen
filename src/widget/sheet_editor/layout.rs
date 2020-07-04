@@ -102,7 +102,7 @@ impl SheetEditor {
 					}
 
 					// draw scale lines
-					if view_height < 3.0 {
+					if view_height < 4.0 {
 						for val in pattern.values.iter().skip(1) {
 							let s_pos = coord.to_screen_y((base * val).log2());
 							if s_pos > 0.0 && s_pos < size.height {

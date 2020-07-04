@@ -1,8 +1,9 @@
+use super::sheet::{Note, Pitch};
+use druid::Point;
+use serde::{Deserialize, Serialize};
+
 mod pattern;
 pub use pattern::*;
-
-use super::sheet::{Note, Pitch};
-use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Layout {
@@ -104,10 +105,10 @@ impl Layout {
 		freq
 	}
 
-	pub fn quantize_position(&self, mut time: f64, mut freq: f64) -> (f64, f64) {
-		time = self.quantize_time(time, false);
-		freq = self.quantize_freq(time, freq);
-		(time, freq)
+	pub fn quantize_position(&self, pos: Point) -> Point {
+		let x = self.quantize_time(pos.x, false);
+		let y = self.quantize_freq(pos.x, 2f64.powf(pos.y));
+		Point::new(x, y.log2())
 	}
 
 	pub fn quantize_note(&self, mut note: Note) -> Note {

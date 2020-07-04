@@ -52,6 +52,10 @@ impl Coord {
 		height - ((y - range.0) / range.size()) * height
 	}
 
+	pub fn to_screen_p(&self, p: Point) -> Point {
+		Point::new(self.to_screen_x(p.x), self.to_screen_y(p.y))
+	}
+
 	pub fn to_screen_w(&self, x: f64) -> f64 {
 		let range = self.frame.x.view;
 		(x / range.size()) * self.size.width
