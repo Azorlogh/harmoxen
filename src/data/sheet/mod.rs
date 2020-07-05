@@ -1,18 +1,20 @@
+use crate::data::icp;
+use crate::util::{intersect, Range};
+use druid::{kurbo::Line, Point, Rect};
+use generational_arena::{Arena, Index};
+use serde::{Deserialize, Serialize};
+use std::collections::HashSet;
+
 mod interval;
 pub use interval::*;
 
 mod note;
 pub use note::*;
 
-use crate::data::icp;
-use crate::util::{intersect, Range};
-use druid::{kurbo::Line, Point, Rect};
-use generational_arena::{Arena, Index};
-use serde::{Deserialize, Serialize};
-
 #[derive(Debug, Default, Clone, Deserialize, Serialize)]
 pub struct Sheet {
 	pub notes: Arena<Note>,
+	pub indices: Vec<Index>,
 }
 
 #[allow(dead_code)]
@@ -28,6 +30,10 @@ impl Sheet {
 		self.get_freq(pitch).log2()
 	}
 
+	pub fn get_notes(&self) -> Vec<(Index, Note)> {
+		self.indices.iter().map(|&idx| (idx, self.notes[idx])).collect()
+	}
+
 	pub fn get_note(&self, id: Index) -> Option<Note> {
 		self.notes.get(id).map(|note| *note)
 	}
@@ -38,7 +44,8 @@ impl Sheet {
 
 	pub fn get_note_at(&self, pos: Point, note_height: f64) -> Option<Index> {
 		let mut closest = (None, f64::INFINITY);
-		for (index, note) in &self.notes {
+		for &index in &self.indices {
+			let note = self.notes[index];
 			let dist = (pos.y - note.y(self)).abs();
 			if note.start <= pos.x && pos.x <= note.start + note.length && dist <= note_height / 2.0 && dist <= closest.1 {
 				closest = (Some(index), dist);
@@ -101,6 +108,7 @@ impl Sheet {
 
 	pub fn add_note(&mut self, note: Note) -> Index {
 		let index = self.notes.insert(note);
+		self.indices.push(index);
 		index
 	}
 
@@ -119,45 +127,42 @@ impl Sheet {
 		}
 	}
 
-	pub fn remove_note(&mut self, id: Index) {
-		let mut unlocked = vec![];
-		for (index, note) in &self.notes {
-			if let Pitch::Relative(root, _) = note.pitch {
-				if root == id {
-					unlocked.push((index, self.get_freq(note.pitch)));
-				}
-			}
-		}
-		for (index, freq) in unlocked {
-			let note = self.notes.get_mut(index).unwrap();
-			note.pitch = Pitch::Absolute(freq);
-		}
-		self.notes.remove(id);
+	pub fn remove_note(&mut self, index: Index) -> Option<Note> {
+		let removed = [index].iter().cloned().collect();
+		self.disconnect_children(&removed);
+		self.indices.retain(|&idx| idx != index);
+		self.notes.remove(index)
 	}
 
 	pub fn remove_notes_along(&mut self, line: Line, note_height: f64) {
-		let mut notes = self.notes.clone();
-		notes.retain(|_, note| {
+		let mut removed = HashSet::new();
+		for (idx, note) in &self.notes {
 			let note_y = note.y(self);
 			let rect = Rect::from_points(
 				Point::new(note.start, note_y - note_height / 2.0),
 				Point::new(note.start + note.length, note_y + note_height / 2.0),
 			);
-			!intersect::line_rect(line, rect)
-		});
-		let mut unlocked = vec![];
-		for (index, note) in &notes {
+			if intersect::line_rect(line, rect) {
+				removed.insert(idx);
+			}
+		}
+		self.disconnect_children(&removed);
+		self.indices.retain(|idx| !removed.contains(idx));
+		self.notes.retain(|idx, _| !removed.contains(&idx));
+	}
+
+	fn disconnect_children(&mut self, parents: &HashSet<Index>) {
+		let mut children = vec![];
+		for (idx, note) in &self.notes {
 			if let Pitch::Relative(root, _) = note.pitch {
-				if !notes.contains(root) {
-					unlocked.push((index, self.get_freq(note.pitch)));
+				if parents.contains(&root) {
+					children.push((idx, self.get_freq(note.pitch)))
 				}
 			}
 		}
-		for (index, freq) in unlocked {
-			let note = notes.get_mut(index).unwrap();
-			note.pitch = Pitch::Absolute(freq);
+		for (idx, freq) in children {
+			self.notes[idx].pitch = Pitch::Absolute(freq);
 		}
-		self.notes = notes;
 	}
 
 	pub fn get_events_at_time(&self, time: f64) -> Vec<icp::Event> {

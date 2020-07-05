@@ -1,10 +1,10 @@
-use super::SheetEditor;
+use super::Board;
 use crate::data::layout::*;
 use crate::theme;
 use crate::util::coord::Coord;
 use druid::{kurbo::Line, Color, Env, PaintCtx, Rect, RenderContext};
 
-impl SheetEditor {
+impl Board {
 	pub fn draw_layout(&self, ctx: &mut PaintCtx, coord: &Coord, layout: &Layout, env: &Env) {
 		let size = ctx.size();
 		let view_width = coord.frame.x.view.size();

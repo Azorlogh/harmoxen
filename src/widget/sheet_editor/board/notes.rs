@@ -1,17 +1,16 @@
-use super::{Action, Hover, SheetEditor};
+use super::{Action, Board, Hover};
 use crate::data::sheet::*;
 use crate::theme;
-use crate::util::{coord::Coord, intersect};
-use druid::{kurbo::Line, Color, Env, PaintCtx, Point, Rect, RenderContext};
+use crate::util::coord::Coord;
+use druid::{kurbo::Line, Color, Env, PaintCtx, Point, RenderContext};
 use generational_arena::Index;
 use std::collections::HashSet;
 
-impl SheetEditor {
+impl Board {
 	pub fn draw_notes(&self, ctx: &mut PaintCtx, coord: &Coord, sheet: &Sheet, selection: &HashSet<Index>, env: &Env) {
 		let note_height = env.get(theme::NOTE_HEIGHT);
-		let b_note_height = coord.to_board_h(note_height);
 		let note_scale_knob = env.get(theme::NOTE_SCALE_KNOB);
-		for (index, note) in sheet.notes.iter() {
+		for (index, note) in sheet.get_notes() {
 			let pos = sheet.get_y(note.pitch);
 			let spos = coord.to_screen_y(pos);
 
@@ -63,34 +62,6 @@ impl SheetEditor {
 				}
 				Action::Move(id, _, _) if id == index => {
 					color = env.get(theme::HIGHLIGHTED_COLOR);
-				}
-				Action::SelectionAdd(p0, p1) => {
-					let note_y = sheet.get_y(note.pitch);
-					if intersect::rect_rect(
-						Rect::from_points(
-							Point::new(note.start, note_y - b_note_height / 2.0),
-							Point::new(note.start + note.length, note_y + b_note_height / 2.0),
-						),
-						Rect::from_points(p0, p1),
-					)
-					.is_some()
-					{
-						color = env.get(theme::SELECTED_COLOR);
-					}
-				}
-				Action::SelectionRemove(p0, p1) => {
-					let note_y = sheet.get_y(note.pitch);
-					if intersect::rect_rect(
-						Rect::from_points(
-							Point::new(note.start, note_y - b_note_height / 2.0),
-							Point::new(note.start + note.length, note_y + b_note_height / 2.0),
-						),
-						Rect::from_points(p0, p1),
-					)
-					.is_some()
-					{
-						color = env.get(theme::FEATURE_COLOR);
-					}
 				}
 				_ => {}
 			}

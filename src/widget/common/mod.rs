@@ -19,6 +19,9 @@ pub use reversed::*;
 mod parse_lazy;
 pub use parse_lazy::ParseLazy;
 
+mod scroll_view;
+pub use scroll_view::ScrollView;
+
 // TEMPORARY
 
 mod text_box;

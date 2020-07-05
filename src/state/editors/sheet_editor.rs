@@ -1,6 +1,6 @@
 use crate::data::{
 	layout::Layout,
-	sheet::{Interval, Sheet},
+	sheet::{Interval, Note, Sheet},
 };
 use crate::util::{Frame, Frame2, Range};
 use druid::{Data, Lens};
@@ -18,6 +18,7 @@ pub struct State {
 	pub interval_input: Interval,
 	pub curr_marker: usize,
 	pub selection: Rc<RefCell<HashSet<Index>>>,
+	pub clipboard: Rc<RefCell<Vec<Note>>>,
 }
 impl Default for State {
 	fn default() -> State {
@@ -40,6 +41,7 @@ impl Default for State {
 			interval_input: Interval::Ratio(3, 2),
 			curr_marker: 0,
 			selection: Rc::new(RefCell::new(HashSet::new())),
+			clipboard: Rc::new(RefCell::new(vec![])),
 		}
 	}
 }

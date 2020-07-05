@@ -113,11 +113,14 @@ impl Delegate {
 			_ if cmd.is(sys_cmds::OPEN_FILE) => {
 				let file_info = cmd.get_unchecked(sys_cmds::OPEN_FILE);
 				if let Ok(project_string) = fs::read_to_string(file_info.path()) {
-					if let Ok(project) = ron::from_str::<state::Project>(&project_string) {
+					let project = ron::from_str::<state::Project>(&project_string);
+					if let Ok(project) = project {
 						project.open(&mut data.editors);
 						data.up_to_date = true;
 						data.save_path = Some(Rc::new(file_info.path().into()));
 						*project_changed = true;
+					} else if let Err(err) = project {
+						println!("The project failed to open: {:?}", err);
 					}
 				}
 				true

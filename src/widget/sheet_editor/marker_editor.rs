@@ -43,7 +43,7 @@ impl Widget<State> for MarkerEditor {
 					data.curr_marker = id;
 					ctx.set_handled();
 					ctx.set_active(true);
-					ctx.submit_command(super::sheet_editor::REDRAW, ctx.window_id());
+					ctx.submit_command(super::REDRAW, ctx.window_id());
 					ctx.request_paint();
 				}
 			}
@@ -67,7 +67,7 @@ impl Widget<State> for MarkerEditor {
 					let new_idx = layout.set_marker_time(idx, time);
 					data.curr_marker = new_idx;
 					ctx.request_paint();
-					ctx.submit_command(super::sheet_editor::REDRAW, ctx.window_id());
+					ctx.submit_command(super::REDRAW, ctx.window_id());
 				}
 			}
 			Event::MouseUp(_) => {
