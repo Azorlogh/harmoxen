@@ -12,6 +12,7 @@ pub const CUT: Selector = Selector::new("selection.cut");
 pub const COPY: Selector = Selector::new("selection.copy");
 pub const PASTE: Selector = Selector::new("selection.paste");
 pub const DELETE: Selector = Selector::new("selection.delete");
+pub const SELECT_ALL: Selector = Selector::new("selection.select-all");
 
 #[derive(Debug, PartialEq)]
 pub enum Action {
@@ -143,6 +144,12 @@ impl Widget<State> for Selection {
 				for idx in selection.drain() {
 					sheet.remove_note(idx);
 				}
+				ctx.submit_command(super::REDRAW, ctx.window_id());
+			}
+			Event::Command(cmd) if cmd.is(SELECT_ALL) => {
+				let sheet = data.sheet.borrow();
+				let mut selection = data.selection.borrow_mut();
+				*selection = sheet.indices.iter().map(|&x| x).collect();
 				ctx.submit_command(super::REDRAW, ctx.window_id());
 			}
 			_ => {}

@@ -28,36 +28,42 @@ impl Widget<State> for Shortcuts {
 				};
 				ctx.submit_command(command, ctx.window_id());
 			}
-			Event::KeyDown(key) if key.mods.ctrl && key.key_code == KeyCode::KeyZ => {
-				ctx.submit_command(commands::HISTORY_UNDO, ctx.window_id());
-			}
-			Event::KeyDown(key) if key.mods.ctrl && key.key_code == KeyCode::KeyY => {
-				ctx.submit_command(commands::HISTORY_REDO, ctx.window_id());
-			}
-			Event::KeyDown(key) if key.mods.ctrl && key.key_code == KeyCode::KeyN => {
-				ctx.submit_command(commands::PROJECT_NEW, ctx.window_id());
-			}
-			Event::KeyDown(key) if key.mods.ctrl && key.key_code == KeyCode::KeyO => {
-				ctx.submit_command(commands::PROJECT_OPEN, ctx.window_id());
-			}
-			Event::KeyDown(key) if key.mods.ctrl && key.mods.shift && key.key_code == KeyCode::KeyS => {
-				ctx.submit_command(commands::PROJECT_SAVE_AS, ctx.window_id());
-			}
-			Event::KeyDown(key) if key.mods.ctrl && key.key_code == KeyCode::KeyS => {
-				ctx.submit_command(commands::PROJECT_SAVE, ctx.window_id());
-			}
-			Event::KeyDown(key) if key.mods.ctrl && key.key_code == KeyCode::KeyX => {
-				ctx.submit_command(selection::CUT, ctx.window_id());
-			}
-			Event::KeyDown(key) if key.mods.ctrl && key.key_code == KeyCode::KeyC => {
-				ctx.submit_command(selection::COPY, ctx.window_id());
-			}
-			Event::KeyDown(key) if key.mods.ctrl && key.key_code == KeyCode::KeyV => {
-				ctx.submit_command(selection::PASTE, ctx.window_id());
-			}
-			Event::KeyDown(key) if key.key_code == KeyCode::Delete => {
-				ctx.submit_command(selection::DELETE, ctx.window_id());
-			}
+			Event::KeyDown(key) => match key.key_code {
+				KeyCode::KeyZ if key.mods.ctrl => {
+					ctx.submit_command(commands::HISTORY_UNDO, ctx.window_id());
+				}
+				KeyCode::KeyY if key.mods.ctrl => {
+					ctx.submit_command(commands::HISTORY_REDO, ctx.window_id());
+				}
+				KeyCode::KeyN if key.mods.ctrl => {
+					ctx.submit_command(commands::PROJECT_NEW, ctx.window_id());
+				}
+				KeyCode::KeyO if key.mods.ctrl => {
+					ctx.submit_command(commands::PROJECT_OPEN, ctx.window_id());
+				}
+				KeyCode::KeyS if key.mods.ctrl && key.mods.shift => {
+					ctx.submit_command(commands::PROJECT_SAVE_AS, ctx.window_id());
+				}
+				KeyCode::KeyS if key.mods.ctrl => {
+					ctx.submit_command(commands::PROJECT_SAVE, ctx.window_id());
+				}
+				KeyCode::KeyX if key.mods.ctrl => {
+					ctx.submit_command(selection::CUT, ctx.window_id());
+				}
+				KeyCode::KeyC if key.mods.ctrl => {
+					ctx.submit_command(selection::COPY, ctx.window_id());
+				}
+				KeyCode::KeyV if key.mods.ctrl => {
+					ctx.submit_command(selection::PASTE, ctx.window_id());
+				}
+				KeyCode::Delete => {
+					ctx.submit_command(selection::DELETE, ctx.window_id());
+				}
+				KeyCode::KeyA if key.mods.ctrl => {
+					ctx.submit_command(selection::SELECT_ALL, ctx.window_id());
+				}
+				_ => {}
+			},
 			_ => {}
 		}
 	}
