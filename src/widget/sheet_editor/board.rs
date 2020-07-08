@@ -67,21 +67,17 @@ impl Board {
 			action_effective: false,
 		}
 	}
-}
 
-fn get_hover(pos: Point, coord: Coord, sheet: &Sheet, env: &Env) -> Hover {
-	let hovered_note_idx = sheet.get_note_at(pos, coord.to_board_h(env.get(theme::NOTE_HEIGHT)));
-	match hovered_note_idx {
-		None => Hover::Idle,
-		Some(idx) => {
-			let note = sheet.get_note(idx).unwrap();
-			if pos.x > note.end() - coord.to_board_w(env.get(theme::NOTE_SCALE_KNOB)) && pos.x > note.start + note.length * 0.60
-			{
-				Hover::Scale(idx)
-			} else {
-				Hover::Move(idx)
-			}
+	fn stop_action(&mut self, ctx: &mut EventCtx, history_save: &mut bool) {
+		if self.action_effective {
+			*history_save = true;
+			self.action_effective = false;
 		}
+		self.action = Action::Idle;
+		ctx.set_active(false);
+		ctx.request_paint();
+		let cmd = Command::new(commands::ICP, icp::Event::NoteStop(2000));
+		ctx.submit_command(cmd, ctx.window_id());
 	}
 }
 
@@ -301,15 +297,7 @@ impl Widget<State> for Board {
 				self.hover = hover;
 			}
 			Event::MouseUp(_) => {
-				if self.action_effective {
-					history_save = true;
-					self.action_effective = false;
-				}
-				self.action = Action::Idle;
-				ctx.set_active(false);
-				ctx.request_paint();
-				let cmd = Command::new(commands::ICP, icp::Event::NoteStop(2000));
-				ctx.submit_command(cmd, ctx.window_id());
+				self.stop_action(ctx, &mut history_save);
 			}
 			Event::WindowSize(_) => {
 				ctx.request_layout();
@@ -325,6 +313,16 @@ impl Widget<State> for Board {
 				}
 				let bounds = sheet.get_bounds();
 				data.frame.x.bounds.1 = ((bounds.0).1 * 1.25).max(5.0);
+			}
+			Event::Command(cmd) if cmd.is(commands::SHEET_CHANGED) => {
+				let stop = match &self.action {
+					Action::Move(_, offsets, _) if offsets.keys().any(|&idx| !sheet.notes.contains(idx)) => true,
+					Action::Scale(_, lengths) if lengths.keys().any(|&idx| !sheet.notes.contains(idx)) => true,
+					_ => false,
+				};
+				if stop {
+					self.stop_action(ctx, &mut history_save);
+				}
 			}
 			Event::Command(ref cmd) if cmd.is(ADD_RELATIVE_NOTE) => {
 				let (root, time) = *cmd.get_unchecked(ADD_RELATIVE_NOTE);
@@ -447,4 +445,20 @@ fn make_note_context_menu<T: Data>(id: Index, time: f64) -> MenuDesc<T> {
 			LocalizedString::new("Delete note"),
 			Command::new(DELETE_NOTE, id),
 		))
+}
+
+fn get_hover(pos: Point, coord: Coord, sheet: &Sheet, env: &Env) -> Hover {
+	let hovered_note_idx = sheet.get_note_at(pos, coord.to_board_h(env.get(theme::NOTE_HEIGHT)));
+	match hovered_note_idx {
+		None => Hover::Idle,
+		Some(idx) => {
+			let note = sheet.get_note(idx).unwrap();
+			if pos.x > note.end() - coord.to_board_w(env.get(theme::NOTE_SCALE_KNOB)) && pos.x > note.start + note.length * 0.60
+			{
+				Hover::Scale(idx)
+			} else {
+				Hover::Move(idx)
+			}
+		}
+	}
 }

@@ -8,8 +8,13 @@ use std::collections::HashSet;
 mod interval;
 pub use interval::*;
 
-mod note;
-pub use note::*;
+pub mod note;
+
+mod clipboard;
+pub use clipboard::Clipboard;
+
+pub type Pitch = note::Pitch<Index>;
+pub type Note = note::Note<Index>;
 
 #[derive(Debug, Default, Clone, Deserialize, Serialize)]
 pub struct Sheet {
@@ -19,7 +24,7 @@ pub struct Sheet {
 
 #[allow(dead_code)]
 impl Sheet {
-	pub fn get_freq(&self, pitch: Pitch) -> Freq {
+	pub fn get_freq(&self, pitch: Pitch) -> f64 {
 		match pitch {
 			Pitch::Absolute(freq) => freq,
 			Pitch::Relative(idx, ratio) => self.get_freq(self.notes[idx].pitch) * ratio,

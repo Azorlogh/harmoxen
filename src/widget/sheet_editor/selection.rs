@@ -112,31 +112,26 @@ impl Widget<State> for Selection {
 				ctx.set_active(false);
 			}
 			Event::Command(cmd) if cmd.is(CUT) => {
-				let selection = data.selection.borrow();
+				let mut selection = data.selection.borrow_mut();
 				let mut sheet = data.sheet.borrow_mut();
 				let mut clipboard = data.clipboard.borrow_mut();
-				for idx in selection.iter() {
-					clipboard.push(sheet.remove_note(*idx).unwrap());
-				}
-				ctx.submit_command(super::REDRAW, ctx.window_id());
+				clipboard.cut(&mut sheet, &mut selection);
+				history_save = true;
+				ctx.submit_command(commands::SHEET_CHANGED, ctx.window_id());
 			}
 			Event::Command(cmd) if cmd.is(COPY) => {
 				let sheet = data.sheet.borrow();
 				let selection = data.selection.borrow();
 				let mut clipboard = data.clipboard.borrow_mut();
-				*clipboard = selection.iter().map(|&idx| sheet.get_note(idx).unwrap()).collect();
-				ctx.submit_command(super::REDRAW, ctx.window_id());
+				clipboard.copy(&sheet, &selection);
 			}
 			Event::Command(cmd) if cmd.is(PASTE) => {
 				let mut sheet = data.sheet.borrow_mut();
 				let mut selection = data.selection.borrow_mut();
 				let clipboard = data.clipboard.borrow();
-				selection.clear();
-				for note in clipboard.iter() {
-					let idx = sheet.add_note(note.clone());
-					selection.insert(idx);
-				}
-				ctx.submit_command(super::REDRAW, ctx.window_id());
+				clipboard.paste(&mut sheet, &mut selection);
+				history_save = true;
+				ctx.submit_command(commands::SHEET_CHANGED, ctx.window_id());
 			}
 			Event::Command(cmd) if cmd.is(DELETE) => {
 				let mut sheet = data.sheet.borrow_mut();
@@ -144,12 +139,14 @@ impl Widget<State> for Selection {
 				for idx in selection.drain() {
 					sheet.remove_note(idx);
 				}
-				ctx.submit_command(super::REDRAW, ctx.window_id());
+				history_save = true;
+				ctx.submit_command(commands::SHEET_CHANGED, ctx.window_id());
 			}
 			Event::Command(cmd) if cmd.is(SELECT_ALL) => {
 				let sheet = data.sheet.borrow();
 				let mut selection = data.selection.borrow_mut();
 				*selection = sheet.indices.iter().map(|&x| x).collect();
+				history_save = true;
 				ctx.submit_command(super::REDRAW, ctx.window_id());
 			}
 			_ => {}

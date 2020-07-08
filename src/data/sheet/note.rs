@@ -1,26 +1,23 @@
 use super::{Interval, Sheet};
 use druid::{Point, Rect};
-use generational_arena::Index;
 use serde::{Deserialize, Serialize};
 
-pub type Freq = f64;
-
 #[derive(Debug, Clone, Copy, PartialEq, Deserialize, Serialize)]
-pub enum Pitch {
+pub enum Pitch<I> {
 	Absolute(f64),
-	Relative(Index, Interval),
+	Relative(I, Interval),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Deserialize, Serialize)]
-pub struct Note {
-	pub pitch: Pitch,
+pub struct Note<I> {
+	pub pitch: Pitch<I>,
 	pub start: f64,
 	pub length: f64,
 }
 
 #[allow(unused)]
-impl Note {
-	pub fn new(pos: Point, note_len: f64) -> Note {
+impl<I> Note<I> {
+	pub fn new(pos: Point, note_len: f64) -> Note<I> {
 		Note {
 			start: pos.x,
 			length: note_len,
@@ -31,7 +28,12 @@ impl Note {
 	pub fn end(&self) -> f64 {
 		self.start + self.length
 	}
+}
 
+use generational_arena::Index;
+
+#[allow(unused)]
+impl Note<Index> {
 	pub fn y(&self, sheet: &Sheet) -> f64 {
 		sheet.get_freq(self.pitch).log2()
 	}

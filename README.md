@@ -39,7 +39,7 @@ Layout markers can be added by right clicking the cursor bar.
 ## TODO
 
 - Improve UI
-- Selection
+- Support more scale types & .scl import
 - More feedback: display errors/warnings/infos
 - Control note volume
 
