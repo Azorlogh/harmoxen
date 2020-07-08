@@ -17,7 +17,9 @@ The goals of this project haven't been fully fleshed out yet, but for now, my on
 
 On Windows, the project can be built simply by running `cargo run` with Rust installed.
 
-For other platforms, if this doesn't work, see the requirements of the [druid](https://github.com/xi-editor/druid) library.
+On Linux, `gtk3` and `alsa` must be installed.
+
+On MacOS, `cairo` must be installed.
 
 ## Usage
 
@@ -35,13 +37,15 @@ How to use:
 The layout of the piano roll can be altered in many different ways using the `Layout` button.
 Layout markers can be added by right clicking the cursor bar.
 
+You can make it can output MPE data through a MIDI port by going into the settings.
 
 ## TODO
 
 - Improve UI
 - Support more scale types & .scl import
 - More feedback: display errors/warnings/infos
-- Control note volume
+- Control note volume/other note attributes
+- Support bending pitch/other note attributes
 
 ## License
 
