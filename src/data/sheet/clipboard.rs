@@ -74,7 +74,8 @@ impl Clipboard {
 
 		selection.clear();
 		while entries.len() > 0 {
-			let entry @ (i, note) = entries.pop().unwrap();
+			let entry = entries.pop().unwrap();
+			let (i, note) = entry;
 			let pitch = match note.pitch {
 				Pitch::Relative(idx, interval) => match idx {
 					Index::ClipboardIndex(idx) => {

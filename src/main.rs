@@ -1,5 +1,3 @@
-#![feature(bindings_after_at)]
-
 use druid::{AppLauncher, LocalizedString, Size, WindowDesc};
 
 #[macro_use]
