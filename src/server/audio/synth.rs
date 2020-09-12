@@ -38,16 +38,16 @@ impl Voice {
 }
 
 pub struct Synth {
-	sample_rate: f64,
+	pub period: f64,
 	voices: Vec<Voice>,
 	lowpass: svf::Kernel,
 	limiter: Limiter,
 }
 
 impl Synth {
-	pub fn new(sample_rate: f64) -> Synth {
+	pub fn new(period: f64) -> Synth {
 		Synth {
-			sample_rate,
+			period,
 			voices: vec![],
 			lowpass: svf::lowpass(0.02, 0.3),
 			limiter: Limiter::new(),
@@ -89,7 +89,7 @@ impl Synth {
 		let mut out = 0.0;
 
 		for voice in &mut self.voices {
-			out += voice.next(1.0 / self.sample_rate);
+			out += voice.next(self.period);
 		}
 
 		self.voices.retain(|voice| voice.adsr.state != adsr::Dead);

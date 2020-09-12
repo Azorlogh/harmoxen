@@ -31,9 +31,9 @@ pub fn run(receiver: Receiver<Event>) {
 
 	event_loop.play_stream(stream_id.clone()).unwrap();
 
-	let sample_rate = format.sample_rate.0 as f64;
+	let period = 1.0 / f64::from(format.sample_rate.0);
 
-	let mut engine = Engine::new(sample_rate);
+	let mut engine = Engine::new(period);
 
 	let event_loop_ref = &event_loop;
 	event_loop.run(move |id, result| {
@@ -73,7 +73,6 @@ mod synth;
 use synth::Synth;
 
 struct Engine {
-	sample_rate: f64,
 	sheet: Sheet,
 	cursor: f64,
 	active: bool,
@@ -82,13 +81,12 @@ struct Engine {
 }
 
 impl Engine {
-	pub fn new(sample_rate: f64) -> Engine {
+	pub fn new(period: f64) -> Engine {
 		Engine {
-			sample_rate,
 			sheet: Sheet::default(),
 			cursor: 0.0,
 			active: false,
-			synth: Synth::new(sample_rate),
+			synth: Synth::new(period),
 			tempo: 140.0,
 		}
 	}
@@ -120,7 +118,7 @@ impl Engine {
 
 	pub fn update(&mut self, samples: usize) {
 		if self.active {
-			let length = samples as f64 / self.sample_rate * (self.tempo / 60.0);
+			let length = samples as f64 * self.synth.period * (self.tempo / 60.0);
 			let range = Range(self.cursor, self.cursor + length);
 			self.cursor += length;
 			let mut events = self.sheet.get_events(range);
