@@ -29,15 +29,13 @@ impl std::str::FromStr for Interval {
 
 	fn from_str(s: &str) -> Result<Self, Self::Err> {
 		let parts = s.split("/").collect::<Vec<&str>>();
-		if parts.len() == 1 {
-			Ok(Interval::Float(parts[0].parse::<f64>().map_err(|_| IntervalParseError)?))
-		} else if parts.len() == 2 {
-			Ok(Interval::Ratio(
+		match parts.len() {
+			1 => Ok(Interval::Float(parts[0].parse::<f64>().map_err(|_| IntervalParseError)?)),
+			2 => Ok(Interval::Ratio(
 				parts[0].parse::<usize>().map_err(|_| IntervalParseError)?,
 				parts[1].parse::<usize>().map_err(|_| IntervalParseError)?,
-			))
-		} else {
-			Err(IntervalParseError)
+			)),
+			_ => Err(IntervalParseError),
 		}
 	}
 }

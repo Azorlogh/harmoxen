@@ -68,10 +68,7 @@ impl Layout {
 			let layout_time = time - start;
 			let beat_time = layout_time.fract();
 			let beat = layout_time.floor();
-			let min = match after {
-				Some(min) => min - start - beat,
-				None => std::f64::NEG_INFINITY,
-			};
+			let min = after.map_or(std::f64::NEG_INFINITY, |x| x - start - beat);
 			pattern
 				.values
 				.iter()

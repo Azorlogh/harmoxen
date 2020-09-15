@@ -91,11 +91,7 @@ impl Sheet {
 	}
 
 	pub fn get_size(&self) -> f64 {
-		let mut max: f64 = 0.0;
-		for (_, note) in &self.notes {
-			max = max.max(note.end());
-		}
-		max
+		self.notes.iter().fold(0.0, |tmp, (_, note)| tmp.max(note.end()))
 	}
 
 	pub fn get_bounds(&self) -> (Range, Range) {

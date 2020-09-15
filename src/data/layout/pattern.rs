@@ -31,7 +31,7 @@ impl FreqPattern {
 }
 
 // the elements of each component are assumed to be sorted
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct Pattern {
 	pub time: Option<TimePattern>,
 	pub freq: Option<FreqPattern>,
@@ -39,10 +39,4 @@ pub struct Pattern {
 
 impl Pattern {
 	pub const EMPTY: Pattern = Pattern { time: None, freq: None };
-}
-
-impl Default for Pattern {
-	fn default() -> Pattern {
-		Pattern::EMPTY
-	}
 }

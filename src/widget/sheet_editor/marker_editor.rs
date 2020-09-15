@@ -80,7 +80,7 @@ impl Widget<State> for MarkerEditor {
 			}
 			Event::Command(ref cmd) if cmd.is(commands::MARKER_ADD) => {
 				let pos = *cmd.get_unchecked(commands::MARKER_ADD);
-				let idx = layout.add_marker(pos, Pattern::default());
+				let idx = layout.add_marker(pos, Pattern::EMPTY);
 				history_save = true;
 				data.curr_marker = idx;
 				ctx.submit_command(commands::LAYOUT_APPLY, ctx.window_id());
