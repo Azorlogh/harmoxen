@@ -25,22 +25,7 @@ impl Clipboard {
 		let selection: Vec<SheetIndex> = selection.drain().collect();
 		for &idx in &selection {
 			let sheet_note = sheet.remove_note(idx).unwrap();
-			let note: Note<Index> = Note {
-				start: sheet_note.start,
-				length: sheet_note.length,
-				pitch: match sheet_note.pitch {
-					Pitch::Absolute(freq) => Pitch::Absolute(freq),
-					Pitch::Relative(idx, interval) => Pitch::Relative(
-						if let Some(i) = selection.iter().position(|&i| i == idx) {
-							Index::ClipboardIndex(i)
-						} else {
-							Index::SheetIndex(idx)
-						},
-						interval,
-					),
-				},
-			};
-			self.0.push(note);
+			self.cut_copy_impl(sheet_note, &selection);
 		}
 	}
 
@@ -49,23 +34,27 @@ impl Clipboard {
 		let selection: Vec<SheetIndex> = selection.iter().cloned().collect();
 		for &idx in &selection {
 			let sheet_note = sheet.get_note(idx).unwrap();
-			let note: Note<Index> = Note {
-				start: sheet_note.start,
-				length: sheet_note.length,
-				pitch: match sheet_note.pitch {
-					Pitch::Absolute(freq) => Pitch::Absolute(freq),
-					Pitch::Relative(idx, interval) => Pitch::Relative(
-						if let Some(i) = selection.iter().position(|&i| i == idx) {
-							Index::ClipboardIndex(i)
-						} else {
-							Index::SheetIndex(idx)
-						},
-						interval,
-					),
-				},
-			};
-			self.0.push(note);
+			self.cut_copy_impl(sheet_note, &selection);
 		}
+	}
+
+	fn cut_copy_impl(&mut self, sheet_note: Note<SheetIndex>, selection: &[SheetIndex]) {
+		let note: Note<Index> = Note {
+			start: sheet_note.start,
+			length: sheet_note.length,
+			pitch: match sheet_note.pitch {
+				Pitch::Absolute(freq) => Pitch::Absolute(freq),
+				Pitch::Relative(idx, interval) => Pitch::Relative(
+					if let Some(i) = selection.iter().position(|&i| i == idx) {
+						Index::ClipboardIndex(i)
+					} else {
+						Index::SheetIndex(idx)
+					},
+					interval,
+				),
+			},
+		};
+		self.0.push(note);
 	}
 
 	pub fn paste(&self, sheet: &mut Sheet, selection: &mut HashSet<SheetIndex>) {
