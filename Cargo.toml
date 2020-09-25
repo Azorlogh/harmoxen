@@ -5,12 +5,12 @@ authors = ["Azorlogh <bott.alix@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-druid = "0.6.0"
-cpal = "0.11.0"
+druid = { git = "https://github.com/linebender/druid", branch = "master" }
+cpal = "0.12.1"
 meval = "0.2.0"
-derive_more = "0.99.7"
-generational-arena = { version = "0.2", features = ["serde"] }
-nalgebra = "0.21.0"
-serde = { version = "1.0", features = ["derive"] }
-ron = "0.6.0"
-midir = "0.5.0"
+derive_more = "0.99.10"
+generational-arena = { version = "0.2.8", features = ["serde"] }
+nalgebra = "0.22.0"
+serde = { version = "1.0.116", features = ["derive"] }
+ron = "0.6.2"
+midir = "0.7.0"

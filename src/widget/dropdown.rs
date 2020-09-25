@@ -2,9 +2,7 @@
 use druid::theme;
 use druid::widget::prelude::*;
 use druid::widget::{Flex, Label, LabelText};
-use druid::{
-	Affine, Command, Data, Insets, LinearGradient, Point, Rect, RenderContext, Selector, UnitPoint, Widget, WidgetExt,
-};
+use druid::{Affine, Data, Insets, LinearGradient, Point, Rect, RenderContext, Selector, UnitPoint, Widget, WidgetExt};
 
 use crate::widget::common::Button;
 
@@ -72,9 +70,8 @@ impl<T: Data> Widget<T> for DropDown<T> {
 					}
 					let widget_id = ctx.widget_id();
 					ctx.submit_command(
-						Command::new(
-							overlay::SHOW_AT,
-							(
+						overlay::SHOW_AT
+							.with((
 								pos,
 								bc,
 								Box::new(move |_| {
@@ -82,24 +79,21 @@ impl<T: Data> Widget<T> for DropDown<T> {
 									for i in 0..texts.len() {
 										flex.add_child(
 											Button::new(texts[i].as_str())
-												.on_click(move |ctx, _, _| {
-													ctx.submit_command(Command::new(CLICK_ITEM, i), widget_id)
-												})
+												.on_click(move |ctx, _, _| ctx.submit_command(CLICK_ITEM.with(i).to(widget_id)))
 												.expand_width(),
 										);
 									}
 									Box::new(flex)
 								}),
-							),
-						),
-						ctx.window_id(),
+							))
+							.to(ctx.window_id()),
 					);
 				}
 			}
 			Event::Command(cmd) if cmd.is(CLICK_ITEM) => {
 				let idx = *cmd.get_unchecked(CLICK_ITEM);
 				(self.items[idx].action)(ctx, data, env);
-				ctx.submit_command(overlay::HIDE, ctx.window_id());
+				ctx.submit_command(overlay::HIDE.to(ctx.window_id()));
 			}
 			_ => (),
 		}

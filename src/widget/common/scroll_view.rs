@@ -1,7 +1,7 @@
 use crate::util::{coord::Coord, Frame2};
 use druid::{
-	BoxConstraints, Command, Env, Event, EventCtx, LayoutCtx, LifeCycle, LifeCycleCtx, PaintCtx, Point, Selector, Size,
-	UpdateCtx, Widget,
+	BoxConstraints, Env, Event, EventCtx, LayoutCtx, LifeCycle, LifeCycleCtx, PaintCtx, Point, Selector, Size, UpdateCtx,
+	Widget,
 };
 
 pub const SCROLL_VIEW_MOVE: Selector<Frame2> = Selector::new("scroll-view.move");
@@ -37,11 +37,11 @@ impl Widget<Frame2> for ScrollView {
 				let mouse_pos = &mut self.mouse;
 				let coord = Coord::new(frame.clone(), ctx.size());
 				*mouse_pos = coord.to_board_p(mouse.pos);
-				if mouse.mods.alt {
+				if mouse.mods.alt() {
 					scroll.xzoom += (delta / 120.0) * 0.1;
-				} else if mouse.mods.ctrl {
+				} else if mouse.mods.ctrl() {
 					scroll.yzoom += (delta / 120.0) * 0.1;
-				} else if mouse.mods.shift {
+				} else if mouse.mods.shift() {
 					let factor = frame.x.view.size();
 					scroll.xmove += (-delta * factor * 0.002).max(-frame.x.view.0 - scroll.xmove);
 				} else {
@@ -63,13 +63,7 @@ impl Widget<Frame2> for ScrollView {
 				ctx.request_layout();
 				ctx.request_paint();
 			}
-			_ => {}
-		}
-	}
-
-	fn lifecycle(&mut self, ctx: &mut LifeCycleCtx, event: &LifeCycle, frame: &Frame2, _env: &Env) {
-		match event {
-			LifeCycle::AnimFrame(_) => {
+			Event::AnimFrame(_) => {
 				let scroll = &mut self.scroll;
 				let mouse = self.mouse;
 				let mut moving = false;
@@ -98,13 +92,15 @@ impl Widget<Frame2> for ScrollView {
 				}
 				if moving {
 					ctx.request_anim_frame();
-					ctx.submit_command(Command::new(SCROLL_VIEW_MOVE, frame), ctx.widget_id());
+					ctx.submit_command(SCROLL_VIEW_MOVE.with(frame).to(ctx.widget_id()));
 				}
 				ctx.request_paint();
 			}
 			_ => {}
 		}
 	}
+
+	fn lifecycle(&mut self, _ctx: &mut LifeCycleCtx, _event: &LifeCycle, _data: &Frame2, _env: &Env) {}
 
 	fn update(&mut self, _ctx: &mut UpdateCtx, _old_data: &Frame2, _data: &Frame2, _env: &Env) {}
 

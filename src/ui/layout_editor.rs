@@ -1,10 +1,3 @@
-use druid::{
-	lens::Map,
-	widget::{Button, Flex, Label, ViewSwitcher, WidgetExt},
-	Widget,
-};
-use std::str::FromStr;
-
 use crate::commands;
 use crate::state::editors::layout_editor::{
 	freq_input::{self, FreqInput},
@@ -13,6 +6,13 @@ use crate::state::editors::layout_editor::{
 };
 use crate::util::ui::*;
 use crate::widget::common::*;
+use druid::{
+	lens::Map,
+	widget::{Button, Flex, Label, ViewSwitcher, WidgetExt},
+	Widget,
+};
+use std::rc::Rc;
+use std::str::FromStr;
 
 pub fn build() -> impl Widget<State> {
 	let time_input = Flex::row()
@@ -36,7 +36,7 @@ pub fn build() -> impl Widget<State> {
 		)
 		.with_flex_child(
 			ViewSwitcher::new(
-				|data: &TimeInput, _| std::mem::discriminant(data),
+				|data: &TimeInput, _| Rc::new(std::mem::discriminant(data)),
 				|_, data, _| {
 					Box::new(match data {
 						TimeInput::None => Flex::row().with_child(Label::new("The time axis will be free")),
@@ -82,7 +82,7 @@ pub fn build() -> impl Widget<State> {
 		)
 		.with_flex_child(
 			ViewSwitcher::new(
-				|data: &FreqInput, _| std::mem::discriminant(data),
+				|data: &FreqInput, _| Rc::new(std::mem::discriminant(data)),
 				|_, data, _| {
 					Box::new(match data {
 						FreqInput::None => Flex::row().with_child(Label::new("The frequency axis will be free")),
@@ -111,7 +111,7 @@ pub fn build() -> impl Widget<State> {
 		.with_flex_child(freq_input, 1.0)
 		.with_flex_spacer(1.0)
 		.with_flex_child(
-			Button::new("Apply").on_click(|ctx, _, _| ctx.submit_command(commands::LAYOUT_APPLY, ctx.window_id())),
+			Button::new("Apply").on_click(|ctx, _, _| ctx.submit_command(commands::LAYOUT_APPLY.to(ctx.window_id()))),
 			1.0,
 		)
 }

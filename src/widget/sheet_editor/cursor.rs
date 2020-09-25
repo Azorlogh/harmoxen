@@ -1,8 +1,8 @@
 use druid::kurbo::Line;
 
 use druid::{
-	BoxConstraints, Color, Command, Env, Event, EventCtx, LayoutCtx, LifeCycle, LifeCycleCtx, MouseButton, MouseEvent,
-	PaintCtx, Point, Rect, RenderContext, Size, UpdateCtx, Widget,
+	BoxConstraints, Color, Env, Event, EventCtx, LayoutCtx, LifeCycle, LifeCycleCtx, MouseButton, MouseEvent, PaintCtx, Point,
+	Rect, RenderContext, Size, UpdateCtx, Widget,
 };
 
 use crate::theme;
@@ -61,25 +61,25 @@ impl Widget<State> for Cursor {
 				*position = (*position + delta * (data.tempo / 60.0)) % data.sheet.borrow().get_size();
 				ctx.request_paint();
 			}
+			Event::AnimFrame(delta) => {
+				if let Some(_) = self.origin {
+					ctx.submit_command(
+						commands::CURSOR_ADVANCE
+							.with((*delta as f64) / 1000000000.0)
+							.to(ctx.widget_id()),
+					);
+					ctx.request_anim_frame();
+				}
+			}
 			_ => {}
 		}
 	}
 
-	fn lifecycle(&mut self, ctx: &mut LifeCycleCtx, event: &LifeCycle, _data: &State, _env: &Env) {
-		if let LifeCycle::AnimFrame(delta) = event {
-			if let Some(_) = self.origin {
-				ctx.submit_command(
-					Command::new(commands::CURSOR_ADVANCE, (*delta as f64) / 1000000000.0),
-					ctx.widget_id(),
-				);
-				ctx.request_anim_frame();
-			}
-		}
-	}
+	fn lifecycle(&mut self, _ctx: &mut LifeCycleCtx, _event: &LifeCycle, _data: &State, _env: &Env) {}
 
 	fn update(&mut self, ctx: &mut UpdateCtx, old_data: &State, data: &State, _env: &Env) {
 		if old_data.tempo != data.tempo {
-			ctx.submit_command(Command::new(commands::TEMPO_CHANGED, data.tempo), ctx.window_id());
+			ctx.submit_command(commands::TEMPO_CHANGED.with(data.tempo).to(ctx.window_id()));
 		}
 	}
 

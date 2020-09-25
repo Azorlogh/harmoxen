@@ -22,7 +22,7 @@ impl Delegate {
 			}
 			_ if cmd.is(cmds::LAYOUT_APPLY) => {
 				if let Ok(()) = data.editors.apply_layout() {
-					ctx.submit_command(cmds::LAYOUT_CHANGED, Target::Global);
+					ctx.submit_command(cmds::LAYOUT_CHANGED.to(Target::Global));
 				}
 				false
 			}

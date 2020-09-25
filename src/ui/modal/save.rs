@@ -19,20 +19,21 @@ pub fn build(cmd: Selector) -> (BoxConstraints, Box<dyn Fn(&Env) -> Box<dyn Widg
 						Flex::row()
 							.with_flex_child(
 								Button::new("Yes").on_click(|ctx, _, _| {
-									ctx.submit_command(overlay::HIDE, ctx.window_id());
-									ctx.submit_command(commands::PROJECT_SAVE, ctx.window_id())
+									ctx.submit_command(overlay::HIDE.to(ctx.window_id()));
+									ctx.submit_command(commands::PROJECT_SAVE.to(ctx.window_id()))
 								}),
 								1.0,
 							)
 							.with_flex_child(
 								Button::new("No").on_click(move |ctx, _, _| {
-									ctx.submit_command(overlay::HIDE, ctx.window_id());
-									ctx.submit_command(cmd, ctx.window_id());
+									ctx.submit_command(overlay::HIDE.to(ctx.window_id()));
+									ctx.submit_command(cmd.to(ctx.window_id()));
 								}),
 								1.0,
 							)
 							.with_flex_child(
-								Button::new("Cancel").on_click(|ctx, _, _| ctx.submit_command(overlay::HIDE, ctx.window_id())),
+								Button::new("Cancel")
+									.on_click(|ctx, _, _| ctx.submit_command(overlay::HIDE.to(ctx.window_id()))),
 								1.0,
 							),
 					)

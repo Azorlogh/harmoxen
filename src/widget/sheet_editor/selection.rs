@@ -45,7 +45,7 @@ impl Widget<State> for Selection {
 			Event::MouseDown(mouse) => {
 				let sheet = data.sheet.borrow();
 				let pos = coord.to_board_p(mouse.pos);
-				if mouse.mods.ctrl {
+				if mouse.mods.ctrl() {
 					if mouse.button.is_left() {
 						self.action = Action::SelectionAdd(pos, pos);
 						ctx.set_active(true);
@@ -106,7 +106,7 @@ impl Widget<State> for Selection {
 				if self.action_effective {
 					history_save = true;
 					self.action_effective = false;
-					ctx.submit_command(super::REDRAW, ctx.window_id());
+					ctx.submit_command(super::REDRAW.to(ctx.window_id()));
 				}
 				self.action = Action::Idle;
 				ctx.set_active(false);
@@ -117,7 +117,7 @@ impl Widget<State> for Selection {
 				let mut clipboard = data.clipboard.borrow_mut();
 				clipboard.cut(&mut sheet, &mut selection);
 				history_save = true;
-				ctx.submit_command(commands::SHEET_CHANGED, ctx.window_id());
+				ctx.submit_command(commands::SHEET_CHANGED.to(ctx.window_id()));
 			}
 			Event::Command(cmd) if cmd.is(COPY) => {
 				let sheet = data.sheet.borrow();
@@ -131,7 +131,7 @@ impl Widget<State> for Selection {
 				let clipboard = data.clipboard.borrow();
 				clipboard.paste(&mut sheet, &mut selection);
 				history_save = true;
-				ctx.submit_command(commands::SHEET_CHANGED, ctx.window_id());
+				ctx.submit_command(commands::SHEET_CHANGED.to(ctx.window_id()));
 			}
 			Event::Command(cmd) if cmd.is(DELETE) => {
 				let mut sheet = data.sheet.borrow_mut();
@@ -140,19 +140,19 @@ impl Widget<State> for Selection {
 					sheet.remove_note(idx);
 				}
 				history_save = true;
-				ctx.submit_command(commands::SHEET_CHANGED, ctx.window_id());
+				ctx.submit_command(commands::SHEET_CHANGED.to(ctx.window_id()));
 			}
 			Event::Command(cmd) if cmd.is(SELECT_ALL) => {
 				let sheet = data.sheet.borrow();
 				let mut selection = data.selection.borrow_mut();
 				*selection = sheet.indices.iter().map(|&x| x).collect();
 				history_save = true;
-				ctx.submit_command(super::REDRAW, ctx.window_id());
+				ctx.submit_command(super::REDRAW.to(ctx.window_id()));
 			}
 			_ => {}
 		}
 		if history_save {
-			ctx.submit_command(commands::HISTORY_SAVE, ctx.window_id());
+			ctx.submit_command(commands::HISTORY_SAVE.to(ctx.window_id()));
 		}
 	}
 

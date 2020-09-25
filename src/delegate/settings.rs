@@ -35,14 +35,20 @@ impl Delegate {
 			_ if cmd.is(cmds::BACKEND_SET_MPE) => {
 				self.to_server.send(server::Event::Shutdown).unwrap();
 				std::thread::sleep(std::time::Duration::from_secs(1));
-				let port = cmd.get_unchecked(cmds::BACKEND_SET_MPE);
-				self.to_server = server::midi::launch(*port).unwrap();
+				let port = *cmd.get_unchecked(cmds::BACKEND_SET_MPE);
+				self.to_server = server::midi::launch(self.midi_ports[port].clone()).unwrap();
 				false
 			}
 			_ if cmd.is(cmds::BACKEND_MPE_REQUEST_PORTS) => {
 				let target = *cmd.get_unchecked(cmds::BACKEND_MPE_REQUEST_PORTS);
-				let ports = server::midi::get_port_names().unwrap();
-				ctx.submit_command(Command::new(index_selector::SET_CHOICES, ports), Some(target.into()));
+				let midi = midir::MidiOutput::new("mpe backend").expect("couldn't open midi output");
+				let ports = midi.ports();
+				let port_names = ports
+					.iter()
+					.map(|p| midi.port_name(p).expect("couldn't get midi port name"))
+					.collect();
+				self.midi_ports = ports;
+				ctx.submit_command(index_selector::SET_CHOICES.with(port_names).to(target));
 				false
 			}
 			_ => true,

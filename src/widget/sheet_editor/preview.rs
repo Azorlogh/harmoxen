@@ -1,8 +1,8 @@
 use druid::kurbo::Line;
 
 use druid::{
-	BoxConstraints, Color, Command, Env, Event, EventCtx, LayoutCtx, LifeCycle, LifeCycleCtx, MouseButton, MouseEvent,
-	PaintCtx, Point, Rect, RenderContext, Size, UpdateCtx, Widget,
+	BoxConstraints, Color, Env, Event, EventCtx, LayoutCtx, LifeCycle, LifeCycleCtx, MouseButton, MouseEvent, PaintCtx, Point,
+	Rect, RenderContext, Size, UpdateCtx, Widget,
 };
 
 use crate::commands;
@@ -35,16 +35,16 @@ impl Widget<State> for Preview {
 				self.playing = Some(freq);
 				ctx.set_active(true);
 				ctx.request_paint();
-				let cmd = Command::new(commands::ICP, icp::Event::NotePlay(icp::Note { id: 1000, freq }));
-				ctx.submit_command(cmd, ctx.window_id());
+				let cmd = commands::ICP.with(icp::Event::NotePlay(icp::Note { id: 1000, freq }));
+				ctx.submit_command(cmd.to(ctx.window_id()));
 			}
 			Event::MouseMove(mouse) if mouse.buttons.has_left() => {
 				if let Some(prev_freq) = &mut self.playing {
 					let freq = 2f64.powf((mouse.pos.y / size.height) * range.size() + range.0);
 					*prev_freq = freq;
 					ctx.request_paint();
-					let cmd = Command::new(commands::ICP, icp::Event::NoteChangeFreq(1000, freq));
-					ctx.submit_command(cmd, ctx.window_id());
+					let cmd = commands::ICP.with(icp::Event::NoteChangeFreq(1000, freq));
+					ctx.submit_command(cmd.to(ctx.window_id()));
 				}
 			}
 			Event::MouseUp(MouseEvent {
@@ -54,8 +54,8 @@ impl Widget<State> for Preview {
 				self.playing = None;
 				ctx.set_active(false);
 				ctx.request_paint();
-				let cmd = Command::new(commands::ICP, icp::Event::NoteStop(1000));
-				ctx.submit_command(cmd, ctx.window_id());
+				let cmd = commands::ICP.with(icp::Event::NoteStop(1000));
+				ctx.submit_command(cmd.to(ctx.window_id()));
 			}
 			_ => {}
 		}

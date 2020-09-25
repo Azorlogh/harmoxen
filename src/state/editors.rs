@@ -10,7 +10,7 @@ pub struct State {
 }
 
 use crate::commands as cmds;
-use druid::{Command, Data, DelegateCtx, Lens};
+use druid::{Data, DelegateCtx, Lens};
 
 impl State {
 	pub fn new() -> State {
@@ -30,10 +30,10 @@ impl State {
 	pub fn apply_settings(&mut self, ctx: &mut DelegateCtx) {
 		match self.settings.backend {
 			settings::Backend::Audio => {
-				ctx.submit_command(cmds::BACKEND_SET_AUDIO, None);
+				ctx.submit_command(cmds::BACKEND_SET_AUDIO);
 			}
 			settings::Backend::MPE { port } => {
-				ctx.submit_command(Command::new(cmds::BACKEND_SET_MPE, port), None);
+				ctx.submit_command(cmds::BACKEND_SET_MPE.with(port));
 			}
 		}
 	}

@@ -1,7 +1,7 @@
 use druid::kurbo::BezPath;
 use druid::{
-	BoxConstraints, Color, Command, ContextMenu, Data, Env, Event, EventCtx, LayoutCtx, LifeCycle, LifeCycleCtx,
-	LocalizedString, MenuDesc, MenuItem, MouseEvent, PaintCtx, Point, Rect, RenderContext, Size, UpdateCtx, Widget,
+	BoxConstraints, Color, ContextMenu, Data, Env, Event, EventCtx, LayoutCtx, LifeCycle, LifeCycleCtx, LocalizedString,
+	MenuDesc, MenuItem, MouseEvent, PaintCtx, Point, Rect, RenderContext, Size, UpdateCtx, Widget,
 };
 use std::cell::RefMut;
 
@@ -43,7 +43,7 @@ impl Widget<State> for MarkerEditor {
 					data.curr_marker = id;
 					ctx.set_handled();
 					ctx.set_active(true);
-					ctx.submit_command(super::REDRAW, ctx.window_id());
+					ctx.submit_command(super::REDRAW.to(ctx.window_id()));
 					ctx.request_paint();
 				}
 			}
@@ -60,14 +60,14 @@ impl Widget<State> for MarkerEditor {
 				let mut time = coord.to_board_x(pos.x).max(0.0);
 				let idx = data.curr_marker;
 				if ctx.is_active() && idx != 0 {
-					if !mods.ctrl {
+					if !mods.ctrl() {
 						time = layout.quantize_time_exclude(time, false, idx);
 					}
 					self.action_effective = true;
 					let new_idx = layout.set_marker_time(idx, time);
 					data.curr_marker = new_idx;
 					ctx.request_paint();
-					ctx.submit_command(super::REDRAW, ctx.window_id());
+					ctx.submit_command(super::REDRAW.to(ctx.window_id()));
 				}
 			}
 			Event::MouseUp(_) => {
@@ -83,7 +83,7 @@ impl Widget<State> for MarkerEditor {
 				let idx = layout.add_marker(pos, Pattern::EMPTY);
 				history_save = true;
 				data.curr_marker = idx;
-				ctx.submit_command(commands::LAYOUT_APPLY, ctx.window_id());
+				ctx.submit_command(commands::LAYOUT_APPLY.to(ctx.window_id()));
 				ctx.request_paint();
 			}
 			Event::Command(ref cmd) if cmd.is(commands::MARKER_DELETE) => {
@@ -91,12 +91,12 @@ impl Widget<State> for MarkerEditor {
 				history_save = true;
 				layout.delete_marker(id);
 				ctx.request_paint();
-				ctx.submit_command(commands::LAYOUT_CHANGED, ctx.window_id());
+				ctx.submit_command(commands::LAYOUT_CHANGED.to(ctx.window_id()));
 			}
 			_ => {}
 		}
 		if history_save {
-			ctx.submit_command(commands::HISTORY_SAVE, ctx.window_id());
+			ctx.submit_command(commands::HISTORY_SAVE.to(ctx.window_id()));
 		}
 	}
 
@@ -138,13 +138,13 @@ impl Widget<State> for MarkerEditor {
 fn make_context_menu<T: Data>(pos: f64) -> MenuDesc<T> {
 	MenuDesc::empty().append(MenuItem::new(
 		LocalizedString::new("Add Marker"),
-		Command::new(commands::MARKER_ADD, pos),
+		commands::MARKER_ADD.with(pos),
 	))
 }
 
 fn make_marker_context_menu<T: Data>(id: usize) -> MenuDesc<T> {
 	MenuDesc::empty().append(MenuItem::new(
 		LocalizedString::new("Delete Marker"),
-		Command::new(commands::MARKER_DELETE, id),
+		commands::MARKER_DELETE.with(id),
 	))
 }

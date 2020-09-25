@@ -1,5 +1,6 @@
 #![allow(unused)]
 
+use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use std::error::Error;
 use std::sync::mpsc::*;
 use std::thread;
@@ -8,65 +9,80 @@ use crate::data::{icp, sheet::*};
 use crate::util::*;
 
 pub fn launch() -> Result<Sender<Event>, Box<dyn Error>> {
-	let (sender, receiver) = channel();
+	let (to_server, from_frontend) = channel();
+	let (to_backend, from_server) = channel();
 	thread::spawn(move || {
-		run(receiver);
+		let mut stream = run(from_server);
+		while let Ok(event) = from_frontend.recv() {
+			if let Event::Shutdown = event {
+				stream.pause();
+				break;
+			}
+			to_backend
+				.send(event)
+				.map_err(|e| format!("connection to audio backend closed unexpectedly: {}", e))
+				.unwrap();
+		}
 	});
-
-	Ok(sender)
+	Ok(to_server)
 }
 
 use super::Event;
 
-pub fn run(receiver: Receiver<Event>) {
-	use cpal::traits::{DeviceTrait, EventLoopTrait, HostTrait};
-
+pub fn run(mut receiver: Receiver<Event>) -> Box<dyn StreamTrait> {
 	let host = cpal::default_host();
 
-	let device = host.default_output_device().expect("no output device available");
-	let format = device.default_output_format().unwrap();
+	let device = host.default_output_device().expect("failed to find a default output device");
+	let supported_config = device.default_output_config().expect("failed to get default output config");
+	let config = supported_config.config();
 
-	let event_loop = host.event_loop();
-	let stream_id = event_loop.build_output_stream(&device, &format).unwrap();
+	let nb_channels = config.channels as usize;
 
-	event_loop.play_stream(stream_id.clone()).unwrap();
-
-	let period = 1.0 / f64::from(format.sample_rate.0);
+	let period = 1.0 / f64::from(config.sample_rate.0);
 
 	let mut engine = Engine::new(period);
 
-	let event_loop_ref = &event_loop;
-	event_loop.run(move |id, result| {
-		while let Ok(event) = receiver.try_recv() {
-			if let Event::Shutdown = event {
-				event_loop_ref.destroy_stream(stream_id.clone());
-			}
-			engine.process_event(event);
-		}
+	let stream = match supported_config.sample_format() {
+		cpal::SampleFormat::F32 => build_stream::<f32>(device, receiver, engine, config),
+		cpal::SampleFormat::I16 => build_stream::<i16>(device, receiver, engine, config),
+		cpal::SampleFormat::U16 => build_stream::<u16>(device, receiver, engine, config),
+	};
 
-		let data = match result {
-			Ok(data) => data,
-			Err(err) => {
-				eprintln!("an error occurred on stream {:?}: {}", id, err);
-				return;
-			}
-		};
+	stream.play().expect("failed to play audio stream");
 
-		match data {
-			cpal::StreamData::Output {
-				buffer: cpal::UnknownTypeOutputBuffer::F32(mut buffer),
-			} => {
-				engine.update(buffer.len() / format.channels as usize);
-				for sample in buffer.chunks_mut(format.channels as usize) {
-					let value = engine.next_sample();
-					for out in sample.iter_mut() {
-						*out = value as f32;
+	stream
+}
+
+fn build_stream<T>(
+	device: cpal::Device,
+	mut receiver: Receiver<Event>,
+	mut engine: Engine,
+	config: cpal::StreamConfig,
+) -> Box<dyn StreamTrait>
+where
+	T: cpal::Sample,
+{
+	let nb_channels = config.channels as usize;
+	Box::new(
+		device
+			.build_output_stream::<T, _, _>(
+				&config,
+				move |data, _| {
+					while let Ok(event) = receiver.try_recv() {
+						engine.process_event(event);
 					}
-				}
-			}
-			_ => (),
-		}
-	});
+
+					for frame in data.chunks_mut(nb_channels) {
+						let value = cpal::Sample::from::<f32>(&(engine.next_sample() as f32));
+						for sample in frame.iter_mut() {
+							*sample = value;
+						}
+					}
+				},
+				|err| println!("an error occured on stream: {}", err),
+			)
+			.expect("failed to build the output stream"),
+	)
 }
 
 mod synth;

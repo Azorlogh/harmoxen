@@ -21,39 +21,39 @@ impl Delegate {
 		match cmd {
 			_ if cmd.is(cmds::PROJECT_NEW) => {
 				if data.up_to_date {
-					ctx.submit_command(IMPL_PROJECT_NEW, None);
+					ctx.submit_command(IMPL_PROJECT_NEW);
 				} else {
 					ctx.submit_command(
-						Command::new(widget::overlay::SHOW_MIDDLE, ui::modal::save::build(IMPL_PROJECT_NEW)),
-						main_window.clone(),
+						widget::overlay::SHOW_MIDDLE
+							.with(ui::modal::save::build(IMPL_PROJECT_NEW))
+							.to(main_window.clone()),
 					);
 					self.after_save = Some(Box::new(|ctx: &mut DelegateCtx| {
-						ctx.submit_command(IMPL_PROJECT_NEW, None);
+						ctx.submit_command(IMPL_PROJECT_NEW);
 					}));
 				}
 				false
 			}
 			_ if cmd.is(cmds::PROJECT_OPEN) => {
 				if data.up_to_date {
-					ctx.submit_command(IMPL_PROJECT_OPEN, None)
+					ctx.submit_command(IMPL_PROJECT_OPEN)
 				} else {
 					ctx.submit_command(
-						Command::new(widget::overlay::SHOW_MIDDLE, ui::modal::save::build(IMPL_PROJECT_OPEN)),
-						main_window.clone(),
+						widget::overlay::SHOW_MIDDLE
+							.with(ui::modal::save::build(IMPL_PROJECT_OPEN))
+							.to(main_window.clone()),
 					);
 					self.after_save = Some(Box::new(|ctx: &mut DelegateCtx| {
-						ctx.submit_command(IMPL_PROJECT_OPEN, None);
+						ctx.submit_command(IMPL_PROJECT_OPEN);
 					}));
 				}
 				false
 			}
 			_ if cmd.is(cmds::PROJECT_SAVE_AS) => {
 				ctx.submit_command(
-					Command::new(
-						sys_cmds::SHOW_SAVE_PANEL,
-						FileDialogOptions::new().allowed_types(vec![FileSpec::new("Harmoxen project", &["hxp"])]),
-					),
-					Target::Window(*data.main_window.clone().unwrap()),
+					sys_cmds::SHOW_SAVE_PANEL
+						.with(FileDialogOptions::new().allowed_types(vec![FileSpec::new("Harmoxen project", &["hxp"])]))
+						.to(Target::Window(*data.main_window.clone().unwrap())),
 				);
 				false
 			}
@@ -68,11 +68,9 @@ impl Delegate {
 				} else {
 					let xrp = FileSpec::new("Harmoxen project", &["hxp"]);
 					ctx.submit_command(
-						Command::new(
-							sys_cmds::SHOW_SAVE_PANEL,
-							FileDialogOptions::new().allowed_types(vec![xrp]).default_type(xrp),
-						),
-						Target::Window(*data.main_window.clone().unwrap()),
+						sys_cmds::SHOW_SAVE_PANEL
+							.with(FileDialogOptions::new().allowed_types(vec![xrp]).default_type(xrp))
+							.to(Target::Window(*data.main_window.clone().unwrap())),
 					);
 				}
 				false
@@ -87,11 +85,9 @@ impl Delegate {
 			}
 			_ if cmd.is(IMPL_PROJECT_OPEN) => {
 				ctx.submit_command(
-					Command::new(
-						sys_cmds::SHOW_OPEN_PANEL,
-						FileDialogOptions::new().allowed_types(vec![FileSpec::new("Harmoxen project", &["hxp"])]),
-					),
-					*data.main_window.clone().unwrap(),
+					sys_cmds::SHOW_OPEN_PANEL
+						.with(FileDialogOptions::new().allowed_types(vec![FileSpec::new("Harmoxen project", &["hxp"])]))
+						.to(*data.main_window.clone().unwrap()),
 				);
 				self.after_save = None;
 				false

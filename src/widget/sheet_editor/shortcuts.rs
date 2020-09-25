@@ -1,7 +1,8 @@
 use crate::commands;
 use crate::state::editors::sheet_editor::State;
 use druid::{
-	BoxConstraints, Env, Event, EventCtx, KeyCode, LayoutCtx, LifeCycle, LifeCycleCtx, PaintCtx, Size, UpdateCtx, Widget,
+	BoxConstraints, Code, Env, Event, EventCtx, KbKey, KeyEvent, LayoutCtx, LifeCycle, LifeCycleCtx, PaintCtx, Size, UpdateCtx,
+	Widget,
 };
 
 use super::selection;
@@ -20,47 +21,33 @@ impl Widget<State> for Shortcuts {
 			Event::MouseDown(_) => {
 				ctx.request_focus();
 			}
-			Event::KeyDown(key) if key.key_code == KeyCode::Space => {
+			Event::KeyDown(evt) if evt.code == Code::Space => {
 				let command = if !data.playing {
 					commands::PLAY_START
 				} else {
 					commands::PLAY_STOP
 				};
-				ctx.submit_command(command, ctx.window_id());
+				ctx.submit_command(command.to(ctx.window_id()));
 			}
-			Event::KeyDown(key) => match key.key_code {
-				KeyCode::KeyZ if key.mods.ctrl => {
-					ctx.submit_command(commands::HISTORY_UNDO, ctx.window_id());
-				}
-				KeyCode::KeyY if key.mods.ctrl => {
-					ctx.submit_command(commands::HISTORY_REDO, ctx.window_id());
-				}
-				KeyCode::KeyN if key.mods.ctrl => {
-					ctx.submit_command(commands::PROJECT_NEW, ctx.window_id());
-				}
-				KeyCode::KeyO if key.mods.ctrl => {
-					ctx.submit_command(commands::PROJECT_OPEN, ctx.window_id());
-				}
-				KeyCode::KeyS if key.mods.ctrl && key.mods.shift => {
-					ctx.submit_command(commands::PROJECT_SAVE_AS, ctx.window_id());
-				}
-				KeyCode::KeyS if key.mods.ctrl => {
-					ctx.submit_command(commands::PROJECT_SAVE, ctx.window_id());
-				}
-				KeyCode::KeyX if key.mods.ctrl => {
-					ctx.submit_command(selection::CUT, ctx.window_id());
-				}
-				KeyCode::KeyC if key.mods.ctrl => {
-					ctx.submit_command(selection::COPY, ctx.window_id());
-				}
-				KeyCode::KeyV if key.mods.ctrl => {
-					ctx.submit_command(selection::PASTE, ctx.window_id());
-				}
-				KeyCode::Delete => {
-					ctx.submit_command(selection::DELETE, ctx.window_id());
-				}
-				KeyCode::KeyA if key.mods.ctrl => {
-					ctx.submit_command(selection::SELECT_ALL, ctx.window_id());
+			Event::KeyDown(e) => match e {
+				KeyEvent {
+					key: KbKey::Character(c),
+					..
+				} => match c.as_str() {
+					"z" if e.mods.ctrl() => ctx.submit_command(commands::HISTORY_UNDO.to(ctx.window_id())),
+					"y" if e.mods.ctrl() => ctx.submit_command(commands::HISTORY_REDO.to(ctx.window_id())),
+					"n" if e.mods.ctrl() => ctx.submit_command(commands::PROJECT_NEW.to(ctx.window_id())),
+					"o" if e.mods.ctrl() => ctx.submit_command(commands::PROJECT_OPEN.to(ctx.window_id())),
+					"s" if e.mods.ctrl() && e.mods.shift() => ctx.submit_command(commands::PROJECT_SAVE_AS.to(ctx.window_id())),
+					"s" if e.mods.ctrl() => ctx.submit_command(commands::PROJECT_SAVE.to(ctx.window_id())),
+					"x" if e.mods.ctrl() => ctx.submit_command(selection::CUT.to(ctx.window_id())),
+					"c" if e.mods.ctrl() => ctx.submit_command(selection::COPY.to(ctx.window_id())),
+					"v" if e.mods.ctrl() => ctx.submit_command(selection::PASTE.to(ctx.window_id())),
+					"a" if e.mods.ctrl() => ctx.submit_command(selection::SELECT_ALL.to(ctx.window_id())),
+					_ => {}
+				},
+				e if e.code == Code::Delete => {
+					ctx.submit_command(selection::DELETE.to(ctx.window_id()));
 				}
 				_ => {}
 			},

@@ -10,6 +10,7 @@ use crate::state::State;
 pub struct Delegate {
 	to_server: Sender<server::Event>,
 	after_save: Option<Box<dyn Fn(&mut DelegateCtx)>>,
+	midi_ports: Vec<midir::MidiOutputPort>,
 }
 
 impl Delegate {
@@ -17,6 +18,7 @@ impl Delegate {
 		Delegate {
 			to_server,
 			after_save: None,
+			midi_ports: vec![],
 		}
 	}
 }
@@ -78,7 +80,7 @@ impl AppDelegate<State> for Delegate {
 			_ => true,
 		};
 		if project_changed {
-			ctx.submit_command(cmds::REDRAW, Target::Global);
+			ctx.submit_command(cmds::REDRAW.to(Target::Global));
 		}
 		propagate
 	}

@@ -1,19 +1,19 @@
-use druid::{
-	lens::Map,
-	widget::{Button, Controller, Flex, Label, ViewSwitcher, WidgetExt},
-	Command, Env, LifeCycle, LifeCycleCtx, Widget,
-};
-
 use crate::commands as cmds;
 use crate::state::editors::settings::{Backend, State};
 use crate::widget::common::*;
+use druid::{
+	lens::Map,
+	widget::{Button, Controller, Flex, Label, ViewSwitcher, WidgetExt},
+	Env, LifeCycle, LifeCycleCtx, Widget,
+};
+use std::rc::Rc;
 
 struct RequestMPEPorts;
 
 impl<T, W: Widget<T>> Controller<T, W> for RequestMPEPorts {
 	fn lifecycle(&mut self, child: &mut W, ctx: &mut LifeCycleCtx, event: &LifeCycle, data: &T, env: &Env) {
 		if let LifeCycle::WidgetAdded = event {
-			ctx.submit_command(Command::new(cmds::BACKEND_MPE_REQUEST_PORTS, ctx.widget_id()), None);
+			ctx.submit_command(cmds::BACKEND_MPE_REQUEST_PORTS.with(ctx.widget_id()));
 		}
 		child.lifecycle(ctx, event, data, env);
 	}
@@ -28,7 +28,7 @@ pub fn build() -> impl Widget<State> {
 		)
 		.with_flex_child(
 			ViewSwitcher::new(
-				|data: &Backend, _| std::mem::discriminant(data),
+				|data: &Backend, _| Rc::new(std::mem::discriminant(data)),
 				|_, data, _| {
 					Box::new(match data {
 						Backend::Audio => Flex::row().with_child(Label::new("Use integrated synth")),
@@ -50,7 +50,7 @@ pub fn build() -> impl Widget<State> {
 		.with_flex_child(backend_input, 1.0)
 		.with_flex_spacer(1.0)
 		.with_flex_child(
-			Button::new("Apply").on_click(|ctx, _, _| ctx.submit_command(cmds::SETTINGS_APPLY, ctx.window_id())),
+			Button::new("Apply").on_click(|ctx, _, _| ctx.submit_command(cmds::SETTINGS_APPLY.to(ctx.window_id()))),
 			1.0,
 		)
 }

@@ -1,34 +1,26 @@
 use super::Event;
 use crate::data::{icp, sheet::*};
 use crate::util::*;
-use midir::{MidiOutput, MidiOutputConnection};
+use midir::{MidiOutput, MidiOutputConnection, MidiOutputPort};
 use std::error::Error;
 use std::sync::mpsc::*;
 use std::thread;
 use std::time::{Duration, Instant};
 
-pub fn launch(device_id: usize) -> Result<Sender<Event>, Box<dyn Error>> {
+pub fn launch(port: MidiOutputPort) -> Result<Sender<Event>, Box<dyn Error>> {
 	let (sender, receiver) = channel();
 	thread::spawn(move || {
-		if let Err(err) = run(receiver, device_id) {
+		if let Err(err) = run(receiver, port) {
 			println!("Error with the mpe server: {}", err);
 		}
 	});
 	Ok(sender)
 }
 
-pub fn get_port_names() -> Result<Vec<String>, Box<dyn Error>> {
-	let midi_out = MidiOutput::new("midir mpe output")?;
-	let ports = (0..midi_out.port_count())
-		.map(|id| midi_out.port_name(id))
-		.collect::<Result<_, _>>()?;
-	Ok(ports)
-}
-
 const UPDATE_RATE: f64 = 0.04;
 
-pub fn run(receiver: Receiver<Event>, device_id: usize) -> Result<(), Box<dyn Error>> {
-	let mut engine = Engine::new(device_id)?;
+pub fn run(receiver: Receiver<Event>, port: MidiOutputPort) -> Result<(), Box<dyn Error>> {
+	let mut engine = Engine::new(port)?;
 
 	let mut last_instant = Instant::now();
 	let mut until_update = 0.0;
@@ -101,9 +93,9 @@ struct Engine {
 }
 
 impl Engine {
-	pub fn new(device_id: usize) -> Result<Engine, Box<dyn Error>> {
+	pub fn new(port: MidiOutputPort) -> Result<Engine, Box<dyn Error>> {
 		let midi_out = MidiOutput::new("midir mpe output")?;
-		let conn = midi_out.connect(device_id, "midir mpe")?;
+		let conn = midi_out.connect(&port, "midir mpe")?;
 
 		Ok(Engine {
 			conn,

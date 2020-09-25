@@ -15,29 +15,29 @@ pub fn build() -> impl Widget<State> {
 			.with_child(
 				DropDown::new("File")
 					.with_item(dropdown::Item::new("New", |ctx, _, _| {
-						ctx.submit_command(commands::PROJECT_NEW, None);
+						ctx.submit_command(commands::PROJECT_NEW);
 					}))
 					.with_item(dropdown::Item::new("Open", |ctx, _, _| {
-						ctx.submit_command(commands::PROJECT_OPEN, None);
+						ctx.submit_command(commands::PROJECT_OPEN);
 					}))
 					.with_item(dropdown::Item::new("Save", |ctx, _, _| {
-						ctx.submit_command(commands::PROJECT_SAVE, None)
+						ctx.submit_command(commands::PROJECT_SAVE)
 					}))
 					.with_item(dropdown::Item::new("Save As", |ctx, _, _| {
-						ctx.submit_command(commands::PROJECT_SAVE_AS, None)
+						ctx.submit_command(commands::PROJECT_SAVE_AS)
 					}))
 					.fix_width(80.0)
 					.padding(3.0),
 			)
 			.with_child(
 				Button::new("Settings")
-					.on_click(|ctx, _, _| ctx.submit_command(commands::OPEN_SETTINGS, None))
+					.on_click(|ctx, _, _| ctx.submit_command(commands::OPEN_SETTINGS))
 					.fix_width(100.0)
 					.padding(3.0),
 			)
 			.with_child(
 				Button::new("Layout")
-					.on_click(|ctx, _, _| ctx.submit_command(commands::OPEN_LAYOUT_EDITOR, None))
+					.on_click(|ctx, _, _| ctx.submit_command(commands::OPEN_LAYOUT_EDITOR))
 					.fix_width(80.0)
 					.padding(3.0),
 			)

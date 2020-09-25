@@ -60,9 +60,10 @@ impl<T: Data> Widget<T> for Reversed<T> {
 		ctx.with_save(|ctx| {
 			ctx.transform(transform);
 			// let visible = Vec2::new(0.0, size.height) + ctx.region().to_rect() * Vec2::new(1.0, -1.0);
-			let visible = ctx.region().to_rect();
-			let visible = Rect::from_points((visible.x0, visible.y1), (visible.x1, visible.y0));
-			ctx.with_child_ctx(visible, |ctx| self.child.paint(ctx, data, env));
+			// let visible = ctx.region().to_rect();
+			// let visible = Rect::from_points((visible.x0, visible.y1), (visible.x1, visible.y0));
+			// ctx.with_child_ctx(visible, |ctx| self.child.paint(ctx, data, env));
+			ctx.with_child_ctx(ctx.region().clone(), |ctx| self.child.paint(ctx, data, env));
 		})
 	}
 }

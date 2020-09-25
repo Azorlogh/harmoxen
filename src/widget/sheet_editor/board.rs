@@ -9,9 +9,9 @@ use crate::util::coord::Coord;
 use crate::widget::common::{ParseLazy, TextBox};
 use druid::kurbo::Line;
 use druid::{
-	BoxConstraints, Color, Command, ContextMenu, Data, Env, Event, EventCtx, KeyCode, KeyEvent, LayoutCtx, LifeCycle,
-	LifeCycleCtx, LocalizedString, MenuDesc, MenuItem, PaintCtx, Point, Rect, RenderContext, Selector, Size, UpdateCtx, Vec2,
-	Widget, WidgetExt, WidgetPod,
+	BoxConstraints, Color, ContextMenu, Data, Env, Event, EventCtx, KbKey, KeyEvent, LayoutCtx, LifeCycle, LifeCycleCtx,
+	LocalizedString, MenuDesc, MenuItem, PaintCtx, Point, Rect, RenderContext, Selector, Size, UpdateCtx, Vec2, Widget,
+	WidgetExt, WidgetPod,
 };
 use generational_arena::Index;
 use std::{collections::HashMap, time::Instant};
@@ -76,8 +76,8 @@ impl Board {
 		self.action = Action::Idle;
 		ctx.set_active(false);
 		ctx.request_paint();
-		let cmd = Command::new(commands::ICP, icp::Event::NoteStop(2000));
-		ctx.submit_command(cmd, ctx.window_id());
+		let cmd = commands::ICP.with(icp::Event::NoteStop(2000));
+		ctx.submit_command(cmd.to(ctx.window_id()));
 	}
 }
 
@@ -85,11 +85,7 @@ impl Widget<State> for Board {
 	fn event(&mut self, ctx: &mut EventCtx, event: &Event, data: &mut State, env: &Env) {
 		// send events to the interval input widget
 		if let Some(interval_input) = &mut self.interval_input {
-			if let Event::KeyDown(KeyEvent {
-				key_code: KeyCode::Return,
-				..
-			}) = event
-			{
+			if let Event::KeyDown(KeyEvent { key: KbKey::Enter, .. }) = event {
 				let mut sheet = data.sheet.borrow_mut();
 				let note = sheet.get_note_mut(interval_input.0).unwrap();
 				if let Pitch::Relative(_, ref mut interval) = note.pitch {
@@ -134,14 +130,12 @@ impl Widget<State> for Board {
 								if sheet.get_note_at(Point::new(note.start, note.y(&sheet)), 0.01).is_none() {
 									let idx = sheet.add_note(note);
 									ctx.submit_command(
-										Command::new(
-											commands::ICP,
-											icp::Event::NotePlay(icp::Note {
+										commands::ICP
+											.with(icp::Event::NotePlay(icp::Note {
 												id: 2000,
 												freq: sheet.get_freq(note.pitch),
-											}),
-										),
-										ctx.window_id(),
+											}))
+											.to(ctx.window_id()),
 									);
 									let mut notes = HashMap::new();
 									notes.insert(idx, Vec2::ZERO);
@@ -173,14 +167,12 @@ impl Widget<State> for Board {
 									self.note_len = note.length;
 									let note_freq = sheet.get_freq(note.pitch);
 									ctx.submit_command(
-										Command::new(
-											commands::ICP,
-											icp::Event::NotePlay(icp::Note {
+										commands::ICP
+											.with(icp::Event::NotePlay(icp::Note {
 												id: 2000,
 												freq: note_freq,
-											}),
-										),
-										ctx.window_id(),
+											}))
+											.to(ctx.window_id()),
 									);
 									if let Pitch::Relative(_, interval) = note.pitch {
 										let widget = WidgetPod::new(
@@ -243,19 +235,14 @@ impl Widget<State> for Board {
 									self.action_effective = true;
 									if sheet.get_y(note.pitch) != pos.y {
 										let note = sheet.get_note(*idx).unwrap();
+										ctx.submit_command(commands::ICP.with(icp::Event::NoteStop(2000)).to(ctx.window_id()));
 										ctx.submit_command(
-											Command::new(commands::ICP, icp::Event::NoteStop(2000)),
-											ctx.window_id(),
-										);
-										ctx.submit_command(
-											Command::new(
-												commands::ICP,
-												icp::Event::NotePlay(icp::Note {
+											commands::ICP
+												.with(icp::Event::NotePlay(icp::Note {
 													id: 2000,
 													freq: sheet.get_freq(note.pitch),
-												}),
-											),
-											ctx.window_id(),
+												}))
+												.to(ctx.window_id()),
 										);
 									}
 									if let Pitch::Relative(_, _) = note.pitch {
@@ -354,10 +341,10 @@ impl Widget<State> for Board {
 			_ => {}
 		}
 		if sheet_changed {
-			ctx.submit_command(commands::SHEET_CHANGED, ctx.window_id());
+			ctx.submit_command(commands::SHEET_CHANGED.to(ctx.window_id()));
 		}
 		if history_save {
-			ctx.submit_command(commands::HISTORY_SAVE, ctx.window_id());
+			ctx.submit_command(commands::HISTORY_SAVE.to(ctx.window_id()));
 		}
 	}
 
@@ -435,16 +422,13 @@ fn make_note_context_menu<T: Data>(id: Index, time: f64) -> MenuDesc<T> {
 	MenuDesc::empty()
 		.append(MenuItem::new(
 			LocalizedString::new("Add relative note"),
-			Command::new(ADD_RELATIVE_NOTE, (id, time)),
+			ADD_RELATIVE_NOTE.with((id, time)),
 		))
 		.append(MenuItem::new(
 			LocalizedString::new("Duplicate note"),
-			Command::new(DUPLICATE_NOTE, (id, time)),
+			DUPLICATE_NOTE.with((id, time)),
 		))
-		.append(MenuItem::new(
-			LocalizedString::new("Delete note"),
-			Command::new(DELETE_NOTE, id),
-		))
+		.append(MenuItem::new(LocalizedString::new("Delete note"), DELETE_NOTE.with(id)))
 }
 
 fn get_hover(pos: Point, coord: Coord, sheet: &Sheet, env: &Env) -> Hover {
