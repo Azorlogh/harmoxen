@@ -56,18 +56,11 @@ impl Widget<State> for Cursor {
 				self.origin = None;
 				ctx.request_paint();
 			}
-			Event::Command(ref cmd) if cmd.is(commands::CURSOR_ADVANCE) => {
-				let delta = *cmd.get_unchecked(commands::CURSOR_ADVANCE);
-				*position = (*position + delta * (data.tempo / 60.0)) % data.sheet.borrow().get_size();
-				ctx.request_paint();
-			}
 			Event::AnimFrame(delta) => {
 				if let Some(_) = self.origin {
-					ctx.submit_command(
-						commands::CURSOR_ADVANCE
-							.with((*delta as f64) / 1000000000.0)
-							.to(ctx.widget_id()),
-					);
+					let delta = (*delta as f64) / 1000000000.0;
+					*position = (*position + delta * (data.tempo / 60.0)) % data.sheet.borrow().get_size();
+					ctx.request_paint();
 					ctx.request_anim_frame();
 				}
 			}

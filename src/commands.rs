@@ -35,6 +35,3 @@ pub const TEMPO_CHANGED: Selector<f64> = Selector::new("tempo-changed");
 // marker editor
 pub const MARKER_ADD: Selector<f64> = Selector::new("marker-add");
 pub const MARKER_DELETE: Selector<usize> = Selector::new("marker-delete");
-
-// cursor
-pub const CURSOR_ADVANCE: Selector<f64> = Selector::new("cursor-advance");
