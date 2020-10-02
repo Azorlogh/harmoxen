@@ -100,7 +100,7 @@ impl Widget<State> for Overlay {
 			let size = child.widget.layout(ctx, &child.bc, data, env);
 			let origin = child
 				.origin
-				.unwrap_or((bc.max().to_vec2() / 2.0 - size.to_vec2() / 2.0).to_point());
+				.unwrap_or_else(|| (bc.max().to_vec2() / 2.0 - size.to_vec2() / 2.0).to_point());
 			child
 				.widget
 				.set_layout_rect(ctx, data, env, Rect::from_origin_size(origin, size));
