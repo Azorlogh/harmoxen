@@ -23,7 +23,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 		.send(server::Event::SetTempo(state.editors.sheet_editor.tempo))
 		.unwrap();
 
-	let main_window = WindowDesc::new(|| ui::build())
+	let main_window = WindowDesc::new(ui::build)
 		.title(LocalizedString::new("Harmoxen v0.2.0"))
 		.window_size(Size::new(800.0, 500.0));
 
