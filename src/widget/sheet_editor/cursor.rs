@@ -57,7 +57,7 @@ impl Widget<State> for Cursor {
 				ctx.request_paint();
 			}
 			Event::AnimFrame(delta) => {
-				if let Some(_) = self.origin {
+				if self.origin.is_some() {
 					let delta = (*delta as f64) / 1000000000.0;
 					*position = (*position + delta * (data.tempo / 60.0)) % data.sheet.borrow().get_size();
 					ctx.request_paint();
