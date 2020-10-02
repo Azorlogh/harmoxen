@@ -76,9 +76,9 @@ impl<T: Data> Widget<T> for DropDown<T> {
 								bc,
 								Box::new(move |_| {
 									let mut flex = Flex::column();
-									for i in 0..texts.len() {
+									for (i, text) in texts.iter().enumerate() {
 										flex.add_child(
-											Button::new(texts[i].as_str())
+											Button::new(text.as_str())
 												.on_click(move |ctx, _, _| ctx.submit_command(CLICK_ITEM.with(i).to(widget_id)))
 												.expand_width(),
 										);
