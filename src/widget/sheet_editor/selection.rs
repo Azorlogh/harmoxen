@@ -145,7 +145,7 @@ impl Widget<State> for Selection {
 			Event::Command(cmd) if cmd.is(SELECT_ALL) => {
 				let sheet = data.sheet.borrow();
 				let mut selection = data.selection.borrow_mut();
-				*selection = sheet.indices.iter().map(|&x| x).collect();
+				*selection = sheet.indices.iter().copied().collect();
 				history_save = true;
 				ctx.submit_command(super::REDRAW.to(ctx.window_id()));
 			}
