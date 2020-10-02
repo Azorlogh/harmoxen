@@ -58,7 +58,7 @@ impl Clipboard {
 	}
 
 	pub fn paste(&self, sheet: &mut Sheet, selection: &mut HashSet<SheetIndex>) {
-		let mut entries: Vec<(usize, Note<Index>)> = (0..self.0.len()).map(|i| (i, self.0[i].clone())).collect();
+		let mut entries: Vec<(usize, Note<Index>)> = (0..self.0.len()).map(|i| (i, self.0[i])).collect();
 		let mut sheet_indices: Vec<Option<SheetIndex>> = vec![None; self.0.len()];
 
 		selection.clear();

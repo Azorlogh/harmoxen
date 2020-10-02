@@ -112,7 +112,7 @@ impl Widget<Frame> for RangeSlider {
 							if active_bounds.1 {
 								new = new.min(bounds.1 - view.size());
 							}
-							*view = view.clone() - view.0 + new;
+							*view = *view - view.0 + new;
 							ctx.request_paint();
 						}
 						State::Scaling(false) => {

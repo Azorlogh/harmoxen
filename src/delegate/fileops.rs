@@ -26,7 +26,7 @@ impl Delegate {
 					ctx.submit_command(
 						widget::overlay::SHOW_MIDDLE
 							.with(ui::modal::save::build(IMPL_PROJECT_NEW))
-							.to(main_window.clone()),
+							.to(main_window),
 					);
 					self.after_save = Some(Box::new(|ctx: &mut DelegateCtx| {
 						ctx.submit_command(IMPL_PROJECT_NEW);
@@ -41,7 +41,7 @@ impl Delegate {
 					ctx.submit_command(
 						widget::overlay::SHOW_MIDDLE
 							.with(ui::modal::save::build(IMPL_PROJECT_OPEN))
-							.to(main_window.clone()),
+							.to(main_window),
 					);
 					self.after_save = Some(Box::new(|ctx: &mut DelegateCtx| {
 						ctx.submit_command(IMPL_PROJECT_OPEN);
