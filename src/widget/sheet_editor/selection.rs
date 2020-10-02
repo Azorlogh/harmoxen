@@ -86,7 +86,7 @@ impl Widget<State> for Selection {
 					Action::SelectionAdd(p0, p1) => {
 						let notes =
 							sheet.get_notes_rect(Rect::from_points(p0, p1), coord.to_board_h(env.get(theme::NOTE_HEIGHT)));
-						if notes.len() != 0 {
+						if !notes.is_empty() {
 							let mut selection = data.selection.borrow_mut();
 							selection.extend(notes);
 							self.action_effective = true;
@@ -95,7 +95,7 @@ impl Widget<State> for Selection {
 					Action::SelectionRemove(p0, p1) => {
 						let notes =
 							sheet.get_notes_rect(Rect::from_points(p0, p1), coord.to_board_h(env.get(theme::NOTE_HEIGHT)));
-						if notes.len() != 0 {
+						if !notes.is_empty() {
 							let mut selection = data.selection.borrow_mut();
 							*selection = &*selection - &notes.into_iter().collect::<HashSet<_>>();
 							self.action_effective = true;

@@ -29,9 +29,7 @@ pub struct IndexSelector {
 
 impl IndexSelector {
 	pub fn new(choices: Vec<String>) -> IndexSelector {
-		if choices.len() == 0 {
-			panic!("tried to create IndexSelector without an empty Vec");
-		}
+		assert!(!choices.is_empty(), "tried to create IndexSelector without an empty Vec");
 		IndexSelector {
 			label: Label::new(choices[0].clone()),
 			label_size: Size::ZERO,
