@@ -22,10 +22,10 @@ impl Widget<State> for Shortcuts {
 				ctx.request_focus();
 			}
 			Event::KeyDown(evt) if evt.code == Code::Space => {
-				let command = if !data.playing {
-					commands::PLAY_START
-				} else {
+				let command = if data.playing {
 					commands::PLAY_STOP
+				} else {
+					commands::PLAY_START
 				};
 				ctx.submit_command(command.to(ctx.window_id()));
 			}
