@@ -56,11 +56,8 @@ impl Widget<State> for Shortcuts {
 	}
 
 	fn lifecycle(&mut self, ctx: &mut LifeCycleCtx, event: &LifeCycle, _data: &State, _env: &Env) {
-		match event {
-			LifeCycle::WidgetAdded => {
-				ctx.register_for_focus();
-			}
-			_ => {}
+		if let LifeCycle::WidgetAdded = event {
+		    ctx.register_for_focus();
 		}
 	}
 
