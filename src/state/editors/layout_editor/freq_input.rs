@@ -66,7 +66,7 @@ impl std::str::FromStr for Enumeration {
 
 	fn from_str(s: &str) -> Result<Self, Self::Err> {
 		Ok(Enumeration(Rc::new(
-			s.split(":")
+			s.split(':')
 				.map(|x| x.parse::<usize>())
 				.collect::<Result<Vec<usize>, _>>()
 				.map_err(|_| super::LayoutParseError)?,

@@ -14,7 +14,7 @@ impl Delegate {
 	) -> bool {
 		match cmd {
 			_ if cmd.is(cmds::OPEN_LAYOUT_EDITOR) => {
-				let new_win = WindowDesc::new(|| ui::build_layout_editor())
+				let new_win = WindowDesc::new(ui::build_layout_editor)
 					.title(LocalizedString::new("Layout input"))
 					.window_size((800.0, 300.0));
 				ctx.new_window(new_win);

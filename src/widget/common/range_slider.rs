@@ -112,7 +112,7 @@ impl Widget<Frame> for RangeSlider {
 							if active_bounds.1 {
 								new = new.min(bounds.1 - view.size());
 							}
-							*view = view.clone() - view.0 + new;
+							*view = *view - view.0 + new;
 							ctx.request_paint();
 						}
 						State::Scaling(false) => {
@@ -141,10 +141,7 @@ impl Widget<Frame> for RangeSlider {
 						}
 						_ => {}
 					}
-				} else if !ctx.is_hot() {
-					ctx.request_paint();
-					self.state = State::Idle;
-				} else {
+				} else if ctx.is_hot() {
 					let new_state = if (screen_view.0 + HANDLE_OFFSET - pos).abs() < HANDLE_OFFSET {
 						State::Scaling(false)
 					} else if (screen_view.1 - HANDLE_OFFSET - pos).abs() < HANDLE_OFFSET {
@@ -158,6 +155,9 @@ impl Widget<Frame> for RangeSlider {
 						self.state = new_state;
 						ctx.request_paint();
 					}
+				} else {
+					ctx.request_paint();
+					self.state = State::Idle;
 				}
 			}
 			Event::MouseUp(_) => {

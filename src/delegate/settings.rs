@@ -16,7 +16,7 @@ impl Delegate {
 	) -> bool {
 		match cmd {
 			_ if cmd.is(cmds::OPEN_SETTINGS) => {
-				let new_win = WindowDesc::new(|| ui::build_settings())
+				let new_win = WindowDesc::new(ui::build_settings)
 					.title(LocalizedString::new("Settings"))
 					.window_size((700.0, 200.0));
 				ctx.new_window(new_win);

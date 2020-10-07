@@ -86,7 +86,7 @@ impl AppDelegate<State> for Delegate {
 	}
 
 	fn window_added(&mut self, id: WindowId, data: &mut State, _env: &Env, _ctx: &mut DelegateCtx) {
-		if let None = data.main_window {
+		if data.main_window.is_none() {
 			data.main_window = Some(Rc::new(id));
 		}
 	}

@@ -40,7 +40,7 @@ impl Sheet {
 	}
 
 	pub fn get_note(&self, id: Index) -> Option<Note> {
-		self.notes.get(id).map(|note| *note)
+		self.notes.get(id).copied()
 	}
 
 	pub fn get_note_mut(&mut self, id: Index) -> Option<&mut Note> {

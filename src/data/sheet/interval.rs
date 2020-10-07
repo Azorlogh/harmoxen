@@ -28,7 +28,7 @@ impl std::str::FromStr for Interval {
 	type Err = IntervalParseError;
 
 	fn from_str(s: &str) -> Result<Self, Self::Err> {
-		let parts = s.split("/").collect::<Vec<&str>>();
+		let parts = s.split('/').collect::<Vec<&str>>();
 		match parts.len() {
 			1 => Ok(Interval::Float(parts[0].parse::<f64>().map_err(|_| IntervalParseError)?)),
 			2 => Ok(Interval::Ratio(

@@ -30,7 +30,7 @@ pub struct ValueSelector<T> {
 impl<T: Data + Clone> ValueSelector<T> {
 	pub fn new(choices: Vec<T>) -> ValueSelector<T> {
 		ValueSelector {
-			label: Label::new(|data: &String, _env: &Env| data.clone().into()),
+			label: Label::new(|data: &String, _env: &Env| data.clone()),
 			label_size: Size::ZERO,
 			choices,
 			curr_idx: 0,
