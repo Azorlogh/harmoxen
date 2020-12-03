@@ -1,3 +1,7 @@
+## Warning
+
+This branch is work in progress, it is dedicated to migrating the software to the Iced library, as well as making it VST-compatible.
+
 # Harmoxen
 
 This software is an experimental piano roll that has a continuous y axis.
@@ -11,15 +15,15 @@ You can still play around with it but many parts are missing.
 
 ## Goals
 
-The goals of this project haven't been fully fleshed out yet, but for now, my only goal is for it to be fun to play with.
+- Be fun to play with
+- Be easy to use in a DAW
+- Encourage experimentation
+- Allow as much creative freedom as possible
 
 ## Building
 
-On Windows, the project can be built simply by running `cargo run` with Rust installed.
-
-On Linux, `gtk3` and `alsa` must be installed.
-
-On MacOS, `cairo` must be installed.
+Running `cargo build` should be sufficient.
+The project will only run in a `wgpu`-compatible environment. Check out [the wgpu repository](https://github.com/gfx-rs/wgpu) for more information.
 
 ## Usage
 

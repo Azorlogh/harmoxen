@@ -1,16 +1,6 @@
-[package]
-name = "harmoxen"
-version = "0.2.0"
-authors = ["Azorlogh <bott.alix@gmail.com>"]
-edition = "2018"
-
-[dependencies]
-druid = { git = "https://github.com/linebender/druid", branch = "master" }
-cpal = "0.12.1"
-meval = "0.2.0"
-derive_more = "0.99.10"
-generational-arena = { version = "0.2.8", features = ["serde"] }
-nalgebra = "0.22.0"
-serde = { version = "1.0.116", features = ["derive"] }
-ron = "0.6.2"
-midir = "0.7.0"
+[workspace]
+members = [
+	"harmoxen",
+	"harmoxen-standalone",
+	"harmoxen-vst",
+]
