@@ -1,4 +1,3 @@
-use iced::{Background, Color};
 use iced_style::menu;
 
 #[derive(Debug, Clone, Copy)]

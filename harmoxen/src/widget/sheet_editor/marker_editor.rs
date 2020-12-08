@@ -6,8 +6,8 @@ use iced_graphics::{
 	Backend, Defaults, Primitive, Renderer,
 };
 use iced_native::{
-	event, keyboard, layout as iced_layout, mouse, overlay, Clipboard, Element, Event, Hasher,
-	Layout as IcedLayout, Length, Rectangle, Vector, Widget,
+	event, keyboard, layout as iced_layout, mouse, overlay, Clipboard, Element, Event, Hasher, Layout as IcedLayout, Length,
+	Rectangle, Vector, Widget,
 };
 
 use crate::widget::common::{context_menu, ContextMenu};
@@ -51,12 +51,7 @@ pub struct MarkerEditor<'a> {
 }
 
 impl<'a> MarkerEditor<'a> {
-	pub fn new(
-		state: &'a mut State,
-		frame: Frame2,
-		layout: &'a Layout,
-		selected_marker: usize,
-	) -> Self {
+	pub fn new(state: &'a mut State, frame: Frame2, layout: &'a Layout, selected_marker: usize) -> Self {
 		Self {
 			state,
 			frame,
@@ -149,26 +144,19 @@ where
 					let at = coord.to_board_x(mouse_pos.x);
 					match get_hover(at, coord, self.layout) {
 						Some(idx) => {
-							let mut items = vec![context_menu::Item::new(
-								"Edit Layout",
-								RootMessage::OpenLayout,
-							)];
+							let mut items = vec![context_menu::Item::new("Edit Layout", RootMessage::OpenLayout)];
 							if idx != 0 {
-								items.push(context_menu::Item::new(
-									"Delete marker",
-									Message::DeleteMarker(idx).into(),
-								));
+								items.push(context_menu::Item::new("Delete marker", Message::DeleteMarker(idx).into()));
 							}
 							self.state.context_menu = context_menu::State::new(items);
 							self.state.action = Action::Context;
 							self.state.context_pos = Some(cursor_position);
 						}
 						_ => {
-							self.state.context_menu =
-								context_menu::State::new(vec![context_menu::Item::new(
-									"Create Marker",
-									Message::AddMarker(at).into(),
-								)]);
+							self.state.context_menu = context_menu::State::new(vec![context_menu::Item::new(
+								"Create Marker",
+								Message::AddMarker(at).into(),
+							)]);
 							self.state.action = Action::Context;
 							self.state.context_pos = Some(cursor_position);
 						}
@@ -186,7 +174,7 @@ where
 		_defaults: &Defaults,
 		layout: IcedLayout,
 		_cursor_position: iced::Point,
-		viewport: &Rectangle,
+		_viewport: &Rectangle,
 	) -> (Primitive, mouse::Interaction) {
 		let bounds = layout.bounds();
 		let coord = Coord::new(self.frame, layout.bounds().size());
@@ -240,9 +228,7 @@ where
 			})
 		}
 
-		let cursors_primitives = Primitive::Group {
-			primitives: cursors,
-		};
+		let cursors_primitives = Primitive::Group { primitives: cursors };
 		(
 			Primitive::Clip {
 				bounds,
@@ -253,10 +239,7 @@ where
 		)
 	}
 
-	fn overlay(
-		&mut self,
-		_layout: iced_layout::Layout,
-	) -> Option<overlay::Element<RootMessage, Renderer<B>>> {
+	fn overlay(&mut self, _layout: iced_layout::Layout) -> Option<overlay::Element<RootMessage, Renderer<B>>> {
 		if let Action::Context = self.state.action {
 			Some(
 				ContextMenu::new(&mut self.state.context_menu)

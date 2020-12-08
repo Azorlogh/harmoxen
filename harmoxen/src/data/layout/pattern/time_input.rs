@@ -17,28 +17,46 @@ pub enum TimeInput {
 	#[display(fmt = "None")]
 	None,
 	#[display(fmt = "Regular")]
-	Regular { ndiv: usize, nbeats: usize },
+	Regular { ndiv: String, nbeats: String },
 	#[display(fmt = "Poly")]
-	Poly {
-		ndiv0: usize,
-		ndiv1: usize,
-		nbeats: usize,
-	},
+	Poly { ndiv0: String, ndiv1: String, nbeats: String },
 	#[display(fmt = "Formula")]
-	Formula {
-		ndiv: usize,
-		nbeats: usize,
-		formula: String,
-	},
+	Formula { ndiv: String, nbeats: String, formula: String },
 }
 
 impl Default for TimeInput {
 	fn default() -> TimeInput {
-		TimeInput::Regular { ndiv: 4, nbeats: 4 }
+		TimeInput::Regular {
+			ndiv: "4".to_string(),
+			nbeats: "4".to_string(),
+		}
 	}
 }
 
 impl TimeInput {
+	pub fn default_none() -> Self {
+		Self::None
+	}
+	pub fn default_regular() -> Self {
+		Self::Regular {
+			ndiv: "4".to_string(),
+			nbeats: "4".to_string(),
+		}
+	}
+	pub fn default_poly() -> Self {
+		Self::Poly {
+			ndiv0: "4".to_string(),
+			ndiv1: "5".to_string(),
+			nbeats: "4".to_string(),
+		}
+	}
+	pub fn default_formula() -> Self {
+		Self::Formula {
+			ndiv: "4".to_string(),
+			nbeats: "4".to_string(),
+			formula: "i/4 + (i%2)*0.2".into(),
+		}
+	}
 	pub fn mode(&self) -> Mode {
 		match self {
 			TimeInput::None => Mode::None,
@@ -51,27 +69,28 @@ impl TimeInput {
 	pub fn build(&self) -> Result<Option<TimePattern>, LayoutParseError> {
 		match self.clone() {
 			TimeInput::None => Ok(None),
-			TimeInput::Regular { ndiv, nbeats } => Ok(Some(TimePattern {
-				values: (0..ndiv).map(|k| k as f32 / ndiv as f32).collect(),
-				nbeats,
-			})),
-			TimeInput::Formula {
-				ndiv,
-				nbeats,
-				formula,
-			} => {
-				let expr: meval::Expr = formula.parse().map_err(|_| LayoutParseError)?;
+			TimeInput::Regular { ndiv, nbeats } => {
+				let ndiv = ndiv.parse::<usize>()?;
+				let nbeats = nbeats.parse::<usize>()?;
+				Ok(Some(TimePattern {
+					values: (0..ndiv).map(|k| k as f32 / ndiv as f32).collect(),
+					nbeats,
+				}))
+			}
+			TimeInput::Formula { ndiv, nbeats, formula } => {
+				let ndiv = ndiv.parse::<usize>()?;
+				let nbeats = nbeats.parse::<usize>()?;
+				let expr: meval::Expr = formula.parse()?;
 				let func = expr.bind("i").map_err(|_| LayoutParseError)?;
 				Ok(Some(TimePattern {
 					values: (0..ndiv).map(|i| func(i as f64) as f32).collect(),
 					nbeats,
 				}))
 			}
-			TimeInput::Poly {
-				ndiv0,
-				ndiv1,
-				nbeats,
-			} => {
+			TimeInput::Poly { ndiv0, ndiv1, nbeats } => {
+				let ndiv0 = ndiv0.parse::<usize>()?;
+				let ndiv1 = ndiv1.parse::<usize>()?;
+				let nbeats = nbeats.parse::<usize>()?;
 				if ndiv0 == 0 || ndiv1 == 0 {
 					return Err(LayoutParseError);
 				}
@@ -80,10 +99,7 @@ impl TimeInput {
 					.chain((1..ndiv1).map(|k| k as f32 / ndiv1 as f32))
 					.collect();
 				out.sort_by(|a, b| a.partial_cmp(b).unwrap());
-				Ok(Some(TimePattern {
-					values: out,
-					nbeats,
-				}))
+				Ok(Some(TimePattern { values: out, nbeats }))
 			}
 		}
 	}

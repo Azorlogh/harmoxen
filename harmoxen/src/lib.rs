@@ -52,15 +52,14 @@ impl Application for State {
 		let is_scrolling = self.sheet_editor.is_scrolling;
 		let mut subscriptions = vec![];
 		if is_playing {
-			subscriptions.push(time::every(Duration::from_millis(16)).map(|_| {
-				state::sheet_editor::Message::CursorTick(std::time::Instant::now()).into()
-			}))
-		}
-		if is_scrolling {
 			subscriptions.push(
 				time::every(Duration::from_millis(16))
-					.map(|_| state::sheet_editor::Message::ScrollTick(16.0).into()),
+					.map(|_| state::sheet_editor::Message::CursorTick(std::time::Instant::now()).into()),
 			)
+		}
+		if is_scrolling {
+			subscriptions
+				.push(time::every(Duration::from_millis(16)).map(|_| state::sheet_editor::Message::ScrollTick(16.0).into()))
 		}
 		Subscription::batch(subscriptions)
 	}

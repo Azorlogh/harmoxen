@@ -26,8 +26,7 @@ impl Osc {
 			Mode::Sine => (self.phase * TAU).sin(),
 			Mode::Saw => (self.phase - 0.5) * 2.0 - 1.0 - poly_blep(self.phase, delta),
 			Mode::Square => {
-				(if self.phase < 0.5 { 1.0 } else { -1.0 }) + poly_blep(self.phase, delta)
-					- poly_blep(self.phase, delta)
+				(if self.phase < 0.5 { 1.0 } else { -1.0 }) + poly_blep(self.phase, delta) - poly_blep(self.phase, delta)
 			}
 		};
 		self.phase += delta;

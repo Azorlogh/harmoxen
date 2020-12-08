@@ -20,8 +20,7 @@ impl FreqPattern {
 	fn normalize(mut self) -> FreqPattern {
 		let period = self.period();
 		for i in 0..(self.values.len() - 1) {
-			self.values[i] =
-				self.values[i] * period.powf((1.0 / self.values[i]).log(period).ceil());
+			self.values[i] = self.values[i] * period.powf((1.0 / self.values[i]).log(period).ceil());
 		}
 		self
 	}
@@ -39,10 +38,7 @@ pub struct Pattern {
 }
 
 impl Pattern {
-	pub const EMPTY: Pattern = Pattern {
-		time: None,
-		freq: None,
-	};
+	pub const EMPTY: Pattern = Pattern { time: None, freq: None };
 }
 
 //
@@ -83,3 +79,19 @@ impl PatternInput {
 #[derive(Debug, Display)]
 pub struct LayoutParseError;
 impl Error for LayoutParseError {}
+
+impl From<std::num::ParseIntError> for LayoutParseError {
+	fn from(_: std::num::ParseIntError) -> LayoutParseError {
+		LayoutParseError
+	}
+}
+impl From<std::num::ParseFloatError> for LayoutParseError {
+	fn from(_: std::num::ParseFloatError) -> LayoutParseError {
+		LayoutParseError
+	}
+}
+impl From<meval::Error> for LayoutParseError {
+	fn from(_: meval::Error) -> LayoutParseError {
+		LayoutParseError
+	}
+}

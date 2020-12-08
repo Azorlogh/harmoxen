@@ -33,20 +33,14 @@ pub fn build(state: &mut State) -> Element<Message> {
 						.style(state.theme),
 					)
 					.push(
-						Tab::new(
-							state.current_editor == CurrentEditor::SheetEditor,
-							Text::new("Sheet"),
-						)
-						.on_press(Message::OpenSheet)
-						.style(state.theme),
+						Tab::new(state.current_editor == CurrentEditor::SheetEditor, Text::new("Sheet"))
+							.on_press(Message::OpenSheet)
+							.style(state.theme),
 					)
 					.push(
-						Tab::new(
-							state.current_editor == CurrentEditor::SettingsEditor,
-							Text::new("Settings"),
-						)
-						.on_press(Message::OpenSettings)
-						.style(state.theme),
+						Tab::new(state.current_editor == CurrentEditor::SettingsEditor, Text::new("Settings"))
+							.on_press(Message::OpenSettings)
+							.style(state.theme),
 					),
 			)
 			// .push(Space::with_height(Length::Units(4)))

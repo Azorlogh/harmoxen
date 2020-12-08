@@ -39,10 +39,7 @@ pub struct State {
 impl Default for State {
 	fn default() -> State {
 		let mut sheet = Sheet::default();
-		sheet.add_note(crate::data::sheet::Note::new(
-			crate::data::Point::new(0.0, 8.8),
-			1.0,
-		));
+		sheet.add_note(crate::data::sheet::Note::new(crate::data::Point::new(0.0, 8.8), 1.0));
 		State {
 			wstates: WStates::default(),
 			frame: Frame2 {
@@ -73,11 +70,7 @@ impl Default for State {
 use std::sync::mpsc::Sender;
 
 impl State {
-	pub fn update(
-		&mut self,
-		msg: Message,
-		to_backend: &mut Sender<backend::Event>,
-	) -> Command<Message> {
+	pub fn update(&mut self, msg: Message, to_backend: &mut Sender<backend::Event>) -> Command<Message> {
 		match msg {
 			Message::FrameChanged(frame) => {
 				self.frame = frame;
@@ -92,17 +85,14 @@ impl State {
 				self.is_scrolling = true;
 			}
 			Message::ScrollTick(dt) => {
-				self.is_scrolling =
-					widget::scroll_view::tick(&mut self.wstates.scroll_view, &mut self.frame, dt);
+				self.is_scrolling = widget::scroll_view::tick(&mut self.wstates.scroll_view, &mut self.frame, dt);
 			}
 			Message::Play => {
 				if self.is_playing {
 					to_backend.send(backend::Event::PlayStop).ok();
 					self.cursor = 0.0;
 				} else {
-					to_backend
-						.send(backend::Event::SetTempo(self.tempo))
-						.unwrap();
+					to_backend.send(backend::Event::SetTempo(self.tempo)).unwrap();
 					to_backend
 						.send(backend::Event::PlayStart(self.sheet.clone(), self.cursor))
 						.ok();
@@ -111,8 +101,7 @@ impl State {
 				self.is_playing ^= true;
 			}
 			Message::CursorTick(now) => {
-				self.cursor +=
-					now.duration_since(self.last_tick).as_secs_f32() * (self.tempo / 60.0);
+				self.cursor += now.duration_since(self.last_tick).as_secs_f32() * (self.tempo / 60.0);
 				self.cursor %= self.sheet.get_size();
 				self.last_tick = now;
 			}

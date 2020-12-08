@@ -171,8 +171,7 @@ impl Engine {
 				for ch in 0..self.channels.len() {
 					let channel = self.channels[ch];
 					if channel.current == Some(id) {
-						let pitch_bend =
-							((freq / 440.0).log2() * 12.0 + 69.0) - channel.note_number as f32;
+						let pitch_bend = ((freq / 440.0).log2() * 12.0 + 69.0) - channel.note_number as f32;
 						if pitch_bend.abs() < PITCH_BEND_RANGE {
 							self.conn.send(&pitch_bend_msg(ch, pitch_bend)).unwrap();
 						} else {
@@ -197,17 +196,12 @@ impl Engine {
 
 	fn note_off(&mut self, ch: usize) -> Result<(), Box<dyn Error>> {
 		self.channels[ch].current = None;
-		self.conn
-			.send(&[0x81 + ch as u8, self.channels[ch].note_number, 0x70])?;
+		self.conn.send(&[0x81 + ch as u8, self.channels[ch].note_number, 0x70])?;
 		Ok(())
 	}
 }
 
 fn pitch_bend_msg(ch: usize, t: f32) -> [u8; 3] {
 	let n = (t * 8191.0 / PITCH_BEND_RANGE + 8192.0) as usize;
-	[
-		0xE1 + ch as u8,
-		(n & 0b1111111) as u8,
-		(n >> 7 & 0b1111111) as u8,
-	]
+	[0xE1 + ch as u8, (n & 0b1111111) as u8, (n >> 7 & 0b1111111) as u8]
 }

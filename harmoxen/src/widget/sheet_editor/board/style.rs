@@ -6,6 +6,7 @@ pub struct Style {
 	pub note_highlight: Color,
 	pub background_dark: Background,
 	pub background_light: Background,
+	pub root_line_color: Color,
 }
 
 impl std::default::Default for Style {
@@ -15,6 +16,7 @@ impl std::default::Default for Style {
 			note_highlight: Color::from_rgb(0.3, 0.7, 1.0),
 			background_dark: Background::Color(Color::from_rgb(0.1, 0.1, 0.1)),
 			background_light: Background::Color(Color::from_rgb(0.2, 0.2, 0.2)),
+			root_line_color: Color::from_rgb(0.1, 0.8, 0.7),
 		}
 	}
 }

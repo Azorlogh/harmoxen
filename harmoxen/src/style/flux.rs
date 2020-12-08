@@ -156,6 +156,7 @@ pub mod sheet_editor {
 				note_highlight: FEATURE_HL,
 				background_dark: BG_0.into(),
 				background_light: BG_1.into(),
+				root_line_color: BG_FEATURE,
 			}
 		}
 	}

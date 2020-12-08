@@ -32,19 +32,13 @@ pub fn tick(state: &mut State, frame: &mut Frame2, _dt: f32) -> bool {
 		moving = true;
 	}
 	if state.xzoom.abs() > 1e-3 {
-		frame
-			.x
-			.view
-			.scale_around(state.cursor.x, 2f32.powf(state.xzoom * 0.2));
+		frame.x.view.scale_around(state.cursor.x, 2f32.powf(state.xzoom * 0.2));
 		frame.x.view -= frame.x.view.0.min(0.0);
 		state.xzoom *= 0.8;
 		moving = true;
 	}
 	if state.yzoom.abs() > 1e-3 {
-		frame
-			.y
-			.view
-			.scale_around(state.cursor.y, 2f32.powf(state.yzoom * 0.2));
+		frame.y.view.scale_around(state.cursor.y, 2f32.powf(state.yzoom * 0.2));
 		frame.y.view -= frame.y.view.0.min(0.0);
 		state.yzoom *= 0.8;
 		moving = true;
@@ -100,8 +94,8 @@ where
 		layout: Layout,
 		cursor_position: iced::Point,
 		messages: &mut Vec<Message>,
-		renderer: &Renderer<B>,
-		clipboard: Option<&dyn Clipboard>,
+		_renderer: &Renderer<B>,
+		_clipboard: Option<&dyn Clipboard>,
 	) -> event::Status {
 		let lbounds = layout.bounds();
 		let size = layout.bounds().size();
@@ -124,8 +118,7 @@ where
 				if delta.0 != 0.0 {
 					let delta = delta.0;
 					let factor = self.frame.x.view.size();
-					self.state.xmove +=
-						(delta * factor * 0.002).max(-self.frame.x.view.0 - self.state.xmove);
+					self.state.xmove += (delta * factor * 0.002).max(-self.frame.x.view.0 - self.state.xmove);
 				}
 				if delta.1 != 0.0 {
 					if mods.alt {
@@ -134,8 +127,8 @@ where
 						self.state.yzoom += (-delta.1 / 120.0) * 0.2;
 					} else if mods.shift {
 						let factor = self.frame.x.view.size();
-						self.state.xmove += (-delta.1 * factor / layout.bounds().width)
-							.max(-self.frame.x.view.0 - self.state.xmove);
+						self.state.xmove +=
+							(-delta.1 * factor / layout.bounds().width).max(-self.frame.x.view.0 - self.state.xmove);
 					} else {
 						let factor = self.frame.y.view.size();
 						self.state.ymove += delta.1 * factor / layout.bounds().height;
@@ -153,13 +146,10 @@ where
 		&self,
 		_renderer: &mut Renderer<B>,
 		_defaults: &Defaults,
-		layout: Layout,
+		_layout: Layout,
 		_cursor_poition: iced::Point,
-		viewport: &Rectangle,
+		_viewport: &Rectangle,
 	) -> (Primitive, mouse::Interaction) {
-		let offset = Into::<Point>::into(layout.bounds().position()).to_vec2();
-		let coord = Coord::new(self.frame.clone(), layout.bounds().size());
-		let pos = coord.to_screen_p(self.state.cursor);
 		(Primitive::None, mouse::Interaction::Idle)
 	}
 }

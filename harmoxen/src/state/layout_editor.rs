@@ -4,9 +4,7 @@ use crate::data::layout::{
 	time_input::{self, TimeInput},
 };
 use crate::state::Message as RootMessage;
-use derive_more::Display;
 use iced::{button, text_input, Command};
-use std::error::Error;
 
 use crate::data::layout::Pattern;
 
@@ -17,6 +15,8 @@ pub struct State {
 	pub time_pick_list: iced::pick_list::State<time_input::Mode>,
 	pub wstates_time: [text_input::State; 3],
 	pub time: TimeInput,
+	pub freq_pick_list: iced::pick_list::State<freq_input::Mode>,
+	pub wstates_freq: [text_input::State; 3],
 	pub freq: FreqInput,
 }
 
@@ -25,48 +25,59 @@ impl State {
 		match msg {
 			Message::SetTimeMode(input) => {
 				self.time = match input {
-					time_input::Mode::None => TimeInput::None,
-					time_input::Mode::Regular => {
-						time_input::TimeInput::Regular { ndiv: 4, nbeats: 4 }
-					}
-					time_input::Mode::Formula => time_input::TimeInput::Formula {
-						ndiv: 4,
-						nbeats: 4,
-						formula: "i/4 + (i%2)*0.2".into(),
-					},
-					time_input::Mode::Poly => time_input::TimeInput::Poly {
-						ndiv0: 4,
-						ndiv1: 5,
-						nbeats: 4,
-					},
+					time_input::Mode::None => TimeInput::default_none(),
+					time_input::Mode::Regular => TimeInput::default_regular(),
+					time_input::Mode::Poly => TimeInput::default_poly(),
+					time_input::Mode::Formula => TimeInput::default_formula(),
 				}
 			}
 			Message::SetTimeField(idx, text) => match &mut self.time {
 				// TODO: improve when RFC 2294 lands
 				TimeInput::None => {}
 				TimeInput::Regular { ndiv, nbeats } => match idx {
-					0 => *ndiv = text.parse::<usize>().unwrap_or(*ndiv),
-					1 => *nbeats = text.parse::<usize>().unwrap_or(*nbeats),
+					0 => *ndiv = text,
+					1 => *nbeats = text,
 					_ => {}
 				},
-				TimeInput::Formula {
-					ndiv,
-					nbeats,
-					formula,
-				} => match idx {
-					0 => *ndiv = text.parse::<usize>().unwrap_or(*ndiv),
-					1 => *nbeats = text.parse::<usize>().unwrap_or(*nbeats),
+				TimeInput::Formula { ndiv, nbeats, formula } => match idx {
+					0 => *ndiv = text,
+					1 => *nbeats = text,
 					2 => *formula = text,
 					_ => {}
 				},
-				TimeInput::Poly {
-					ndiv0,
-					ndiv1,
-					nbeats,
-				} => match idx {
-					0 => *ndiv0 = text.parse::<usize>().unwrap_or(*ndiv0),
-					1 => *ndiv1 = text.parse::<usize>().unwrap_or(*ndiv1),
-					2 => *nbeats = text.parse::<usize>().unwrap_or(*nbeats),
+				TimeInput::Poly { ndiv0, ndiv1, nbeats } => match idx {
+					0 => *ndiv0 = text,
+					1 => *ndiv1 = text,
+					2 => *nbeats = text,
+					_ => {}
+				},
+			},
+			Message::SetFreqMode(input) => {
+				self.freq = match input {
+					freq_input::Mode::None => FreqInput::default_none(),
+					freq_input::Mode::Equal => FreqInput::default_equal(),
+					freq_input::Mode::Enumeration => FreqInput::default_enumeration(),
+					freq_input::Mode::HarmonicSegment => FreqInput::default_harmonic_segment(),
+				}
+			}
+			Message::SetFreqField(idx, text) => match &mut self.freq {
+				// TODO: improve when RFC 2294 lands
+				FreqInput::None => {}
+				FreqInput::Equal { base, interval, ndiv } => match idx {
+					0 => *base = text,
+					1 => *interval = text,
+					2 => *ndiv = text,
+					_ => {}
+				},
+				FreqInput::Enumeration { base, values } => match idx {
+					0 => *base = text,
+					1 => *values = text,
+					_ => {}
+				},
+				FreqInput::HarmonicSegment { base, from, to } => match idx {
+					0 => *base = text,
+					1 => *from = text,
+					2 => *to = text,
 					_ => {}
 				},
 			},
@@ -79,6 +90,8 @@ impl State {
 pub enum Message {
 	SetTimeMode(time_input::Mode),
 	SetTimeField(usize, String),
+	SetFreqMode(freq_input::Mode),
+	SetFreqField(usize, String),
 }
 
 impl From<Message> for RootMessage {

@@ -19,29 +19,13 @@ const NORD_13: Color = color(0xebcb8b);
 const NORD_14: Color = color(0xa3be8c);
 const NORD_15: Color = color(0xb48ead);
 
-const SURFACE: Color = Color::from_rgb(
-	0x40 as f32 / 255.0,
-	0x44 as f32 / 255.0,
-	0x4B as f32 / 255.0,
-);
+const SURFACE: Color = Color::from_rgb(0x40 as f32 / 255.0, 0x44 as f32 / 255.0, 0x4B as f32 / 255.0);
 
-const ACCENT: Color = Color::from_rgb(
-	0x6F as f32 / 255.0,
-	0xFF as f32 / 255.0,
-	0xE9 as f32 / 255.0,
-);
+const ACCENT: Color = Color::from_rgb(0x6F as f32 / 255.0, 0xFF as f32 / 255.0, 0xE9 as f32 / 255.0);
 
-const ACTIVE: Color = Color::from_rgb(
-	0x72 as f32 / 255.0,
-	0x89 as f32 / 255.0,
-	0xDA as f32 / 255.0,
-);
+const ACTIVE: Color = Color::from_rgb(0x72 as f32 / 255.0, 0x89 as f32 / 255.0, 0xDA as f32 / 255.0);
 
-const HOVERED: Color = Color::from_rgb(
-	0x67 as f32 / 255.0,
-	0x7B as f32 / 255.0,
-	0xC4 as f32 / 255.0,
-);
+const HOVERED: Color = Color::from_rgb(0x67 as f32 / 255.0, 0x7B as f32 / 255.0, 0xC4 as f32 / 255.0);
 
 pub struct Container;
 
@@ -182,6 +166,7 @@ pub mod sheet_editor {
 				note_highlight: NORD_8,
 				background_dark: NORD_0.into(),
 				background_light: NORD_1.into(),
+				root_line_color: NORD_8,
 			}
 		}
 	}

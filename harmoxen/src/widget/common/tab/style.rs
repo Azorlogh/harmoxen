@@ -1,4 +1,4 @@
-use iced::{mouse, Background, Color};
+use iced::{Background, Color};
 
 #[derive(Debug, Clone, Copy)]
 pub struct Style {

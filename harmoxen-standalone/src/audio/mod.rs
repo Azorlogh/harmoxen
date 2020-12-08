@@ -31,12 +31,8 @@ pub fn launch() -> Result<Sender<Event>, Box<dyn Error>> {
 pub fn run(mut receiver: Receiver<Event>) -> Box<dyn StreamTrait> {
 	let host = cpal::default_host();
 
-	let device = host
-		.default_output_device()
-		.expect("failed to find a default output device");
-	let supported_config = device
-		.default_output_config()
-		.expect("failed to get default output config");
+	let device = host.default_output_device().expect("failed to find a default output device");
+	let supported_config = device.default_output_config().expect("failed to get default output config");
 	let config = supported_config.config();
 
 	let nb_channels = config.channels as usize;

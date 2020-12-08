@@ -46,10 +46,7 @@ impl Layout {
 		let mut indices: Vec<usize> = (0..self.markers.len()).collect();
 		indices.sort_by(|&a, &b| self.markers[a].at.partial_cmp(&self.markers[b].at).unwrap());
 		let new_idx = indices.iter().position(|&x| x == idx).unwrap();
-		let new_markers = indices
-			.into_iter()
-			.map(|i| self.markers[i].clone())
-			.collect();
+		let new_markers = indices.into_iter().map(|i| self.markers[i].clone()).collect();
 		self.markers = new_markers;
 		new_idx
 	}
@@ -79,13 +76,7 @@ impl Layout {
 		self.quantize_time_impl(time, floor, Some(exclude), None)
 	}
 
-	pub fn quantize_time_impl(
-		&self,
-		time: f32,
-		floor: bool,
-		exclude: Option<usize>,
-		after: Option<f32>,
-	) -> f32 {
+	pub fn quantize_time_impl(&self, time: f32, floor: bool, exclude: Option<usize>, after: Option<f32>) -> f32 {
 		let marker = self.get_marker_at(time, exclude);
 		if let Some(pattern) = &marker.pattern.time {
 			let layout_time = time - marker.at;
@@ -98,10 +89,7 @@ impl Layout {
 				.map(|&x| vec![x - 1.0, x, x + 1.0])
 				.flatten()
 				.fold(0.0, |acc, x| {
-					if x > min
-						&& (!floor || x < beat_time)
-						&& (x - beat_time).abs() < (acc - beat_time).abs()
-					{
+					if x > min && (!floor || x < beat_time) && (x - beat_time).abs() < (acc - beat_time).abs() {
 						x
 					} else {
 						acc

@@ -2,9 +2,7 @@ use crate::data::Frame2;
 use crate::state::Message;
 use crate::util::coord::Coord;
 use iced_graphics::{Backend, Defaults, Primitive, Renderer};
-use iced_native::{
-	layout, mouse, Color, Element, Hasher, Layout, Length, Point, Rectangle, Size, Vector, Widget,
-};
+use iced_native::{layout, mouse, Color, Element, Hasher, Layout, Length, Point, Rectangle, Size, Vector, Widget};
 
 pub struct Cursor {
 	pos: f32,
@@ -41,7 +39,7 @@ where
 		_defaults: &Defaults,
 		layout: Layout,
 		_cursor_position: iced::Point,
-		viewport: &Rectangle,
+		_viewport: &Rectangle,
 	) -> (Primitive, mouse::Interaction) {
 		let bounds = layout.bounds();
 		let coord = Coord::new(self.frame, layout.bounds().size());
@@ -51,10 +49,7 @@ where
 				bounds,
 				offset: Vector::new(0, 0),
 				content: Box::new(Primitive::Quad {
-					bounds: Rectangle::new(
-						Point::new(bounds.x + s_pos, bounds.y),
-						Size::new(1.0, bounds.height),
-					),
+					bounds: Rectangle::new(Point::new(bounds.x + s_pos, bounds.y), Size::new(1.0, bounds.height)),
 					background: Color::WHITE.into(),
 					border_color: Color::TRANSPARENT,
 					border_radius: 0,

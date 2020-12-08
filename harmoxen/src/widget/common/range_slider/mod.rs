@@ -3,8 +3,8 @@
 use crate::data::{Axis, Frame, Range};
 use iced_graphics::{Backend, Defaults, Primitive, Renderer};
 use iced_native::{
-	event, layout, mouse, Background, Clipboard, Color, Element, Event, Hasher, Layout, Length,
-	Point, Rectangle, Size, Vector, Widget,
+	event, layout, mouse, Background, Clipboard, Color, Element, Event, Hasher, Layout, Length, Point, Rectangle, Size, Vector,
+	Widget,
 };
 
 pub type State = Action;
@@ -128,9 +128,7 @@ where
 		let bounds = &self.frame.bounds;
 		let view = &self.frame.view;
 		let pos = if self.reversed {
-			dir.major(lbounds.position()) + dir.major(lbounds.size())
-				- dir.major(cursor_position)
-				- style.padding
+			dir.major(lbounds.position()) + dir.major(lbounds.size()) - dir.major(cursor_position) - style.padding
 		} else {
 			dir.major(cursor_position) - dir.major(lbounds.position()) - style.padding
 		};
@@ -143,23 +141,15 @@ where
 					if lbounds.contains(cursor_position) {
 						if (screen_view.0 + style.handle_offset - pos).abs() < style.handle_offset {
 							*self.action = State::Scaling(Side::Start);
-						} else if (screen_view.1 - style.handle_offset - pos).abs()
-							< style.handle_offset
-						{
+						} else if (screen_view.1 - style.handle_offset - pos).abs() < style.handle_offset {
 							*self.action = State::Scaling(Side::End);
 						} else if pos < screen_view.0 {
 							messages.push((self.on_change)(
-								*view
-									- (bounds.size() / 8.0)
-										.min(view.0 - gpos)
-										.min(view.0 - bounds.0),
+								*view - (bounds.size() / 8.0).min(view.0 - gpos).min(view.0 - bounds.0),
 							));
 						} else if pos > screen_view.1 {
 							messages.push((self.on_change)(
-								*view
-									+ (bounds.size() / 8.0)
-										.min(gpos - view.1)
-										.min(bounds.1 - view.1),
+								*view + (bounds.size() / 8.0).min(gpos - view.1).min(bounds.1 - view.1),
 							));
 						} else {
 							*self.action = Action::Moving(gpos - view.0);
@@ -258,26 +248,16 @@ where
 				1.0 - (view.0 - bounds.0) / bounds.size(),
 			)
 		} else {
-			Range(
-				(view.0 - bounds.0) / bounds.size(),
-				(view.1 - bounds.0) / bounds.size(),
-			)
+			Range((view.0 - bounds.0) / bounds.size(), (view.1 - bounds.0) / bounds.size())
 		};
 		let bar = Primitive::Quad {
 			bounds: Rectangle::new(
 				self.dir.with_major(
-					Point::new(
-						style.padding + layout.bounds().x,
-						style.padding + layout.bounds().y,
-					),
-					self.dir.major(layout.bounds().position())
-						+ style.padding + (size_major - style.padding * 2.0) * rview.0,
+					Point::new(style.padding + layout.bounds().x, style.padding + layout.bounds().y),
+					self.dir.major(layout.bounds().position()) + style.padding + (size_major - style.padding * 2.0) * rview.0,
 				),
 				self.dir.with_major(
-					Size::new(
-						size.width - style.padding * 2.0,
-						size.height - style.padding * 2.0,
-					),
+					Size::new(size.width - style.padding * 2.0, size.height - style.padding * 2.0),
 					(size_major - style.padding * 2.0) * rview.size(),
 				),
 			),

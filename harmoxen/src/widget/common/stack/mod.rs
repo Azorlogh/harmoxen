@@ -1,42 +1,21 @@
-//! Distribute content vertically.
-use std::hash::Hash;
-
+//! Stack widgets on top of each other
 use iced_graphics::{Backend, Defaults, Primitive, Renderer};
-use iced_native::{
-	event, layout, mouse, overlay, Align, Clipboard, Element, Event, Hasher, Layout, Length, Point,
-	Rectangle, Widget,
-};
+use iced_native::{event, layout, mouse, overlay, Clipboard, Element, Event, Hasher, Layout, Length, Point, Rectangle, Widget};
 
-use std::u32;
-
-/// A container that distributes its contents vertically.
-///
-/// A [`Column`] will try to fill the horizontal space of its container.
-///
-/// [`Column`]: struct.Column.html
 #[allow(missing_debug_implementations)]
 pub struct Stack<'a, Message, B: Backend> {
 	children: Vec<Element<'a, Message, Renderer<B>>>,
 }
 
 impl<'a, Message, B: Backend> Stack<'a, Message, B> {
-	/// Creates an empty [`Column`].
-	///
-	/// [`Column`]: struct.Column.html
 	pub fn new() -> Self {
 		Self::with_children(Vec::new())
 	}
 
-	/// Creates a [`Column`] with the given elements.
-	///
-	/// [`Column`]: struct.Column.html
 	pub fn with_children(children: Vec<Element<'a, Message, Renderer<B>>>) -> Self {
 		Stack { children }
 	}
 
-	/// Adds an element to the [`Column`].
-	///
-	/// [`Column`]: struct.Column.html
 	pub fn push<E>(mut self, child: E) -> Self
 	where
 		E: Into<Element<'a, Message, Renderer<B>>>,
@@ -62,10 +41,7 @@ where
 	fn layout(&self, renderer: &Renderer<B>, limits: &layout::Limits) -> layout::Node {
 		layout::Node::with_children(
 			limits.max(),
-			self.children
-				.iter()
-				.map(|child| child.layout(renderer, limits))
-				.collect(),
+			self.children.iter().map(|child| child.layout(renderer, limits)).collect(),
 		)
 	}
 
@@ -83,14 +59,7 @@ where
 		let layouts: Vec<Layout> = layout.children().collect();
 		for i in (0..self.children.len()).rev() {
 			let child = &mut self.children[i];
-			let status = child.on_event(
-				event.clone(),
-				layouts[i],
-				cursor_position,
-				messages,
-				renderer,
-				clipboard,
-			);
+			let status = child.on_event(event.clone(), layouts[i], cursor_position, messages, renderer, clipboard);
 			if status == event::Status::Captured {
 				return event::Status::Captured;
 			}
@@ -128,10 +97,7 @@ where
 		)
 	}
 
-	fn overlay(
-		&mut self,
-		layout: Layout<'_>,
-	) -> Option<overlay::Element<'_, Message, Renderer<B>>> {
+	fn overlay(&mut self, layout: Layout<'_>) -> Option<overlay::Element<'_, Message, Renderer<B>>> {
 		self.children
 			.iter_mut()
 			.zip(layout.children())

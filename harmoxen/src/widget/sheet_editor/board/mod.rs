@@ -10,11 +10,8 @@ use crate::{
 	backend,
 	widget::{context_menu, ContextMenu},
 };
-use iced_graphics::{Backend, Background, Color, Defaults, Primitive, Renderer};
-use iced_native::{
-	event, layout as iced_layout, mouse, overlay, Clipboard, Element, Event, Hasher, Length,
-	Rectangle, Widget,
-};
+use iced_graphics::{Backend, Defaults, Primitive, Renderer};
+use iced_native::{event, layout as iced_layout, mouse, overlay, Clipboard, Element, Event, Hasher, Length, Rectangle, Widget};
 use std::collections::{HashMap, HashSet};
 use std::time::Instant;
 
@@ -121,9 +118,7 @@ impl<'a> Board<'a> {
 			self.state.action_effective = false;
 		}
 		self.state.action = Action::Idle;
-		messages.push(RootMessage::Backend(backend::Event::ICP(
-			icp::Event::NoteStop(2000),
-		)));
+		messages.push(RootMessage::Backend(backend::Event::ICP(icp::Event::NoteStop(2000))));
 	}
 }
 
@@ -175,8 +170,8 @@ where
 					state.action = Action::Idle;
 				}
 				if btn == mouse::Button::Left {
-					let is_double_click = mouse_pos == state.last_left_click.0
-						&& state.last_left_click.1.elapsed().as_millis() < 500;
+					let is_double_click =
+						mouse_pos == state.last_left_click.0 && state.last_left_click.1.elapsed().as_millis() < 500;
 					state.last_left_click = (mouse_pos, Instant::now());
 					if is_double_click {
 						if let Some(id) = get_hover(pos, coord, &self.sheet).note_idx() {
@@ -195,14 +190,8 @@ where
 									)
 									.into(),
 								),
-								context_menu::Item::new(
-									"Duplicate note",
-									Message::AddNote(note, false).into(),
-								),
-								context_menu::Item::new(
-									"Delete note",
-									Message::DeleteNote(id).into(),
-								),
+								context_menu::Item::new("Duplicate note", Message::AddNote(note, false).into()),
+								context_menu::Item::new("Delete note", Message::DeleteNote(id).into()),
 							];
 							self.state.action = Action::Context {
 								menu: context_menu::State::new(items),
@@ -213,17 +202,12 @@ where
 						match state.hover {
 							Hover::Idle => {
 								let note = layout.quantize_note(Note::new(pos, state.note_len));
-								if sheet
-									.get_note_at(Point::new(note.start, note.y(&sheet)), 0.01)
-									.is_none()
-								{
+								if sheet.get_note_at(Point::new(note.start, note.y(&sheet)), 0.01).is_none() {
 									messages.push(Message::AddNote(note, true).into());
-									messages.push(RootMessage::Backend(backend::Event::ICP(
-										icp::Event::NotePlay(icp::Note {
-											id: 2000,
-											freq: sheet.get_freq(note.pitch),
-										}),
-									)));
+									messages.push(RootMessage::Backend(backend::Event::ICP(icp::Event::NotePlay(icp::Note {
+										id: 2000,
+										freq: sheet.get_freq(note.pitch),
+									}))));
 								}
 							}
 							Hover::Move(idx) => {
@@ -232,9 +216,7 @@ where
 									let root = sheet.get_note(idx).unwrap();
 									let mut rect = root.rect(&sheet, 0.0);
 									for idx in selection.iter() {
-										let note = sheet
-											.get_note(*idx)
-											.expect("selection contained a dead note");
+										let note = sheet.get_note(*idx).expect("selection contained a dead note");
 										let offset = note.start_pt(&sheet) - pos;
 										rect = rect.union(&note.rect(&sheet, 0.0));
 										notes.insert(*idx, offset);
@@ -244,45 +226,27 @@ where
 								} else {
 									let note = sheet.get_note(idx).unwrap();
 									let mut notes = HashMap::new();
-									notes.insert(
-										idx,
-										note.start_pt(&sheet).to_vec2() - pos.to_vec2(),
-									);
-									state.action = Action::Move(
-										idx,
-										notes,
-										note.rect(&sheet, 0.0) - pos.to_vec2(),
-									);
+									notes.insert(idx, note.start_pt(&sheet).to_vec2() - pos.to_vec2());
+									state.action = Action::Move(idx, notes, note.rect(&sheet, 0.0) - pos.to_vec2());
 									let note = sheet.get_note(idx).unwrap();
 									state.note_len = note.length;
-									messages.push(RootMessage::Backend(backend::Event::ICP(
-										icp::Event::NotePlay(icp::Note {
-											id: 2000,
-											freq: sheet.get_freq(note.pitch),
-										}),
-									)));
+									messages.push(RootMessage::Backend(backend::Event::ICP(icp::Event::NotePlay(icp::Note {
+										id: 2000,
+										freq: sheet.get_freq(note.pitch),
+									}))));
 								}
 							}
 							Hover::Scale(idx) => {
 								if selection.len() > 0 {
 									let mut notes = HashMap::new();
 									for &idx in selection.iter() {
-										notes.insert(
-											idx,
-											sheet
-												.get_note(idx)
-												.expect("selection contained a dead note")
-												.length,
-										);
+										notes.insert(idx, sheet.get_note(idx).expect("selection contained a dead note").length);
 									}
 									state.action = Action::Scale(idx, notes);
 								} else {
 									let note = sheet.get_note(idx).unwrap();
 									state.note_len = note.length;
-									state.action = Action::Scale(
-										idx,
-										[(idx, note.length)].iter().cloned().collect(),
-									);
+									state.action = Action::Scale(idx, [(idx, note.length)].iter().cloned().collect());
 								}
 							}
 						}
@@ -315,15 +279,11 @@ where
 								messages.push(Message::MoveNote(*idx, pos).into());
 								state.action_effective = true;
 								if sheet.get_y(note.pitch) != pos.y {
-									messages.push(RootMessage::Backend(backend::Event::ICP(
-										icp::Event::NoteStop(2000),
-									)));
-									messages.push(RootMessage::Backend(backend::Event::ICP(
-										icp::Event::NotePlay(icp::Note {
-											id: 2000,
-											freq: sheet.get_freq(Pitch::Absolute(2f32.powf(pos.y))),
-										}),
-									)));
+									messages.push(RootMessage::Backend(backend::Event::ICP(icp::Event::NoteStop(2000))));
+									messages.push(RootMessage::Backend(backend::Event::ICP(icp::Event::NotePlay(icp::Note {
+										id: 2000,
+										freq: sheet.get_freq(Pitch::Absolute(2f32.powf(pos.y))),
+									}))));
 								}
 							}
 						}
@@ -341,10 +301,7 @@ where
 						}
 					}
 					Action::DeleteNotes(ref mut prev_pos) => {
-						for idx in sheet.get_notes_along(
-							Line::new(*prev_pos, pos),
-							coord.to_board_h(NOTE_HEIGHT),
-						) {
+						for idx in sheet.get_notes_along(Line::new(*prev_pos, pos), coord.to_board_h(NOTE_HEIGHT)) {
 							state.action_effective = true;
 							messages.push(Message::DeleteNote(idx).into());
 						}
@@ -369,7 +326,7 @@ where
 		_defaults: &Defaults,
 		layout: iced_native::Layout,
 		_cursor_position: iced::Point,
-		viewport: &Rectangle,
+		_viewport: &Rectangle,
 	) -> (Primitive, mouse::Interaction) {
 		let offset = Into::<Point>::into(layout.bounds().position()).to_vec2();
 		let size = layout.bounds().size();
@@ -395,10 +352,7 @@ where
 		)
 	}
 
-	fn overlay(
-		&mut self,
-		_layout: iced_native::Layout,
-	) -> Option<overlay::Element<'_, RootMessage, Renderer<B>>> {
+	fn overlay(&mut self, _layout: iced_native::Layout) -> Option<overlay::Element<'_, RootMessage, Renderer<B>>> {
 		if let Action::Context { menu, pos } = &mut self.state.action {
 			Some(ContextMenu::new(menu).padding(4).overlay(pos.clone()))
 		} else {
@@ -413,9 +367,7 @@ fn get_hover(pos: Point, coord: Coord, sheet: &Sheet) -> Hover {
 		None => Hover::Idle,
 		Some(idx) => {
 			let note = sheet.get_note(idx).unwrap();
-			if pos.x > note.end() - coord.to_board_w(NOTE_SCALE_KNOB)
-				&& pos.x > note.start + note.length * 0.60
-			{
+			if pos.x > note.end() - coord.to_board_w(NOTE_SCALE_KNOB) && pos.x > note.start + note.length * 0.60 {
 				Hover::Scale(idx)
 			} else {
 				Hover::Move(idx)

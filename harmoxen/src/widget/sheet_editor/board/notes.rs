@@ -19,11 +19,7 @@ impl<'a> Board<'a> {
 				let root = sheet.get_note(root).unwrap();
 				let root_sfreq = coord.to_screen_y(sheet.get_y(root.pitch));
 				if note.start < root.start || note.start > root.end() {
-					let endpoint = coord.to_screen_x(if note.start < root.start {
-						root.start
-					} else {
-						root.end()
-					});
+					let endpoint = coord.to_screen_x(if note.start < root.start { root.start } else { root.end() });
 					primitives.push(Primitive::Quad {
 						bounds: Rect::new(s_start - 0.5, spos, s_start + 0.5, root_sfreq).into(),
 						background: style.note_color.into(),
@@ -32,8 +28,7 @@ impl<'a> Board<'a> {
 						border_color: Color::TRANSPARENT,
 					});
 					primitives.push(Primitive::Quad {
-						bounds: Rect::new(endpoint, root_sfreq - 0.5, s_start, root_sfreq + 0.5)
-							.into(),
+						bounds: Rect::new(endpoint, root_sfreq - 0.5, s_start, root_sfreq + 0.5).into(),
 						background: style.note_color.into(),
 						border_radius: 0,
 						border_width: 0,
@@ -41,13 +36,7 @@ impl<'a> Board<'a> {
 					});
 				} else {
 					primitives.push(Primitive::Quad {
-						bounds: Rect::new(
-							s_start - 0.5,
-							spos,
-							s_start + 0.5,
-							root_sfreq - NOTE_HEIGHT / 2.0,
-						)
-						.into(),
+						bounds: Rect::new(s_start - 0.5, spos, s_start + 0.5, root_sfreq - NOTE_HEIGHT / 2.0).into(),
 						background: style.note_color.into(),
 						border_radius: 0,
 						border_width: 0,
@@ -76,13 +65,7 @@ impl<'a> Board<'a> {
 				_ => {}
 			}
 			primitives.push(Primitive::Quad {
-				bounds: Rect::new(
-					p0.x,
-					p0.y - NOTE_HEIGHT / 2.0,
-					p1.x,
-					p1.y + NOTE_HEIGHT / 2.0,
-				)
-				.into(),
+				bounds: Rect::new(p0.x, p0.y - NOTE_HEIGHT / 2.0, p1.x, p1.y + NOTE_HEIGHT / 2.0).into(),
 				background: Background::Color(color),
 				border_radius: 0,
 				border_width: 0,

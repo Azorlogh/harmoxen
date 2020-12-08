@@ -21,8 +21,7 @@ impl Limiter {
 		self.buf_pos = (self.buf_pos + 1) % LENGTH;
 		let old = self.buf[self.buf_pos];
 		self.buf[self.buf_pos] = input;
-		self.rms = ((self.rms * self.rms * LENGTH as f32 - old * old + input * input)
-			/ LENGTH as f32)
+		self.rms = ((self.rms * self.rms * LENGTH as f32 - old * old + input * input) / LENGTH as f32)
 			.max(0.0)
 			.sqrt();
 		input / self.rms.max(1.0)

@@ -1,6 +1,4 @@
-use crate::data::Frame2;
 use crate::state::{sheet_editor::Message, Message as RootMessage};
-use crate::util::coord::Coord;
 
 pub struct Shortcuts;
 
@@ -9,7 +7,7 @@ use iced_native::{
 	event,
 	keyboard::{self, KeyCode},
 	layout,
-	mouse::{self, ScrollDelta},
+	mouse::{self},
 	Clipboard, Element, Event, Hasher, Layout, Length, Point, Rectangle, Widget,
 };
 
@@ -34,17 +32,14 @@ where
 	fn on_event(
 		&mut self,
 		event: Event,
-		layout: Layout,
-		cursor_position: Point,
+		_layout: Layout,
+		_cursor_position: Point,
 		messages: &mut Vec<RootMessage>,
-		renderer: &Renderer<B>,
-		clipboard: Option<&dyn Clipboard>,
+		_renderer: &Renderer<B>,
+		_clipboard: Option<&dyn Clipboard>,
 	) -> event::Status {
 		let captured = match event {
-			Event::Keyboard(keyboard::Event::KeyPressed {
-				key_code: key,
-				modifiers: mods,
-			}) => match key {
+			Event::Keyboard(keyboard::Event::KeyPressed { key_code: key, .. }) => match key {
 				KeyCode::Space => {
 					messages.push(Message::Play.into());
 					true
@@ -66,7 +61,7 @@ where
 		_defaults: &Defaults,
 		_layout: Layout,
 		_cursor_poition: iced::Point,
-		viewport: &Rectangle,
+		_viewport: &Rectangle,
 	) -> (Primitive, mouse::Interaction) {
 		(Primitive::None, mouse::Interaction::Idle)
 	}

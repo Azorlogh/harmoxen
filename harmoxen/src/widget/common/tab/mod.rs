@@ -1,36 +1,11 @@
-//! Allow your users to perform actions by pressing a button.
-//!
-//! A [`Button`] has some local [`State`].
-//!
-//! [`Button`]: struct.Button.html
-//! [`State`]: struct.State.html
+//! Tab widget that appears pressed when some state is equal to some value
 use iced_graphics::{Backend, Defaults, Primitive, Renderer};
-use iced_native::{
-	event, layout, mouse, Clipboard, Element, Event, Hasher, Layout, Length, Point, Rectangle,
-	Widget,
-};
+use iced_native::{event, layout, mouse, Clipboard, Element, Event, Hasher, Layout, Length, Point, Rectangle, Widget};
 use std::hash::Hash;
 
 mod style;
 pub use style::{Style, StyleSheet};
 
-/// A generic widget that produces a message when pressed.
-///
-/// ```
-/// # use iced_native::{button, Text};
-/// #
-/// # type Button<'a, Message> =
-/// #     iced_native::Button<'a, Message, iced_native::renderer::Null>;
-/// #
-/// #[derive(Clone)]
-/// enum Message {
-///     ButtonPressed,
-/// }
-///
-/// let mut state = button::State::new();
-/// let button = Button::new(&mut state, Text::new("Press me!"))
-///     .on_press(Message::ButtonPressed);
-/// ```
 #[allow(missing_debug_implementations)]
 pub struct Tab<'a, Message, B: Backend> {
 	selected: bool,
@@ -49,10 +24,10 @@ where
 	Message: Clone,
 	B: Backend,
 {
-	/// Creates a new [`Button`] with some local [`State`] and the given
+	/// Creates a new [`Tab`] with some local [`State`] and the given
 	/// content.
 	///
-	/// [`Button`]: struct.Button.html
+	/// [`Tab`]: struct.Tab.html
 	/// [`State`]: struct.State.html
 	pub fn new<E>(selected: bool, content: E) -> Self
 	where
@@ -71,57 +46,57 @@ where
 		}
 	}
 
-	/// Sets the width of the [`Button`].
+	/// Sets the width of the [`Tab`].
 	///
-	/// [`Button`]: struct.Button.html
+	/// [`Tab`]: struct.Tab.html
 	pub fn width(mut self, width: Length) -> Self {
 		self.width = width;
 		self
 	}
 
-	/// Sets the height of the [`Button`].
+	/// Sets the height of the [`Tab`].
 	///
-	/// [`Button`]: struct.Button.html
+	/// [`Tab`]: struct.Tab.html
 	pub fn height(mut self, height: Length) -> Self {
 		self.height = height;
 		self
 	}
 
-	/// Sets the minimum width of the [`Button`].
+	/// Sets the minimum width of the [`Tab`].
 	///
-	/// [`Button`]: struct.Button.html
+	/// [`Tab`]: struct.Tab.html
 	pub fn min_width(mut self, min_width: u32) -> Self {
 		self.min_width = min_width;
 		self
 	}
 
-	/// Sets the minimum height of the [`Button`].
+	/// Sets the minimum height of the [`Tab`].
 	///
-	/// [`Button`]: struct.Button.html
+	/// [`Tab`]: struct.Tab.html
 	pub fn min_height(mut self, min_height: u32) -> Self {
 		self.min_height = min_height;
 		self
 	}
 
-	/// Sets the padding of the [`Button`].
+	/// Sets the padding of the [`Tab`].
 	///
-	/// [`Button`]: struct.Button.html
+	/// [`Tab`]: struct.Tab.html
 	pub fn padding(mut self, padding: u16) -> Self {
 		self.padding = padding;
 		self
 	}
 
-	/// Sets the message that will be produced when the [`Button`] is pressed.
+	/// Sets the message that will be produced when the [`Tab`] is pressed.
 	///
-	/// [`Button`]: struct.Button.html
+	/// [`Tab`]: struct.Tab.html
 	pub fn on_press(mut self, msg: Message) -> Self {
 		self.on_press = Some(msg);
 		self
 	}
 
-	/// Sets the style of the [`Button`].
+	/// Sets the style of the [`Tab`].
 	///
-	/// [`Button`]: struct.Button.html
+	/// [`Tab`]: struct.Tab.html
 	pub fn style(mut self, style: impl Into<Box<dyn StyleSheet>>) -> Self {
 		self.style = style.into();
 		self
@@ -241,7 +216,7 @@ where
 	Message: 'a + Clone,
 	B: 'a + Backend,
 {
-	fn from(button: Tab<'a, Message, B>) -> Element<'a, Message, Renderer<B>> {
-		Element::new(button)
+	fn from(tab: Tab<'a, Message, B>) -> Element<'a, Message, Renderer<B>> {
+		Element::new(tab)
 	}
 }

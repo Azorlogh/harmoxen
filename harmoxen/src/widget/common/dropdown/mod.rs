@@ -6,8 +6,7 @@ use iced_native::{
 	event::Status,
 	layout, mouse, overlay,
 	overlay::{menu, Menu},
-	scrollable, text, Button, Clipboard, Element, Event, Hasher, Layout, Length, Point, Rectangle,
-	Size, Widget,
+	scrollable, text, Button, Clipboard, Element, Event, Hasher, Layout, Length, Point, Rectangle, Size, Widget,
 };
 use std::fmt;
 
@@ -65,11 +64,7 @@ impl<'a, Message, Renderer: self::Renderer> DropDown<'a, Message, Renderer> {
 	///
 	/// [`PickList`]: struct.PickList.html
 	/// [`State`]: struct.State.html
-	pub fn new(
-		state: &'a mut State<Message>,
-		label: &'static str,
-		mut items: Vec<(&'static str, Message)>,
-	) -> Self {
+	pub fn new(state: &'a mut State<Message>, label: &'static str, mut items: Vec<(&'static str, Message)>) -> Self {
 		Self {
 			state,
 			label: label.to_string(),
@@ -130,10 +125,7 @@ where
 	fn layout(&self, renderer: &Renderer, limits: &layout::Limits) -> layout::Node {
 		use std::f32;
 
-		let limits = limits
-			.width(self.width)
-			.height(Length::Shrink)
-			.pad(f32::from(self.padding));
+		let limits = limits.width(self.width).height(Length::Shrink).pad(f32::from(self.padding));
 
 		let text_size = self.text_size.unwrap_or(renderer.default_size());
 
@@ -155,10 +147,7 @@ where
 		};
 
 		let size = {
-			let intrinsic = Size::new(
-				max_width as f32 + f32::from(self.padding),
-				f32::from(text_size),
-			);
+			let intrinsic = Size::new(max_width as f32 + f32::from(self.padding), f32::from(text_size));
 
 			limits.resolve(intrinsic).pad(f32::from(self.padding))
 		};

@@ -34,11 +34,7 @@ where
 	) -> Self::Output {
 		let is_mouse_over = bounds.contains(cursor_position);
 
-		let style = if is_mouse_over {
-			style.hovered()
-		} else {
-			style.active()
-		};
+		let style = if is_mouse_over { style.hovered() } else { style.active() };
 
 		let background = Primitive::Quad {
 			bounds,

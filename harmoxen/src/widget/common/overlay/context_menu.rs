@@ -1,15 +1,10 @@
 //! Build and show dropdown menus.
-use iced_native::container;
 use iced_native::event::{self, Event};
 use iced_native::layout;
 use iced_native::mouse;
 use iced_native::overlay;
 use iced_native::scrollable;
-use iced_native::text;
-use iced_native::{
-	Clipboard, Container, Element, Hasher, Layout, Length, Point, Rectangle, Scrollable, Size,
-	Vector, Widget,
-};
+use iced_native::{Clipboard, Container, Element, Hasher, Layout, Length, Point, Rectangle, Scrollable, Size, Vector, Widget};
 
 #[derive(Debug, Clone)]
 pub struct Item<Message> {
@@ -43,6 +38,7 @@ pub struct ContextMenu<'a, Message, Renderer: self::Renderer> {
 	style: <Renderer as self::Renderer>::Style,
 }
 
+#[allow(unused)]
 impl<'a, Message, Renderer> ContextMenu<'a, Message, Renderer>
 where
 	Message: Clone,
@@ -183,8 +179,7 @@ where
 	}
 }
 
-impl<'a, Message, Renderer> iced_native::Overlay<Message, Renderer>
-	for Overlay<'a, Message, Renderer>
+impl<'a, Message, Renderer> iced_native::Overlay<Message, Renderer> for Overlay<'a, Message, Renderer>
 where
 	Renderer: self::Renderer,
 {
@@ -196,11 +191,7 @@ where
 			Size::ZERO,
 			Size::new(
 				bounds.width - position.x,
-				if space_below > space_above {
-					space_below
-				} else {
-					space_above
-				},
+				if space_below > space_above { space_below } else { space_above },
 			),
 		)
 		.width(Length::Units(
@@ -251,14 +242,8 @@ where
 		renderer: &Renderer,
 		clipboard: Option<&dyn Clipboard>,
 	) -> event::Status {
-		self.container.on_event(
-			event.clone(),
-			layout,
-			cursor_position,
-			messages,
-			renderer,
-			clipboard,
-		)
+		self.container
+			.on_event(event.clone(), layout, cursor_position, messages, renderer, clipboard)
 	}
 
 	fn draw(
@@ -268,13 +253,9 @@ where
 		layout: Layout<'_>,
 		cursor_position: Point,
 	) -> Renderer::Output {
-		let primitives = self.container.draw(
-			renderer,
-			defaults,
-			layout,
-			cursor_position,
-			&layout.bounds(),
-		);
+		let primitives = self
+			.container
+			.draw(renderer, defaults, layout, cursor_position, &layout.bounds());
 
 		renderer.decorate(layout.bounds(), cursor_position, &self.style, primitives)
 	}
@@ -289,8 +270,7 @@ struct List<'a, Message, Renderer: self::Renderer> {
 	style: <Renderer as self::Renderer>::Style,
 }
 
-impl<'a, Message, Renderer: self::Renderer> Widget<Message, Renderer>
-	for List<'a, Message, Renderer>
+impl<'a, Message, Renderer: self::Renderer> Widget<Message, Renderer> for List<'a, Message, Renderer>
 where
 	Message: Clone,
 	Renderer: self::Renderer,
@@ -310,10 +290,7 @@ where
 		let text_size = self.text_size.unwrap_or(renderer.default_size());
 
 		let size = {
-			let intrinsic = Size::new(
-				0.0,
-				f32::from(text_size + self.padding * 2) * self.items.len() as f32,
-			);
+			let intrinsic = Size::new(0.0, f32::from(text_size + self.padding * 2) * self.items.len() as f32);
 
 			limits.resolve(intrinsic)
 		};
@@ -359,10 +336,8 @@ where
 				let text_size = self.text_size.unwrap_or(renderer.default_size());
 
 				if bounds.contains(cursor_position) {
-					*self.hovered_option = Some(
-						((cursor_position.y - bounds.y) / f32::from(text_size + self.padding * 2))
-							as usize,
-					);
+					*self.hovered_option =
+						Some(((cursor_position.y - bounds.y) / f32::from(text_size + self.padding * 2)) as usize);
 				}
 			}
 			_ => {}

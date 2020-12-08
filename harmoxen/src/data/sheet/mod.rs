@@ -36,10 +36,7 @@ impl Sheet {
 	}
 
 	pub fn get_notes(&self) -> Vec<(Index, Note)> {
-		self.indices
-			.iter()
-			.map(|&idx| (idx, self.notes[idx]))
-			.collect()
+		self.indices.iter().map(|&idx| (idx, self.notes[idx])).collect()
 	}
 
 	pub fn get_note(&self, id: Index) -> Option<Note> {
@@ -55,11 +52,7 @@ impl Sheet {
 		for &index in &self.indices {
 			let note = self.notes[index];
 			let dist = (pos.y - note.y(self)).abs();
-			if note.start <= pos.x
-				&& pos.x <= note.start + note.length
-				&& dist <= note_height / 2.0
-				&& dist <= closest.1
-			{
+			if note.start <= pos.x && pos.x <= note.start + note.length && dist <= note_height / 2.0 && dist <= closest.1 {
 				closest = (Some(index), dist);
 			}
 		}
@@ -70,10 +63,7 @@ impl Sheet {
 	pub fn get_notes_at(&self, pos: Point, note_height: f32) -> Vec<Index> {
 		let mut out = vec![];
 		for (index, note) in &self.notes {
-			if note.start <= pos.x
-				&& note.start + note.length >= pos.x
-				&& (pos.y - note.y(self)).abs() <= note_height / 2.0
-			{
+			if note.start <= pos.x && note.start + note.length >= pos.x && (pos.y - note.y(self)).abs() <= note_height / 2.0 {
 				out.push(index);
 			}
 		}
@@ -116,9 +106,7 @@ impl Sheet {
 	}
 
 	pub fn get_size(&self) -> f32 {
-		self.notes
-			.iter()
-			.fold(0.0, |tmp, (_, note)| tmp.max(note.end()))
+		self.notes.iter().fold(0.0, |tmp, (_, note)| tmp.max(note.end()))
 	}
 
 	pub fn get_bounds(&self) -> (Range, Range) {
