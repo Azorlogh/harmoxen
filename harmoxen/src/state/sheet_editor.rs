@@ -19,6 +19,7 @@ pub struct WStates {
 	pub marker_editor: widget::sheet_editor::marker_editor::State,
 	pub xrange_slider: widget::range_slider::State,
 	pub yrange_slider: widget::range_slider::State,
+	pub cursor: widget::sheet_editor::cursor::State,
 }
 
 pub struct State {
@@ -105,6 +106,9 @@ impl State {
 				self.cursor %= self.sheet.get_size();
 				self.last_tick = now;
 			}
+			Message::SetCursor(at) => {
+				self.cursor = at;
+			}
 			Message::AddNote(note, mov) => {
 				let idx = self.sheet.add_note(note);
 				if mov {
@@ -151,6 +155,7 @@ pub enum Message {
 	ScrollTick(f32),
 	Play,
 	CursorTick(Instant),
+	SetCursor(f32),
 	AddNote(data::sheet::Note, bool), // if true: initiate move action
 	MoveNote(data::sheet::Index, Point),
 	ResizeNote(data::sheet::Index, f32),

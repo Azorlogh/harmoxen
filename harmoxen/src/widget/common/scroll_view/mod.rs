@@ -49,7 +49,7 @@ pub fn tick(state: &mut State, frame: &mut Frame2, _dt: f32) -> bool {
 pub struct ScrollView<'a, Message> {
 	state: &'a mut State,
 	frame: &'a Frame2,
-	limits: [(bool, bool); 2],
+	limits: [(bool, bool); 2], // TODO: use this
 	on_change: Box<dyn Fn() -> Message>,
 }
 

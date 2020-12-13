@@ -70,18 +70,36 @@ impl From<Theme> for Box<dyn tab::StyleSheet> {
 	}
 }
 
+// impl From<Theme> for Box<dyn overlay::context_menu::StyleSheet> {
+// 	fn from(theme: Theme) -> Self {
+// 		match theme {
+// 			Flux => flux::Tab.into(),
+// 			Nord => nord::Tab.into(),
+// 		}
+// 	}
+// }
+
 mod sheet_editor {
 	use super::{
 		flux, nord,
 		Theme::{self, *},
 	};
-	use crate::widget::sheet_editor::board;
+	use crate::widget::sheet_editor::*;
 
 	impl From<Theme> for Box<dyn board::StyleSheet> {
 		fn from(theme: Theme) -> Self {
 			match theme {
 				Flux => flux::sheet_editor::Board.into(),
 				Nord => nord::sheet_editor::Board.into(),
+			}
+		}
+	}
+
+	impl From<Theme> for Box<dyn marker_editor::StyleSheet> {
+		fn from(theme: Theme) -> Self {
+			match theme {
+				Flux => flux::sheet_editor::MarkerEditor.into(),
+				Nord => nord::sheet_editor::MarkerEditor.into(),
 			}
 		}
 	}

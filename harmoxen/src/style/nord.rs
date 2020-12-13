@@ -28,7 +28,6 @@ const ACTIVE: Color = Color::from_rgb(0x72 as f32 / 255.0, 0x89 as f32 / 255.0, 
 const HOVERED: Color = Color::from_rgb(0x67 as f32 / 255.0, 0x7B as f32 / 255.0, 0xC4 as f32 / 255.0);
 
 pub struct Container;
-
 impl container::StyleSheet for Container {
 	fn style(&self) -> container::Style {
 		container::Style {
@@ -42,7 +41,6 @@ impl container::StyleSheet for Container {
 }
 
 pub struct Button;
-
 impl button::StyleSheet for Button {
 	fn active(&self) -> button::Style {
 		button::Style {
@@ -71,7 +69,6 @@ impl button::StyleSheet for Button {
 }
 
 pub struct PickList;
-
 impl pick_list::StyleSheet for PickList {
 	fn menu(&self) -> pick_list::Menu {
 		pick_list::Menu {
@@ -104,7 +101,6 @@ impl pick_list::StyleSheet for PickList {
 }
 
 pub struct RangeSlider;
-
 impl range_slider::StyleSheet for RangeSlider {
 	fn active(&self) -> range_slider::Style {
 		range_slider::Style {
@@ -128,7 +124,6 @@ impl range_slider::StyleSheet for RangeSlider {
 }
 
 pub struct Tab;
-
 impl tab::StyleSheet for Tab {
 	fn active(&self) -> tab::Style {
 		tab::Style {
@@ -156,9 +151,8 @@ impl tab::StyleSheet for Tab {
 
 pub mod sheet_editor {
 	use super::*;
-	use crate::widget::sheet_editor::board;
+	use crate::widget::sheet_editor::*;
 	pub struct Board;
-
 	impl board::StyleSheet for Board {
 		fn active(&self) -> board::Style {
 			board::Style {
@@ -168,6 +162,24 @@ pub mod sheet_editor {
 				background_light: NORD_1.into(),
 				root_line_color: NORD_8,
 			}
+		}
+	}
+
+	pub struct MarkerEditor;
+	impl marker_editor::StyleSheet for MarkerEditor {
+		fn menu(&self) -> pick_list::Menu {
+			pick_list::Menu {
+				text_color: NORD_6,
+				background: NORD_0.into(),
+				border_width: 1,
+				border_color: NORD_1.into(),
+				selected_background: NORD_1.into(),
+				selected_text_color: NORD_1.into(),
+			}
+		}
+
+		fn active(&self) -> marker_editor::Style {
+			marker_editor::Style {}
 		}
 	}
 }

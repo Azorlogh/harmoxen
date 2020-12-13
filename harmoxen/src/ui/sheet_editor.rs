@@ -17,39 +17,49 @@ fn rootmsg(msg: Message) -> RootMessage {
 }
 
 pub fn build(state: &mut State, theme: Theme) -> Element<RootMessage> {
+	let x_scrollbar = Container::new(
+		RangeSlider::horizontal(
+			&mut state.wstates.xrange_slider,
+			state.frame.x,
+			(true, false),
+			false,
+			|view| rootmsg(Message::XViewChanged(view)),
+		)
+		.style(theme),
+	)
+	.height(SCROLLBAR_THICKNESS)
+	.width(Length::Fill);
+
+	let y_scrollbar = Container::new(
+		RangeSlider::vertical(&mut state.wstates.yrange_slider, state.frame.y, (true, true), true, |view| {
+			rootmsg(Message::YViewChanged(view))
+		})
+		.style(theme),
+	)
+	.width(SCROLLBAR_THICKNESS);
+
+	let timeline = Container::new(
+		Stack::new()
+			.push(Cursor::new(&mut state.wstates.cursor, state.cursor, state.frame))
+			.push(
+				MarkerEditor::new(
+					&mut state.wstates.marker_editor,
+					state.frame,
+					&state.layout,
+					state.curr_marker,
+				)
+				.style(theme),
+			),
+	)
+	.height(TIMELINE_THICKNESS);
+
 	Stack::new()
 		.push(
 			Row::new().push(Space::with_width(PREVIEW_THICKNESS)).push(
 				Column::new()
 					.push(
 						Row::new()
-							.push(
-								Column::new()
-									.push(
-										Container::new(
-											RangeSlider::horizontal(
-												&mut state.wstates.xrange_slider,
-												state.frame.x,
-												(true, false),
-												false,
-												|view| rootmsg(Message::XViewChanged(view)),
-											)
-											.style(theme),
-										)
-										.height(SCROLLBAR_THICKNESS)
-										.width(Length::Fill),
-									)
-									.push(
-										Container::new(MarkerEditor::new(
-											&mut state.wstates.marker_editor,
-											state.frame,
-											&state.layout,
-											state.curr_marker,
-										))
-										.height(TIMELINE_THICKNESS),
-									)
-									.width(Length::Fill),
-							)
+							.push(Column::new().push(x_scrollbar).push(timeline).width(Length::Fill))
 							.push(Space::with_width(SCROLLBAR_THICKNESS)),
 					)
 					.push(
@@ -62,11 +72,11 @@ pub fn build(state: &mut State, theme: Theme) -> Element<RootMessage> {
 											&state.sheet,
 											&state.frame,
 											&state.layout,
+											&state.cursor,
 											&state.selection,
 										)
 										.style(theme),
 									)
-									.push(Cursor::new(state.cursor, state.frame))
 									.push(ScrollView::new(
 										&mut state.wstates.scroll_view,
 										&state.frame,
@@ -74,19 +84,7 @@ pub fn build(state: &mut State, theme: Theme) -> Element<RootMessage> {
 										|| Message::SetScrolling.into(),
 									)),
 							)
-							.push(
-								Container::new(
-									RangeSlider::vertical(
-										&mut state.wstates.yrange_slider,
-										state.frame.y,
-										(true, true),
-										true,
-										|view| rootmsg(Message::YViewChanged(view)),
-									)
-									.style(theme),
-								)
-								.width(SCROLLBAR_THICKNESS),
-							),
+							.push(y_scrollbar),
 					),
 			),
 		)

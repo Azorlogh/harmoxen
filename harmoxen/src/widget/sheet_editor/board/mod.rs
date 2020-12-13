@@ -11,7 +11,9 @@ use crate::{
 	widget::{context_menu, ContextMenu},
 };
 use iced_graphics::{Backend, Defaults, Primitive, Renderer};
-use iced_native::{event, layout as iced_layout, mouse, overlay, Clipboard, Element, Event, Hasher, Length, Rectangle, Widget};
+use iced_native::{
+	event, layout as iced_layout, mouse, overlay, Clipboard, Color, Element, Event, Hasher, Length, Rectangle, Size, Widget,
+};
 use std::collections::{HashMap, HashSet};
 use std::time::Instant;
 
@@ -85,6 +87,7 @@ pub struct Board<'a> {
 	sheet: &'a Sheet,
 	frame: &'a Frame2,
 	layout: &'a Layout,
+	cursor: &'a f32,
 	selection: &'a HashSet<Index>,
 	style: Box<dyn StyleSheet>,
 }
@@ -95,6 +98,7 @@ impl<'a> Board<'a> {
 		sheet: &'a Sheet,
 		frame: &'a Frame2,
 		layout: &'a Layout,
+		cursor: &'a f32,
 		selection: &'a HashSet<Index>,
 	) -> Self {
 		Self {
@@ -102,6 +106,7 @@ impl<'a> Board<'a> {
 			sheet,
 			frame,
 			layout,
+			cursor,
 			selection,
 			style: Default::default(),
 		}
@@ -337,6 +342,17 @@ where
 
 		let notes = self.draw_notes(&coord, style);
 
+		let cursor = {
+			let s_pos = coord.to_screen_x(*self.cursor);
+			Primitive::Quad {
+				bounds: Rect::from_point_size(Point::new(s_pos, 0.0), Size::new(1.0, size.height)).into(),
+				background: Color::WHITE.into(),
+				border_color: Color::TRANSPARENT,
+				border_radius: 0,
+				border_width: 0,
+			}
+		};
+
 		(
 			Primitive::Clip {
 				bounds: layout.bounds(),
@@ -344,7 +360,7 @@ where
 				content: Box::new(Primitive::Translate {
 					translation: offset.into(),
 					content: Box::new(Primitive::Group {
-						primitives: vec![layout_primitives, notes],
+						primitives: vec![layout_primitives, notes, cursor],
 					}),
 				}),
 			},

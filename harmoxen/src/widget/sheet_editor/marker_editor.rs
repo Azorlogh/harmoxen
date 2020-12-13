@@ -109,19 +109,27 @@ where
 		let lposition: Point = lbounds.position().into();
 		let mouse_pos = Into::<Point>::into(cursor_position) - lposition.to_vec2();
 		let coord = Coord::new(self.frame, lbounds.size());
-		match event {
+
+		let captured = match event {
 			Event::Keyboard(keyboard::Event::ModifiersChanged(mods)) => {
 				self.state.ctrl = mods.control;
+				false
 			}
 			Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left)) => {
 				if let Action::Context = self.state.action {
 					self.state.action = Action::Idle;
+					true
 				} else if lbounds.contains(cursor_position) {
 					let x = coord.to_board_x(mouse_pos.x);
 					if let Some(idx) = get_hover(x, coord, self.layout) {
 						messages.push(Message::SelectMarker(idx).into());
 						self.state.action = Action::Move;
+						true
+					} else {
+						false
 					}
+				} else {
+					false
 				}
 			}
 			Event::Mouse(mouse::Event::CursorMoved { .. }) => {
@@ -132,11 +140,13 @@ where
 						time = self.layout.quantize_time_exclude(time, false, idx);
 					}
 					self.state.action_effective = true;
-					messages.push(Message::MoveMarker(time).into())
+					messages.push(Message::MoveMarker(time).into());
 				}
+				false
 			}
 			Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Left)) => {
 				self.state.action = Action::Idle;
+				false
 			}
 			Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Right)) => {
 				self.state.action = Action::Idle;
@@ -161,11 +171,18 @@ where
 							self.state.context_pos = Some(cursor_position);
 						}
 					}
+					true
+				} else {
+					false
 				}
 			}
-			_ => {}
+			_ => false,
+		};
+		if captured {
+			event::Status::Captured
+		} else {
+			event::Status::Ignored
 		}
-		event::Status::Ignored
 	}
 
 	fn draw(
