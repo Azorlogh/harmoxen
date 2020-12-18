@@ -6,13 +6,13 @@ pub struct Style {
 	pub border_radius: u16,
 	pub border_width: u16,
 	pub border_color: Color,
-	pub padding: f32,
 	pub bar_color: Color,
+	pub bar_highlight: Color,
 	pub bar_border_radius: u16,
 	pub bar_border_width: u16,
 	pub bar_border_color: Color,
 	pub handle_color: Color,
-	pub handle_offset: f32,
+	pub handle_highlight: Color,
 }
 
 impl std::default::Default for Style {
@@ -22,21 +22,19 @@ impl std::default::Default for Style {
 			border_radius: 0,
 			border_width: 1,
 			border_color: [0.7, 0.7, 0.7].into(),
-			padding: 8.0,
-			bar_color: Color::from_rgb(0.6, 0.6, 0.6),
+			bar_color: Color::from_rgb(0.5, 0.5, 0.5),
+			bar_highlight: Color::from_rgb(0.6, 0.6, 0.6),
 			bar_border_radius: 0,
 			bar_border_width: 1,
 			bar_border_color: [0.5, 0.5, 0.5].into(),
 			handle_color: Color::from_rgb(0.5, 0.5, 0.5),
-			handle_offset: 3.0,
+			handle_highlight: Color::from_rgb(0.6, 0.6, 0.6),
 		}
 	}
 }
 
 pub trait StyleSheet {
 	fn active(&self) -> Style;
-
-	fn hovered(&self) -> Style;
 }
 
 struct Default;
@@ -44,13 +42,6 @@ struct Default;
 impl StyleSheet for Default {
 	fn active(&self) -> Style {
 		Style::default()
-	}
-
-	fn hovered(&self) -> Style {
-		Style {
-			border_color: Color::BLACK,
-			..self.active()
-		}
 	}
 }
 

@@ -190,13 +190,16 @@ where
 		_renderer: &mut Renderer<B>,
 		_defaults: &Defaults,
 		layout: IcedLayout,
-		_cursor_position: iced::Point,
+		cursor_position: iced::Point,
 		_viewport: &Rectangle,
 	) -> (Primitive, mouse::Interaction) {
 		let bounds = layout.bounds();
-		let coord = Coord::new(self.frame, layout.bounds().size());
+		let coord = Coord::new(self.frame, bounds.size());
 
 		let size = bounds.width.min(bounds.height);
+
+		let mouse_pos =
+			coord.to_board_x((Into::<Point>::into(cursor_position) - Into::<Point>::into(bounds.position()).to_vec2()).x);
 
 		const AR: f32 = 0.5; // marker aspect ratio
 
@@ -252,7 +255,11 @@ where
 				offset: Vector::new(0, 0),
 				content: Box::new(cursors_primitives),
 			},
-			mouse::Interaction::Idle,
+			if bounds.contains(cursor_position) && get_hover(mouse_pos, coord, self.layout).is_some() {
+				mouse::Interaction::Pointer
+			} else {
+				mouse::Interaction::Idle
+			},
 		)
 	}
 

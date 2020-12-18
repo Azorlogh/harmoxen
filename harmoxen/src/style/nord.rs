@@ -108,18 +108,14 @@ impl range_slider::StyleSheet for RangeSlider {
 			border_radius: 1,
 			border_width: 1,
 			border_color: NORD_2,
-			padding: 3.0,
 			bar_color: NORD_3,
+			bar_highlight: NORD_4,
 			bar_border_radius: 0,
 			bar_border_width: 1,
 			bar_border_color: NORD_1,
-			handle_color: NORD_1,
-			handle_offset: 8.0,
+			handle_color: NORD_3,
+			handle_highlight: NORD_2,
 		}
-	}
-
-	fn hovered(&self) -> range_slider::Style {
-		range_slider::Style { ..self.active() }
 	}
 }
 

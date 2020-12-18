@@ -168,12 +168,17 @@ where
 		let layout = self.layout;
 		let selection = self.selection;
 
+		if let Action::Context { .. } = state.action {
+			if let Event::Mouse(mouse::Event::ButtonPressed(_)) = event {
+				state.action = Action::Idle;
+				state.hover = Hover::Idle;
+			}
+			return event::Status::Captured;
+		}
+
 		match event {
 			Event::Mouse(mouse::Event::ButtonPressed(btn)) if lbounds.contains(cursor_position) => {
 				let pos = coord.to_board_p(mouse_pos);
-				if let Action::Context { .. } = &state.action {
-					state.action = Action::Idle;
-				}
 				if btn == mouse::Button::Left {
 					let is_double_click =
 						mouse_pos == state.last_left_click.0 && state.last_left_click.1.elapsed().as_millis() < 500;
