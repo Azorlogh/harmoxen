@@ -6,8 +6,8 @@ use iced_graphics::{
 	Backend, Defaults, Primitive, Renderer,
 };
 use iced_native::{
-	event, keyboard, layout as iced_layout, mouse, overlay, Clipboard, Element, Event, Hasher, Layout as IcedLayout, Length,
-	Rectangle, Vector, Widget,
+	event, keyboard, layout as iced_layout, mouse, overlay, Clipboard, Color, Element, Event, Hasher, Layout as IcedLayout,
+	Length, Rectangle, Vector, Widget,
 };
 
 use crate::widget::common::{context_menu, ContextMenu};
@@ -248,12 +248,23 @@ where
 			})
 		}
 
-		let cursors_primitives = Primitive::Group { primitives: cursors };
+		let cursors_primitives = Primitive::Clip {
+			bounds,
+			offset: Vector::new(0, 0),
+			content: Box::new(Primitive::Group { primitives: cursors }),
+		};
 		(
-			Primitive::Clip {
-				bounds,
-				offset: Vector::new(0, 0),
-				content: Box::new(cursors_primitives),
+			Primitive::Group {
+				primitives: vec![
+					Primitive::Quad {
+						bounds,
+						background: self.style.active().background,
+						border_width: 0,
+						border_radius: 0,
+						border_color: Color::TRANSPARENT,
+					},
+					cursors_primitives,
+				],
 			},
 			if bounds.contains(cursor_position) && get_hover(mouse_pos, coord, self.layout).is_some() {
 				mouse::Interaction::Pointer

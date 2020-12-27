@@ -43,7 +43,6 @@ pub fn build(state: &mut State) -> Element<Message> {
 							.style(state.theme),
 					),
 			)
-			// .push(Space::with_height(Length::Units(4)))
 			.push(editor_ui)
 			.into(),
 		CurrentEditor::LayoutEditor => editor_ui,

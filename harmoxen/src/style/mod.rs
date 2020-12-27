@@ -11,96 +11,61 @@ pub const fn color(code: u32) -> iced::Color {
 
 mod flux;
 mod nord;
+mod one_dark;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Theme {
-	Flux,
-	Nord,
+	// Flux,
+	// Nord,
+	OneDark,
 }
 use Theme::*;
 
+macro_rules! impl_style {
+	($widget:ident, $style:ident) => {
+		impl From<Theme> for Box<dyn $widget::StyleSheet> {
+			fn from(theme: Theme) -> Self {
+				match theme {
+					// Flux => flux::$style.into(),
+					// Nord => nord::$style.into(),
+					OneDark => one_dark::$style.into(),
+				}
+			}
+		}
+	};
+	($widget:ident, $prefix:ident, $style:ident) => {
+		impl From<Theme> for Box<dyn $widget::StyleSheet> {
+			fn from(theme: Theme) -> Self {
+				match theme {
+					// Flux => flux::$prefix::$style.into(),
+					// Nord => nord::$prefix::$style.into(),
+					OneDark => one_dark::$prefix::$style.into(),
+				}
+			}
+		}
+	};
+}
+
 impl Default for Theme {
 	fn default() -> Theme {
-		Flux
+		OneDark
 	}
 }
 
-impl From<Theme> for Box<dyn container::StyleSheet> {
-	fn from(theme: Theme) -> Self {
-		match theme {
-			Flux => flux::Container.into(),
-			Nord => nord::Container.into(),
-		}
-	}
-}
-
-impl From<Theme> for Box<dyn button::StyleSheet> {
-	fn from(theme: Theme) -> Self {
-		match theme {
-			Flux => flux::Button.into(),
-			Nord => nord::Button.into(),
-		}
-	}
-}
-
-impl From<Theme> for Box<dyn pick_list::StyleSheet> {
-	fn from(theme: Theme) -> Self {
-		match theme {
-			Flux => flux::PickList.into(),
-			Nord => nord::PickList.into(),
-		}
-	}
-}
-
-impl From<Theme> for Box<dyn range_slider::StyleSheet> {
-	fn from(theme: Theme) -> Self {
-		match theme {
-			Flux => flux::RangeSlider.into(),
-			Nord => nord::RangeSlider.into(),
-		}
-	}
-}
-
-impl From<Theme> for Box<dyn tab::StyleSheet> {
-	fn from(theme: Theme) -> Self {
-		match theme {
-			Flux => flux::Tab.into(),
-			Nord => nord::Tab.into(),
-		}
-	}
-}
-
-// impl From<Theme> for Box<dyn overlay::context_menu::StyleSheet> {
-// 	fn from(theme: Theme) -> Self {
-// 		match theme {
-// 			Flux => flux::Tab.into(),
-// 			Nord => nord::Tab.into(),
-// 		}
-// 	}
-// }
+impl_style!(container, Container);
+impl_style!(button, Button);
+impl_style!(pick_list, PickList);
+impl_style!(range_slider, RangeSlider);
+impl_style!(tab, Tab);
 
 mod sheet_editor {
 	use super::{
-		flux, nord,
+		flux, nord, one_dark,
 		Theme::{self, *},
 	};
 	use crate::widget::sheet_editor::*;
 
-	impl From<Theme> for Box<dyn board::StyleSheet> {
-		fn from(theme: Theme) -> Self {
-			match theme {
-				Flux => flux::sheet_editor::Board.into(),
-				Nord => nord::sheet_editor::Board.into(),
-			}
-		}
-	}
-
-	impl From<Theme> for Box<dyn marker_editor::StyleSheet> {
-		fn from(theme: Theme) -> Self {
-			match theme {
-				Flux => flux::sheet_editor::MarkerEditor.into(),
-				Nord => nord::sheet_editor::MarkerEditor.into(),
-			}
-		}
-	}
+	impl_style!(board, sheet_editor, Board);
+	impl_style!(marker_editor, sheet_editor, MarkerEditor);
+	impl_style!(preview, sheet_editor, Preview);
 }

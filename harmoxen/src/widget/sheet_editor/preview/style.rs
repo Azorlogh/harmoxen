@@ -1,5 +1,4 @@
 use iced::Color;
-use iced_style::menu;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Style {
@@ -15,18 +14,12 @@ impl std::default::Default for Style {
 }
 
 pub trait StyleSheet {
-	fn menu(&self) -> menu::Style;
-
 	fn active(&self) -> Style;
 }
 
 struct Default;
 
 impl StyleSheet for Default {
-	fn menu(&self) -> menu::Style {
-		menu::Style::default()
-	}
-
 	fn active(&self) -> Style {
 		Style::default()
 	}

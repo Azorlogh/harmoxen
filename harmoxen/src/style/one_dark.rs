@@ -2,10 +2,10 @@ use super::color;
 use crate::widget::*;
 use iced::Color;
 
-const BG_0: Color = color(0x252729);
-const BG_1: Color = color(0x2C2E30);
-const BG_2: Color = color(0x323232);
-const BG_3: Color = color(0x404040);
+const BG_0: Color = color(0x21252B);
+const BG_1: Color = color(0x282C34);
+const BG_2: Color = color(0x373C47);
+const BG_3: Color = color(0x414855);
 const BG_4: Color = color(0x5D5D5D);
 const BG_5: Color = color(0x707070);
 
@@ -21,9 +21,9 @@ impl container::StyleSheet for Container {
 	fn style(&self) -> container::Style {
 		container::Style {
 			text_color: Some(FG),
-			background: BG_2.into(),
-			border_width: 1,
-			border_color: BG_3.into(),
+			background: BG_0.into(),
+			border_width: 0,
+			border_color: Color::TRANSPARENT.into(),
 			border_radius: 0,
 		}
 	}
@@ -33,9 +33,9 @@ pub struct Button;
 impl button::StyleSheet for Button {
 	fn active(&self) -> button::Style {
 		button::Style {
-			background: BG_0.into(),
-			border_radius: 3,
-			border_width: 1,
+			background: BG_1.into(),
+			border_radius: 0,
+			border_width: 0,
 			border_color: BG_1,
 			text_color: FG,
 			..button::Style::default()
@@ -63,7 +63,7 @@ impl pick_list::StyleSheet for PickList {
 		pick_list::Menu {
 			text_color: FG,
 			background: BG_0.into(),
-			border_width: 1,
+			border_width: 0,
 			border_color: BG_1.into(),
 			selected_background: BG_3.into(),
 			selected_text_color: FG.into(),
@@ -74,7 +74,7 @@ impl pick_list::StyleSheet for PickList {
 		pick_list::Style {
 			text_color: FG,
 			background: BG_0.into(),
-			border_width: 1,
+			border_width: 0,
 			border_color: BG_1.into(),
 
 			border_radius: 0,
@@ -94,17 +94,17 @@ pub struct RangeSlider;
 impl range_slider::StyleSheet for RangeSlider {
 	fn active(&self) -> range_slider::Style {
 		range_slider::Style {
-			background: BG_3.into(),
-			border_radius: 1,
+			background: BG_1.into(),
+			border_radius: 0,
 			border_width: 1,
-			border_color: BG_4,
-			bar_color: BG_4,
-			bar_highlight: BG_5,
+			border_color: BG_2,
+			bar_color: BG_2,
+			bar_highlight: BG_3,
 			bar_border_radius: 0,
-			bar_border_width: 1,
+			bar_border_width: 0,
 			bar_border_color: BG_5,
-			handle_color: BG_4,
-			handle_highlight: BG_5,
+			handle_color: BG_2,
+			handle_highlight: BG_3,
 		}
 	}
 }
@@ -114,8 +114,8 @@ impl tab::StyleSheet for Tab {
 	fn active(&self) -> tab::Style {
 		tab::Style {
 			background: BG_0.into(),
-			border_radius: 1,
-			border_width: 1,
+			border_radius: 0,
+			border_width: 0,
 			border_color: BG_1,
 		}
 	}
@@ -144,8 +144,8 @@ pub mod sheet_editor {
 			board::Style {
 				note_color: FEATURE,
 				note_highlight: FEATURE_HL,
-				background_dark: BG_0.into(),
-				background_light: BG_1.into(),
+				background_dark: BG_1.into(),
+				background_light: BG_0.into(),
 				root_line_color: BG_FEATURE,
 			}
 		}
@@ -165,9 +165,14 @@ pub mod sheet_editor {
 		}
 
 		fn active(&self) -> marker_editor::Style {
-			marker_editor::Style {
-				background: Color::TRANSPARENT.into(),
-			}
+			marker_editor::Style { background: BG_2.into() }
+		}
+	}
+
+	pub struct Preview;
+	impl preview::StyleSheet for Preview {
+		fn active(&self) -> preview::Style {
+			preview::Style { background: BG_1.into() }
 		}
 	}
 }

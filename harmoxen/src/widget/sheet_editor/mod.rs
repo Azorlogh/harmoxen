@@ -9,3 +9,6 @@ pub use cursor::Cursor;
 
 pub mod marker_editor;
 pub use marker_editor::MarkerEditor;
+
+pub mod preview;
+pub use preview::Preview;

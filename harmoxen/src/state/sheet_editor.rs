@@ -20,6 +20,7 @@ pub struct WStates {
 	pub xrange_slider: widget::range_slider::State,
 	pub yrange_slider: widget::range_slider::State,
 	pub cursor: widget::sheet_editor::cursor::State,
+	pub preview: widget::sheet_editor::preview::State,
 }
 
 pub struct State {

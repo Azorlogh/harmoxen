@@ -47,7 +47,7 @@ impl State {
 			current_editor: CurrentEditor::SheetEditor,
 			save_path: None,
 			up_to_date: true,
-			theme: Theme::Flux,
+			theme: Theme::default(),
 			to_backend,
 		}
 	}

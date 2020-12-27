@@ -9,3 +9,9 @@ pub enum Event {
 	ICP(icp::Event),
 	Shutdown,
 }
+
+impl From<icp::Event> for Event {
+	fn from(evt: icp::Event) -> Event {
+		Event::ICP(evt)
+	}
+}

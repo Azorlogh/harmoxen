@@ -175,7 +175,9 @@ pub mod sheet_editor {
 		}
 
 		fn active(&self) -> marker_editor::Style {
-			marker_editor::Style {}
+			marker_editor::Style {
+				background: NORD_1.into(),
+			}
 		}
 	}
 }

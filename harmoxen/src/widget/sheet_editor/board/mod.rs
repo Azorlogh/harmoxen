@@ -179,12 +179,13 @@ where
 		match event {
 			Event::Mouse(mouse::Event::ButtonPressed(btn)) if lbounds.contains(cursor_position) => {
 				let pos = coord.to_board_p(mouse_pos);
+				state.hover = get_hover(pos, &coord, &sheet);
 				if btn == mouse::Button::Left {
 					let is_double_click =
 						mouse_pos == state.last_left_click.0 && state.last_left_click.1.elapsed().as_millis() < 500;
 					state.last_left_click = (mouse_pos, Instant::now());
 					if is_double_click {
-						if let Some(id) = get_hover(pos, coord, &self.sheet).note_idx() {
+						if let Some(id) = get_hover(pos, &coord, &self.sheet).note_idx() {
 							let mut note = sheet.get_note(id).unwrap();
 							note.start += pos.x;
 							let items = vec![
@@ -319,7 +320,7 @@ where
 					}
 					_ => {}
 				}
-				state.hover = get_hover(pos, coord, &sheet);
+				state.hover = get_hover(pos, &coord, &sheet);
 			}
 			Event::Mouse(mouse::Event::ButtonReleased(_)) => match self.state.action {
 				Action::Context { .. } => {}
@@ -382,7 +383,7 @@ where
 	}
 }
 
-fn get_hover(pos: Point, coord: Coord, sheet: &Sheet) -> Hover {
+fn get_hover(pos: Point, coord: &Coord, sheet: &Sheet) -> Hover {
 	let hovered_note_idx = sheet.get_note_at(pos, coord.to_board_h(NOTE_HEIGHT));
 	match hovered_note_idx {
 		None => Hover::Idle,
