@@ -16,6 +16,13 @@ const FEATURE_HL: Color = color(0x69FFA2);
 
 const FG: Color = color(0xEEEEEE);
 
+const RED: Color = color(0xE06C75);
+const GREEN: Color = color(0x98C379);
+const YELLOW: Color = color(0xE5C07B);
+const BLUE: Color = color(0x61AFEF);
+const MAGENTA: Color = color(0xC678DD);
+const CYAN: Color = color(0x56B6C2);
+
 pub struct Container;
 impl container::StyleSheet for Container {
 	fn style(&self) -> container::Style {
@@ -135,11 +142,26 @@ impl tab::StyleSheet for Tab {
 	}
 }
 
+fn context_menu() -> pick_list::Menu {
+	pick_list::Menu {
+		text_color: FG,
+		background: BG_2.into(),
+		border_width: 0,
+		border_color: BG_1.into(),
+		selected_background: BG_3.into(),
+		selected_text_color: FG.into(),
+	}
+}
+
 pub mod sheet_editor {
 	use super::*;
 	use crate::widget::sheet_editor::*;
 	pub struct Board;
 	impl board::StyleSheet for Board {
+		fn menu(&self) -> pick_list::Menu {
+			context_menu()
+		}
+
 		fn active(&self) -> board::Style {
 			board::Style {
 				note_color: FEATURE,
@@ -154,14 +176,7 @@ pub mod sheet_editor {
 	pub struct MarkerEditor;
 	impl marker_editor::StyleSheet for MarkerEditor {
 		fn menu(&self) -> pick_list::Menu {
-			pick_list::Menu {
-				text_color: FG,
-				background: BG_0.into(),
-				border_width: 1,
-				border_color: BG_1.into(),
-				selected_background: BG_3.into(),
-				selected_text_color: FG.into(),
-			}
+			context_menu()
 		}
 
 		fn active(&self) -> marker_editor::Style {

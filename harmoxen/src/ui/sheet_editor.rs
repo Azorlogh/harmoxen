@@ -76,6 +76,7 @@ pub fn build(state: &mut State, theme: Theme) -> Element<RootMessage> {
 										.push(
 											Board::new(
 												&mut state.wstates.board,
+												state.interval_input.as_mut().map(|d| &mut d.state),
 												&state.sheet,
 												&state.frame,
 												&state.layout,

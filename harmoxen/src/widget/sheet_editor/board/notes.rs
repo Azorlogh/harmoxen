@@ -1,9 +1,10 @@
 use super::{Action, Board, Hover, Style, NOTE_HEIGHT, NOTE_SCALE_KNOB};
 use crate::data::{sheet::Pitch, Point, Rect};
 use crate::util::coord::Coord;
+use iced_graphics::Backend;
 use iced_graphics::{Background, Color, Primitive};
 
-impl<'a> Board<'a> {
+impl<'a, B: Backend + iced_graphics::backend::Text> Board<'a, B> {
 	pub fn draw_notes(&self, coord: &Coord, style: Style) -> Primitive {
 		let mut primitives = vec![];
 

@@ -1,25 +1,31 @@
-use crate::data::{
-	icp,
-	layout::Layout,
-	sheet::{Index, Interval, Note, Pitch, Sheet},
-	Frame2, Line, Point, Rect, Vec2,
-};
 use crate::state::{sheet_editor::Message, Message as RootMessage};
 use crate::util::coord::Coord;
 use crate::{
 	backend,
-	widget::{context_menu, ContextMenu},
+	widget::{context_menu, text_input, ContextMenu},
+};
+use crate::{
+	data::{
+		icp,
+		layout::Layout,
+		sheet::{Index, Interval, Note, Pitch, Sheet},
+		Frame2, Line, Point, Rect, Vec2,
+	},
+	util::intersect,
 };
 use iced_graphics::{Backend, Defaults, Primitive, Renderer};
 use iced_native::{
-	event, layout as iced_layout, mouse, overlay, Clipboard, Color, Element, Event, Hasher, Length, Rectangle, Size, Widget,
+	event, layout as iced_layout, mouse, overlay, Clipboard, Color, Element, Event, Hasher, Length, Rectangle, Size, TextInput,
+	Widget,
 };
+use iced_winit::conversion::mouse_interaction;
 use std::collections::{HashMap, HashSet};
 use std::time::Instant;
 
 const NOTE_HEIGHT: f32 = 24.0;
 const NOTE_SCALE_KNOB: f32 = 32.0;
 
+// mod interval_input;
 mod layout;
 mod notes;
 mod style;
@@ -42,7 +48,9 @@ impl Hover {
 	}
 }
 
-#[derive(Debug)]
+#[derive(Clone)]
+struct IntervalInputChange(String);
+
 pub enum Action {
 	Idle,
 	Move(Index, HashMap<Index, Vec2>, Rect), // root note, offsets to mouse, extent of selection around mouse
@@ -51,6 +59,10 @@ pub enum Action {
 	Context {
 		menu: context_menu::State<RootMessage>,
 		pos: iced::Point,
+	},
+	EditInterval {
+		idx: Index,
+		current_text: String,
 	},
 }
 
@@ -80,10 +92,17 @@ impl State {
 		notes.insert(idx, Vec2::ZERO);
 		self.action = Action::Move(idx, notes, rect);
 	}
+	pub fn set_action_edit_interval(&mut self, idx: Index) {
+		self.action = Action::EditInterval {
+			idx,
+			current_text: "3/2".to_owned(),
+		};
+	}
 }
 
-pub struct Board<'a> {
+pub struct Board<'a, B: Backend + iced_graphics::backend::Text> {
 	state: &'a mut State,
+	interval_input: Option<TextInput<'a, IntervalInputChange, Renderer<B>>>,
 	sheet: &'a Sheet,
 	frame: &'a Frame2,
 	layout: &'a Layout,
@@ -92,17 +111,24 @@ pub struct Board<'a> {
 	style: Box<dyn StyleSheet>,
 }
 
-impl<'a> Board<'a> {
+impl<'a, B: Backend + iced_graphics::backend::Text> Board<'a, B> {
 	pub fn new(
 		state: &'a mut State,
+		interval_input_state: Option<&'a mut text_input::State>,
 		sheet: &'a Sheet,
 		frame: &'a Frame2,
 		layout: &'a Layout,
 		cursor: &'a f32,
 		selection: &'a HashSet<Index>,
 	) -> Self {
+		let interval_input = if let Action::EditInterval { current_text, .. } = &state.action {
+			Some(TextInput::new(interval_input_state.unwrap(), "2/1", current_text, |s| IntervalInputChange(s)).padding(2))
+		} else {
+			None
+		};
 		Self {
 			state,
+			interval_input,
 			sheet,
 			frame,
 			layout,
@@ -127,7 +153,7 @@ impl<'a> Board<'a> {
 	}
 }
 
-impl<'a, B> Widget<RootMessage, Renderer<B>> for Board<'a>
+impl<'a, B> Widget<RootMessage, Renderer<B>> for Board<'a, B>
 where
 	Message: Clone,
 	B: Backend + iced_graphics::backend::Text + 'static,
@@ -140,26 +166,51 @@ where
 		Length::Fill
 	}
 
-	fn layout(&self, _renderer: &Renderer<B>, limits: &iced_layout::Limits) -> iced_layout::Node {
-		iced_layout::Node::new(limits.max())
+	fn layout(&self, renderer: &Renderer<B>, limits: &iced_layout::Limits) -> iced_layout::Node {
+		let mut children = vec![];
+		if let Action::EditInterval { idx, .. } = &self.state.action {
+			let sheet = self.sheet;
+			let note = sheet.get_note(*idx).unwrap();
+			if let Pitch::Relative(root, _) = note.pitch {
+				let coord = Coord::new(*self.frame, limits.max());
+				let root = sheet.get_note(root).unwrap();
+				let position = Point::new(note.start, (sheet.get_y(note.pitch) + sheet.get_y(root.pitch)) / 2.0);
+				let screen_pos = coord.to_screen_p(position);
+				let interval_input = self.interval_input.as_ref().unwrap();
+				let mut node = interval_input.layout(renderer, &iced_layout::Limits::NONE.max_width(100));
+				println!("{:?}", node);
+				node.move_to(screen_pos.into());
+				children.push(node)
+			}
+		}
+		iced_layout::Node::with_children(limits.max(), children)
 	}
 
-	fn hash_layout(&self, _action: &mut Hasher) {}
+	fn hash_layout(&self, state: &mut Hasher) {
+		use std::{any::TypeId, hash::Hash};
+		struct Marker;
+		TypeId::of::<Marker>().hash(state);
+
+		if let Action::EditInterval { .. } = &self.state.action {
+			let interval_input = self.interval_input.as_ref().unwrap();
+			interval_input.hash_layout(state);
+		}
+	}
 
 	fn on_event(
 		&mut self,
 		event: Event,
-		layout: iced_native::Layout,
+		iced_layout: iced_native::Layout,
 		cursor_position: iced::Point,
 		messages: &mut Vec<RootMessage>,
-		_renderer: &Renderer<B>,
-		_clipboard: Option<&dyn Clipboard>,
+		renderer: &Renderer<B>,
+		clipboard: Option<&dyn Clipboard>,
 	) -> event::Status {
-		let lbounds = layout.bounds();
+		let lbounds = iced_layout.bounds();
 		let lposition: Point = lbounds.position().into();
 		let mouse_pos = Into::<Point>::into(cursor_position) - lposition.to_vec2();
 		let mut history_save = false;
-		let size = layout.bounds().size();
+		let size = iced_layout.bounds().size();
 		let coord = Coord::new(*self.frame, size);
 
 		let state = &mut self.state;
@@ -174,6 +225,22 @@ where
 				state.hover = Hover::Idle;
 			}
 			return event::Status::Captured;
+		}
+
+		if let Action::EditInterval { .. } = &mut state.action {
+			let text_input = self.interval_input.as_mut().unwrap();
+			let mut messages = vec![];
+			let status = text_input.on_event(
+				event.clone(),
+				iced_layout.children().next().unwrap(),
+				cursor_position,
+				&mut messages,
+				renderer,
+				clipboard,
+			);
+			if let event::Status::Captured = status {
+				return event::Status::Captured;
+			}
 		}
 
 		match event {
@@ -324,6 +391,7 @@ where
 			}
 			Event::Mouse(mouse::Event::ButtonReleased(_)) => match self.state.action {
 				Action::Context { .. } => {}
+				Action::EditInterval { .. } => {}
 				_ => self.stop_action(messages, &mut history_save),
 			},
 			_ => {}
@@ -333,21 +401,25 @@ where
 
 	fn draw(
 		&self,
-		_renderer: &mut Renderer<B>,
-		_defaults: &Defaults,
+		renderer: &mut Renderer<B>,
+		defaults: &Defaults,
 		layout: iced_native::Layout,
-		_cursor_position: iced::Point,
-		_viewport: &Rectangle,
+		cursor_position: iced::Point,
+		viewport: &Rectangle,
 	) -> (Primitive, mouse::Interaction) {
 		let offset = Into::<Point>::into(layout.bounds().position()).to_vec2();
 		let size = layout.bounds().size();
 		let coord = Coord::new(self.frame.clone(), size);
 		let style = self.style.active();
+		let mut mouse_interaction = mouse::Interaction::Idle;
 
+		// Draw sheet layout
 		let layout_primitives = self.draw_layout(size, &coord, self.layout, style);
 
+		// Draw notes
 		let notes = self.draw_notes(&coord, style);
 
+		// Draw cursor
 		let cursor = {
 			let s_pos = coord.to_screen_x(*self.cursor);
 			Primitive::Quad {
@@ -359,24 +431,45 @@ where
 			}
 		};
 
+		// Draw interval input
+		let mut interval_input = Primitive::None;
+		if let Action::EditInterval { idx, current_text } = &self.state.action {
+			let text_input = self.interval_input.as_ref().unwrap();
+			let layout = layout.children().next().unwrap();
+			let (primitive, interaction) =
+				iced_native::Widget::draw(text_input, renderer, defaults, layout, cursor_position, viewport);
+			interval_input = primitive;
+			mouse_interaction = interaction;
+		}
+
 		(
 			Primitive::Clip {
 				bounds: layout.bounds(),
 				offset: Vec2::<u32>::new(0, 0).into(),
-				content: Box::new(Primitive::Translate {
-					translation: offset.into(),
-					content: Box::new(Primitive::Group {
-						primitives: vec![layout_primitives, notes, cursor],
-					}),
+				content: Box::new(Primitive::Group {
+					primitives: vec![
+						Primitive::Translate {
+							translation: offset.into(),
+							content: Box::new(Primitive::Group {
+								primitives: vec![layout_primitives, notes, cursor],
+							}),
+						},
+						interval_input,
+					],
 				}),
 			},
-			mouse::Interaction::Idle,
+			mouse_interaction,
 		)
 	}
 
 	fn overlay(&mut self, _layout: iced_native::Layout) -> Option<overlay::Element<'_, RootMessage, Renderer<B>>> {
 		if let Action::Context { menu, pos } = &mut self.state.action {
-			Some(ContextMenu::new(menu).padding(4).overlay(pos.clone()))
+			Some(
+				ContextMenu::new(menu)
+					.padding(4)
+					.style(self.style.menu())
+					.overlay(pos.clone()),
+			)
 		} else {
 			None
 		}
@@ -398,7 +491,7 @@ fn get_hover(pos: Point, coord: &Coord, sheet: &Sheet) -> Hover {
 	}
 }
 
-impl<'a, B> Into<Element<'a, RootMessage, Renderer<B>>> for Board<'a>
+impl<'a, B> Into<Element<'a, RootMessage, Renderer<B>>> for Board<'a, B>
 where
 	Message: 'a + Clone,
 	B: Backend + iced_graphics::backend::Text + 'static,

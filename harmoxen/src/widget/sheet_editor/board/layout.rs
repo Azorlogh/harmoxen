@@ -2,9 +2,10 @@ use super::{Board, Style};
 use crate::data::{layout::*, Rect, Size};
 use crate::util::coord::Coord;
 use iced::{Color, Vector};
+use iced_graphics::Backend;
 use iced_graphics::Primitive;
 
-impl<'a> Board<'a> {
+impl<'a, B: Backend + iced_graphics::backend::Text> Board<'a, B> {
 	pub fn draw_layout(&self, size: Size, coord: &Coord, layout: &Layout, style: Style) -> Primitive {
 		let view_width = coord.frame.x.view.size();
 		let view_height = coord.frame.y.view.size();
