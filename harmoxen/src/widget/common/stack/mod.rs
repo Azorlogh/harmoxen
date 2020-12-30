@@ -45,7 +45,11 @@ where
 		)
 	}
 
-	fn hash_layout(&self, _action: &mut Hasher) {}
+	fn hash_layout(&self, state: &mut Hasher) {
+		for child in &self.children {
+			child.hash_layout(state)
+		}
+	}
 
 	fn on_event(
 		&mut self,
@@ -56,7 +60,7 @@ where
 		renderer: &Renderer<B>,
 		clipboard: Option<&dyn Clipboard>,
 	) -> event::Status {
-		let layouts: Vec<Layout> = layout.children().collect();
+		let layouts: Vec<Layout> = layout.children().collect(); // should reverse this
 		for i in (0..self.children.len()).rev() {
 			let child = &mut self.children[i];
 			let status = child.on_event(event.clone(), layouts[i], cursor_position, messages, renderer, clipboard);

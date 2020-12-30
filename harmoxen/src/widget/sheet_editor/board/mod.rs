@@ -1,25 +1,31 @@
-use crate::data::{
-	icp,
-	layout::Layout,
-	sheet::{Index, Interval, Note, Pitch, Sheet},
-	Frame2, Line, Point, Rect, Vec2,
-};
 use crate::state::{sheet_editor::Message, Message as RootMessage};
 use crate::util::coord::Coord;
 use crate::{
 	backend,
-	widget::{context_menu, ContextMenu},
+	widget::{context_menu, text_input, ContextMenu},
+};
+use crate::{
+	data::{
+		icp,
+		layout::Layout,
+		sheet::{Index, Interval, Note, Pitch, Sheet},
+		Frame2, Line, Point, Rect, Vec2,
+	},
+	util::intersect,
 };
 use iced_graphics::{Backend, Defaults, Primitive, Renderer};
 use iced_native::{
-	event, layout as iced_layout, mouse, overlay, Clipboard, Color, Element, Event, Hasher, Length, Rectangle, Size, Widget,
+	event, layout as iced_layout, mouse, overlay, Clipboard, Color, Element, Event, Hasher, Length, Rectangle, Size, TextInput,
+	Widget,
 };
+use iced_winit::conversion::mouse_interaction;
 use std::collections::{HashMap, HashSet};
 use std::time::Instant;
 
 const NOTE_HEIGHT: f32 = 24.0;
 const NOTE_SCALE_KNOB: f32 = 32.0;
 
+// mod interval_input;
 mod layout;
 mod notes;
 mod style;
@@ -42,7 +48,9 @@ impl Hover {
 	}
 }
 
-#[derive(Debug)]
+#[derive(Clone)]
+struct IntervalInputChange(String);
+
 pub enum Action {
 	Idle,
 	Move(Index, HashMap<Index, Vec2>, Rect), // root note, offsets to mouse, extent of selection around mouse
@@ -140,26 +148,30 @@ where
 		Length::Fill
 	}
 
-	fn layout(&self, _renderer: &Renderer<B>, limits: &iced_layout::Limits) -> iced_layout::Node {
+	fn layout(&self, renderer: &Renderer<B>, limits: &iced_layout::Limits) -> iced_layout::Node {
 		iced_layout::Node::new(limits.max())
 	}
 
-	fn hash_layout(&self, _action: &mut Hasher) {}
+	fn hash_layout(&self, state: &mut Hasher) {
+		use std::{any::TypeId, hash::Hash};
+		struct Marker;
+		TypeId::of::<Marker>().hash(state);
+	}
 
 	fn on_event(
 		&mut self,
 		event: Event,
-		layout: iced_native::Layout,
+		iced_layout: iced_native::Layout,
 		cursor_position: iced::Point,
 		messages: &mut Vec<RootMessage>,
-		_renderer: &Renderer<B>,
-		_clipboard: Option<&dyn Clipboard>,
+		renderer: &Renderer<B>,
+		clipboard: Option<&dyn Clipboard>,
 	) -> event::Status {
-		let lbounds = layout.bounds();
+		let lbounds = iced_layout.bounds();
 		let lposition: Point = lbounds.position().into();
 		let mouse_pos = Into::<Point>::into(cursor_position) - lposition.to_vec2();
 		let mut history_save = false;
-		let size = layout.bounds().size();
+		let size = iced_layout.bounds().size();
 		let coord = Coord::new(*self.frame, size);
 
 		let state = &mut self.state;
@@ -191,7 +203,7 @@ where
 							let items = vec![
 								context_menu::Item::new(
 									"Add relative note",
-									Message::AddNote(
+									Message::NoteAdd(
 										Note {
 											start: pos.x,
 											length: self.state.note_len,
@@ -201,8 +213,8 @@ where
 									)
 									.into(),
 								),
-								context_menu::Item::new("Duplicate note", Message::AddNote(note, false).into()),
-								context_menu::Item::new("Delete note", Message::DeleteNote(id).into()),
+								context_menu::Item::new("Duplicate note", Message::NoteAdd(note, false).into()),
+								context_menu::Item::new("Delete note", Message::NoteDelete(id).into()),
 							];
 							self.state.action = Action::Context {
 								menu: context_menu::State::new(items),
@@ -214,7 +226,7 @@ where
 							Hover::Idle => {
 								let note = layout.quantize_note(Note::new(pos, state.note_len));
 								if sheet.get_note_at(Point::new(note.start, note.y(&sheet)), 0.01).is_none() {
-									messages.push(Message::AddNote(note, true).into());
+									messages.push(Message::NoteAdd(note, true).into());
 									messages.push(RootMessage::Backend(backend::Event::ICP(icp::Event::NotePlay(icp::Note {
 										id: 2000,
 										freq: sheet.get_freq(note.pitch),
@@ -236,6 +248,9 @@ where
 									state.action = Action::Move(idx, notes, rect);
 								} else {
 									let note = sheet.get_note(idx).unwrap();
+									if let Pitch::Relative(_, _) = note.pitch {
+										messages.push(Message::OpenIntervalInput(idx).into());
+									}
 									let mut notes = HashMap::new();
 									notes.insert(idx, note.start_pt(&sheet).to_vec2() - pos.to_vec2());
 									state.action = Action::Move(idx, notes, note.rect(&sheet, 0.0) - pos.to_vec2());
@@ -264,10 +279,11 @@ where
 					}
 				} else if btn == mouse::Button::Right {
 					if let Some(idx) = sheet.get_note_at(pos, coord.to_board_h(NOTE_HEIGHT)) {
-						messages.push(Message::DeleteNote(idx).into());
 						state.action_effective = true;
+						messages.push(Message::NoteDelete(idx).into());
 					} else {
 						state.action = Action::DeleteNotes(pos);
+						messages.push(Message::CloseIntervalInput.into());
 					}
 				}
 			}
@@ -287,7 +303,7 @@ where
 							let note = sheet.get_note(*idx).unwrap();
 							let pos = anchor + *offset;
 							if note.start != pos.x || note.y(&sheet) != pos.y {
-								messages.push(Message::MoveNote(*idx, pos).into());
+								messages.push(Message::NoteMove(*idx, pos).into());
 								state.action_effective = true;
 								if sheet.get_y(note.pitch) != pos.y {
 									messages.push(RootMessage::Backend(backend::Event::ICP(icp::Event::NoteStop(2000))));
@@ -305,7 +321,7 @@ where
 						if time > note.start && time != note.end() {
 							let dist = time - (note.start + lengths[idx]);
 							for (idx, length) in lengths {
-								messages.push(Message::ResizeNote(*idx, *length + dist).into());
+								messages.push(Message::NoteResize(*idx, *length + dist).into());
 							}
 							state.action_effective = true;
 							state.note_len = time - note.start;
@@ -314,7 +330,7 @@ where
 					Action::DeleteNotes(ref mut prev_pos) => {
 						for idx in sheet.get_notes_along(Line::new(*prev_pos, pos), coord.to_board_h(NOTE_HEIGHT)) {
 							state.action_effective = true;
-							messages.push(Message::DeleteNote(idx).into());
+							messages.push(Message::NoteDelete(idx).into());
 						}
 						*prev_pos = pos;
 					}
@@ -333,31 +349,33 @@ where
 
 	fn draw(
 		&self,
-		_renderer: &mut Renderer<B>,
-		_defaults: &Defaults,
+		renderer: &mut Renderer<B>,
+		defaults: &Defaults,
 		layout: iced_native::Layout,
-		_cursor_position: iced::Point,
-		_viewport: &Rectangle,
+		cursor_position: iced::Point,
+		viewport: &Rectangle,
 	) -> (Primitive, mouse::Interaction) {
 		let offset = Into::<Point>::into(layout.bounds().position()).to_vec2();
 		let size = layout.bounds().size();
 		let coord = Coord::new(self.frame.clone(), size);
 		let style = self.style.active();
+		let mut mouse_interaction = mouse::Interaction::Idle;
 
-		let layout_primitives = self.draw_layout(size, &coord, self.layout, style);
-
-		let notes = self.draw_notes(&coord, style);
-
-		let cursor = {
-			let s_pos = coord.to_screen_x(*self.cursor);
+		let primitives = vec![
+			// Draw sheet layout
+			self.draw_layout(size, &coord, self.layout, style),
+			// Draw notes
+			self.draw_notes(size, &coord, style),
+			// Draw cursor
 			Primitive::Quad {
-				bounds: Rect::from_point_size(Point::new(s_pos, 0.0), Size::new(1.0, size.height)).into(),
+				bounds: Rect::from_point_size(Point::new(coord.to_screen_x(*self.cursor), 0.0), Size::new(1.0, size.height))
+					.into(),
 				background: Color::WHITE.into(),
 				border_color: Color::TRANSPARENT,
 				border_radius: 0,
 				border_width: 0,
-			}
-		};
+			},
+		];
 
 		(
 			Primitive::Clip {
@@ -365,18 +383,21 @@ where
 				offset: Vec2::<u32>::new(0, 0).into(),
 				content: Box::new(Primitive::Translate {
 					translation: offset.into(),
-					content: Box::new(Primitive::Group {
-						primitives: vec![layout_primitives, notes, cursor],
-					}),
+					content: Box::new(Primitive::Group { primitives }),
 				}),
 			},
-			mouse::Interaction::Idle,
+			mouse_interaction,
 		)
 	}
 
 	fn overlay(&mut self, _layout: iced_native::Layout) -> Option<overlay::Element<'_, RootMessage, Renderer<B>>> {
 		if let Action::Context { menu, pos } = &mut self.state.action {
-			Some(ContextMenu::new(menu).padding(4).overlay(pos.clone()))
+			Some(
+				ContextMenu::new(menu)
+					.padding(4)
+					.style(self.style.menu())
+					.overlay(pos.clone()),
+			)
 		} else {
 			None
 		}

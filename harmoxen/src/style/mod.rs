@@ -9,8 +9,8 @@ pub const fn color(code: u32) -> iced::Color {
 	}
 }
 
-mod flux;
-mod nord;
+// mod flux;
+// mod nord;
 mod one_dark;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -60,7 +60,9 @@ impl_style!(tab, Tab);
 
 mod sheet_editor {
 	use super::{
-		flux, nord, one_dark,
+		// flux,
+		// nord,
+		one_dark,
 		Theme::{self, *},
 	};
 	use crate::widget::sheet_editor::*;
