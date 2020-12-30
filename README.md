@@ -2,12 +2,6 @@
 
 This branch is work in progress, it is dedicated to migrating the software to the Iced library, as well as making it VST-compatible.
 
-### Branch todo:
-
-- Clipboard
-- Undo/Redo
-- Project saving
-
 
 # Harmoxen
 
