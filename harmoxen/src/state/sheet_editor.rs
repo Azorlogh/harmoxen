@@ -21,13 +21,7 @@ pub struct WStates {
 	pub yrange_slider: widget::range_slider::State,
 	pub cursor: widget::sheet_editor::cursor::State,
 	pub preview: widget::sheet_editor::preview::State,
-}
-
-#[derive(Debug)]
-pub struct IntervalInput {
-	pub state: widget::text_input::State,
-	pub text: String,
-	pub idx: Index,
+	pub interval_input: Option<widget::sheet_editor::interval_input::State>,
 }
 
 pub struct State {
@@ -40,7 +34,6 @@ pub struct State {
 	pub last_tick: Instant,
 	pub layout: Layout,
 	pub tempo: f32,
-	pub interval_input: Option<IntervalInput>,
 	pub curr_marker: usize,
 	pub selection: HashSet<Index>,
 	pub clipboard: Rc<RefCell<Clipboard>>,
@@ -68,7 +61,6 @@ impl Default for State {
 			last_tick: Instant::now(),
 			layout: Layout::default(),
 			tempo: 172.0,
-			interval_input: None,
 			curr_marker: 0,
 			selection: HashSet::new(),
 			clipboard: Rc::new(RefCell::new(Clipboard::new())),
@@ -117,43 +109,36 @@ impl State {
 			Message::SetCursor(at) => {
 				self.cursor = at;
 			}
-			Message::AddNote(note, mov) => {
+			Message::NoteAdd(note, mov) => {
 				let idx = self.sheet.add_note(note);
 
-				if let Pitch::Relative(root, interval) = note.pitch {
-					self.interval_input = Some(IntervalInput {
-						state: widget::text_input::State::default(),
-						text: interval.to_string(),
-						idx,
-					});
-					self.wstates.board.set_action_edit_interval(idx);
-					println!("{:?}", self.interval_input);
+				if let Pitch::Relative(_, _) = note.pitch {
+					self.wstates.interval_input = Some(widget::sheet_editor::interval_input::State::new(&self.sheet, idx));
 				} else if mov {
 					let rect = note.rect(&self.sheet, 0.0);
 					self.wstates.board.set_action_move(idx, rect);
 				}
 			}
-			Message::MoveNote(idx, pos) => {
+			Message::NoteMove(idx, pos) => {
 				self.sheet.move_note(idx, pos.x, pos.y);
 			}
-			Message::ResizeNote(idx, len) => {
-				let note = self.sheet.get_note_mut(idx).unwrap();
+			Message::NoteResize(idx, len) => {
+				let note = self.sheet.get_note_mut(idx).expect("tried to resize dead note");
 				note.length = len;
 			}
-			Message::DeleteNote(idx) => {
+			Message::NoteDelete(idx) => {
 				self.sheet.remove_note(idx);
+				self.wstates.interval_input = None;
+			}
+			Message::NoteSetPitch(idx, pitch) => {
+				let note = self.sheet.get_note_mut(idx).expect("tried to change pitch of dead note");
+				note.pitch = pitch;
 			}
 			Message::OpenIntervalInput(idx) => {
-				let note = self.sheet.get_note(idx).unwrap();
-				if let Pitch::Relative(_, interval) = note.pitch {
-					self.interval_input = Some(IntervalInput {
-						state: widget::text_input::State::default(),
-						text: interval.to_string(),
-						idx,
-					})
-				} else {
-					panic!("tried to open interval input but pitch is absolute");
-				}
+				self.wstates.interval_input = Some(widget::sheet_editor::interval_input::State::new(&self.sheet, idx));
+			}
+			Message::CloseIntervalInput => {
+				self.wstates.interval_input = None;
 			}
 			Message::AddMarker(at) => {
 				let mut new_marker = self.layout.markers[self.curr_marker].clone();
@@ -185,11 +170,13 @@ pub enum Message {
 	Play,
 	CursorTick(Instant),
 	SetCursor(f32),
-	AddNote(sheet::Note, bool), // if true: initiate move action
-	MoveNote(sheet::Index, Point),
-	ResizeNote(sheet::Index, f32),
-	DeleteNote(sheet::Index),
+	NoteAdd(sheet::Note, bool), // if true: initiate move action
+	NoteMove(sheet::Index, Point),
+	NoteResize(sheet::Index, f32),
+	NoteDelete(sheet::Index),
+	NoteSetPitch(sheet::Index, Pitch),
 	OpenIntervalInput(sheet::Index),
+	CloseIntervalInput,
 	AddMarker(f32),
 	SelectMarker(usize),
 	MoveMarker(f32),

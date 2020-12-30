@@ -60,10 +60,6 @@ pub enum Action {
 		menu: context_menu::State<RootMessage>,
 		pos: iced::Point,
 	},
-	EditInterval {
-		idx: Index,
-		current_text: String,
-	},
 }
 
 pub struct State {
@@ -92,17 +88,10 @@ impl State {
 		notes.insert(idx, Vec2::ZERO);
 		self.action = Action::Move(idx, notes, rect);
 	}
-	pub fn set_action_edit_interval(&mut self, idx: Index) {
-		self.action = Action::EditInterval {
-			idx,
-			current_text: "3/2".to_owned(),
-		};
-	}
 }
 
-pub struct Board<'a, B: Backend + iced_graphics::backend::Text> {
+pub struct Board<'a> {
 	state: &'a mut State,
-	interval_input: Option<TextInput<'a, IntervalInputChange, Renderer<B>>>,
 	sheet: &'a Sheet,
 	frame: &'a Frame2,
 	layout: &'a Layout,
@@ -111,24 +100,17 @@ pub struct Board<'a, B: Backend + iced_graphics::backend::Text> {
 	style: Box<dyn StyleSheet>,
 }
 
-impl<'a, B: Backend + iced_graphics::backend::Text> Board<'a, B> {
+impl<'a> Board<'a> {
 	pub fn new(
 		state: &'a mut State,
-		interval_input_state: Option<&'a mut text_input::State>,
 		sheet: &'a Sheet,
 		frame: &'a Frame2,
 		layout: &'a Layout,
 		cursor: &'a f32,
 		selection: &'a HashSet<Index>,
 	) -> Self {
-		let interval_input = if let Action::EditInterval { current_text, .. } = &state.action {
-			Some(TextInput::new(interval_input_state.unwrap(), "2/1", current_text, |s| IntervalInputChange(s)).padding(2))
-		} else {
-			None
-		};
 		Self {
 			state,
-			interval_input,
 			sheet,
 			frame,
 			layout,
@@ -153,7 +135,7 @@ impl<'a, B: Backend + iced_graphics::backend::Text> Board<'a, B> {
 	}
 }
 
-impl<'a, B> Widget<RootMessage, Renderer<B>> for Board<'a, B>
+impl<'a, B> Widget<RootMessage, Renderer<B>> for Board<'a>
 where
 	Message: Clone,
 	B: Backend + iced_graphics::backend::Text + 'static,
@@ -167,34 +149,13 @@ where
 	}
 
 	fn layout(&self, renderer: &Renderer<B>, limits: &iced_layout::Limits) -> iced_layout::Node {
-		let mut children = vec![];
-		if let Action::EditInterval { idx, .. } = &self.state.action {
-			let sheet = self.sheet;
-			let note = sheet.get_note(*idx).unwrap();
-			if let Pitch::Relative(root, _) = note.pitch {
-				let coord = Coord::new(*self.frame, limits.max());
-				let root = sheet.get_note(root).unwrap();
-				let position = Point::new(note.start, (sheet.get_y(note.pitch) + sheet.get_y(root.pitch)) / 2.0);
-				let screen_pos = coord.to_screen_p(position);
-				let interval_input = self.interval_input.as_ref().unwrap();
-				let mut node = interval_input.layout(renderer, &iced_layout::Limits::NONE.max_width(100));
-				println!("{:?}", node);
-				node.move_to(screen_pos.into());
-				children.push(node)
-			}
-		}
-		iced_layout::Node::with_children(limits.max(), children)
+		iced_layout::Node::new(limits.max())
 	}
 
 	fn hash_layout(&self, state: &mut Hasher) {
 		use std::{any::TypeId, hash::Hash};
 		struct Marker;
 		TypeId::of::<Marker>().hash(state);
-
-		if let Action::EditInterval { .. } = &self.state.action {
-			let interval_input = self.interval_input.as_ref().unwrap();
-			interval_input.hash_layout(state);
-		}
 	}
 
 	fn on_event(
@@ -227,22 +188,6 @@ where
 			return event::Status::Captured;
 		}
 
-		if let Action::EditInterval { .. } = &mut state.action {
-			let text_input = self.interval_input.as_mut().unwrap();
-			let mut messages = vec![];
-			let status = text_input.on_event(
-				event.clone(),
-				iced_layout.children().next().unwrap(),
-				cursor_position,
-				&mut messages,
-				renderer,
-				clipboard,
-			);
-			if let event::Status::Captured = status {
-				return event::Status::Captured;
-			}
-		}
-
 		match event {
 			Event::Mouse(mouse::Event::ButtonPressed(btn)) if lbounds.contains(cursor_position) => {
 				let pos = coord.to_board_p(mouse_pos);
@@ -258,7 +203,7 @@ where
 							let items = vec![
 								context_menu::Item::new(
 									"Add relative note",
-									Message::AddNote(
+									Message::NoteAdd(
 										Note {
 											start: pos.x,
 											length: self.state.note_len,
@@ -268,8 +213,8 @@ where
 									)
 									.into(),
 								),
-								context_menu::Item::new("Duplicate note", Message::AddNote(note, false).into()),
-								context_menu::Item::new("Delete note", Message::DeleteNote(id).into()),
+								context_menu::Item::new("Duplicate note", Message::NoteAdd(note, false).into()),
+								context_menu::Item::new("Delete note", Message::NoteDelete(id).into()),
 							];
 							self.state.action = Action::Context {
 								menu: context_menu::State::new(items),
@@ -281,7 +226,7 @@ where
 							Hover::Idle => {
 								let note = layout.quantize_note(Note::new(pos, state.note_len));
 								if sheet.get_note_at(Point::new(note.start, note.y(&sheet)), 0.01).is_none() {
-									messages.push(Message::AddNote(note, true).into());
+									messages.push(Message::NoteAdd(note, true).into());
 									messages.push(RootMessage::Backend(backend::Event::ICP(icp::Event::NotePlay(icp::Note {
 										id: 2000,
 										freq: sheet.get_freq(note.pitch),
@@ -303,6 +248,9 @@ where
 									state.action = Action::Move(idx, notes, rect);
 								} else {
 									let note = sheet.get_note(idx).unwrap();
+									if let Pitch::Relative(_, _) = note.pitch {
+										messages.push(Message::OpenIntervalInput(idx).into());
+									}
 									let mut notes = HashMap::new();
 									notes.insert(idx, note.start_pt(&sheet).to_vec2() - pos.to_vec2());
 									state.action = Action::Move(idx, notes, note.rect(&sheet, 0.0) - pos.to_vec2());
@@ -331,10 +279,11 @@ where
 					}
 				} else if btn == mouse::Button::Right {
 					if let Some(idx) = sheet.get_note_at(pos, coord.to_board_h(NOTE_HEIGHT)) {
-						messages.push(Message::DeleteNote(idx).into());
 						state.action_effective = true;
+						messages.push(Message::NoteDelete(idx).into());
 					} else {
 						state.action = Action::DeleteNotes(pos);
+						messages.push(Message::CloseIntervalInput.into());
 					}
 				}
 			}
@@ -354,7 +303,7 @@ where
 							let note = sheet.get_note(*idx).unwrap();
 							let pos = anchor + *offset;
 							if note.start != pos.x || note.y(&sheet) != pos.y {
-								messages.push(Message::MoveNote(*idx, pos).into());
+								messages.push(Message::NoteMove(*idx, pos).into());
 								state.action_effective = true;
 								if sheet.get_y(note.pitch) != pos.y {
 									messages.push(RootMessage::Backend(backend::Event::ICP(icp::Event::NoteStop(2000))));
@@ -372,7 +321,7 @@ where
 						if time > note.start && time != note.end() {
 							let dist = time - (note.start + lengths[idx]);
 							for (idx, length) in lengths {
-								messages.push(Message::ResizeNote(*idx, *length + dist).into());
+								messages.push(Message::NoteResize(*idx, *length + dist).into());
 							}
 							state.action_effective = true;
 							state.note_len = time - note.start;
@@ -381,7 +330,7 @@ where
 					Action::DeleteNotes(ref mut prev_pos) => {
 						for idx in sheet.get_notes_along(Line::new(*prev_pos, pos), coord.to_board_h(NOTE_HEIGHT)) {
 							state.action_effective = true;
-							messages.push(Message::DeleteNote(idx).into());
+							messages.push(Message::NoteDelete(idx).into());
 						}
 						*prev_pos = pos;
 					}
@@ -391,7 +340,6 @@ where
 			}
 			Event::Mouse(mouse::Event::ButtonReleased(_)) => match self.state.action {
 				Action::Context { .. } => {}
-				Action::EditInterval { .. } => {}
 				_ => self.stop_action(messages, &mut history_save),
 			},
 			_ => {}
@@ -413,49 +361,29 @@ where
 		let style = self.style.active();
 		let mut mouse_interaction = mouse::Interaction::Idle;
 
-		// Draw sheet layout
-		let layout_primitives = self.draw_layout(size, &coord, self.layout, style);
-
-		// Draw notes
-		let notes = self.draw_notes(&coord, style);
-
-		// Draw cursor
-		let cursor = {
-			let s_pos = coord.to_screen_x(*self.cursor);
+		let primitives = vec![
+			// Draw sheet layout
+			self.draw_layout(size, &coord, self.layout, style),
+			// Draw notes
+			self.draw_notes(size, &coord, style),
+			// Draw cursor
 			Primitive::Quad {
-				bounds: Rect::from_point_size(Point::new(s_pos, 0.0), Size::new(1.0, size.height)).into(),
+				bounds: Rect::from_point_size(Point::new(coord.to_screen_x(*self.cursor), 0.0), Size::new(1.0, size.height))
+					.into(),
 				background: Color::WHITE.into(),
 				border_color: Color::TRANSPARENT,
 				border_radius: 0,
 				border_width: 0,
-			}
-		};
-
-		// Draw interval input
-		let mut interval_input = Primitive::None;
-		if let Action::EditInterval { idx, current_text } = &self.state.action {
-			let text_input = self.interval_input.as_ref().unwrap();
-			let layout = layout.children().next().unwrap();
-			let (primitive, interaction) =
-				iced_native::Widget::draw(text_input, renderer, defaults, layout, cursor_position, viewport);
-			interval_input = primitive;
-			mouse_interaction = interaction;
-		}
+			},
+		];
 
 		(
 			Primitive::Clip {
 				bounds: layout.bounds(),
 				offset: Vec2::<u32>::new(0, 0).into(),
-				content: Box::new(Primitive::Group {
-					primitives: vec![
-						Primitive::Translate {
-							translation: offset.into(),
-							content: Box::new(Primitive::Group {
-								primitives: vec![layout_primitives, notes, cursor],
-							}),
-						},
-						interval_input,
-					],
+				content: Box::new(Primitive::Translate {
+					translation: offset.into(),
+					content: Box::new(Primitive::Group { primitives }),
 				}),
 			},
 			mouse_interaction,
@@ -491,7 +419,7 @@ fn get_hover(pos: Point, coord: &Coord, sheet: &Sheet) -> Hover {
 	}
 }
 
-impl<'a, B> Into<Element<'a, RootMessage, Renderer<B>>> for Board<'a, B>
+impl<'a, B> Into<Element<'a, RootMessage, Renderer<B>>> for Board<'a>
 where
 	Message: 'a + Clone,
 	B: Backend + iced_graphics::backend::Text + 'static,

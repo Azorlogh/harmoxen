@@ -53,6 +53,28 @@ pub fn build(state: &mut State, theme: Theme) -> Element<RootMessage> {
 	)
 	.height(TIMELINE_THICKNESS.into());
 
+	let mut editing_area = Stack::new()
+		.push(
+			Board::new(
+				&mut state.wstates.board,
+				&state.sheet,
+				&state.frame,
+				&state.layout,
+				&state.cursor,
+				&state.selection,
+			)
+			.style(theme),
+		)
+		.push(ScrollView::new(
+			&mut state.wstates.scroll_view,
+			&state.frame,
+			[(true, false), (true, true)],
+			|| Message::SetScrolling.into(),
+		));
+	if let Some(wstate) = &mut state.wstates.interval_input {
+		editing_area = editing_area.push(IntervalInput::new(wstate, &state.sheet, &state.frame));
+	}
+
 	Stack::new()
 		.push(
 			Row::new()
@@ -69,31 +91,7 @@ pub fn build(state: &mut State, theme: Theme) -> Element<RootMessage> {
 								.push(Column::new().push(x_scrollbar).push(timeline).width(Length::Fill))
 								.push(Space::with_width(SCROLLBAR_THICKNESS.into())),
 						)
-						.push(
-							Row::new()
-								.push(
-									Stack::new()
-										.push(
-											Board::new(
-												&mut state.wstates.board,
-												state.interval_input.as_mut().map(|d| &mut d.state),
-												&state.sheet,
-												&state.frame,
-												&state.layout,
-												&state.cursor,
-												&state.selection,
-											)
-											.style(theme),
-										)
-										.push(ScrollView::new(
-											&mut state.wstates.scroll_view,
-											&state.frame,
-											[(true, false), (true, true)],
-											|| Message::SetScrolling.into(),
-										)),
-								)
-								.push(y_scrollbar),
-						),
+						.push(Row::new().push(editing_area).push(y_scrollbar)),
 				),
 		)
 		.push(Shortcuts)

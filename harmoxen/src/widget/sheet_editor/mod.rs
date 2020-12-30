@@ -12,3 +12,6 @@ pub use marker_editor::MarkerEditor;
 
 pub mod preview;
 pub use preview::Preview;
+
+pub mod interval_input;
+pub use interval_input::IntervalInput;

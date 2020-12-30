@@ -7,7 +7,7 @@ edition = "2018"
 [lib]
 
 [dependencies]
-iced = { git = "https://github.com/hecrj/iced.git", branch = "master", features = [ "debug", "tokio" ]}
+iced = { git = "https://github.com/hecrj/iced.git", branch = "master", features = [ "debug", "tokio", "canvas" ]}
 iced_native = { git = "https://github.com/hecrj/iced.git", branch = "master" }
 iced_wgpu = { git = "https://github.com/hecrj/iced.git", branch = "master" }
 iced_winit = { git = "https://github.com/hecrj/iced.git", branch = "master" }
