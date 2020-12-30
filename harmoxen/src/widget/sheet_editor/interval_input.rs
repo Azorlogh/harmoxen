@@ -1,21 +1,14 @@
 use crate::data::{
 	sheet::{Index, Interval, Pitch},
-	Frame2, Layout, Point, Sheet,
+	Frame2, Point, Sheet,
 };
 use crate::state::{sheet_editor::Message, Message as RootMessage};
 use crate::util::coord::Coord;
-use iced_graphics::{
-	backend,
-	triangle::{Mesh2D, Vertex2D},
-	Backend, Defaults, Primitive, Renderer,
-};
+use iced_graphics::{backend, Backend, Defaults, Primitive, Renderer};
 use iced_native::widget::*;
 use iced_native::{
-	event, keyboard, layout as iced_layout, mouse, overlay, Clipboard, Color, Element, Event, Hasher, Layout as IcedLayout,
-	Length, Rectangle, Vector, Widget,
+	event, layout as iced_layout, mouse, Clipboard, Element, Event, Hasher, Layout as IcedLayout, Length, Rectangle, Widget,
 };
-
-use crate::widget::common::{context_menu, ContextMenu};
 
 pub struct State {
 	internal: InternalState,
@@ -25,7 +18,7 @@ impl State {
 	pub fn new(sheet: &Sheet, idx: Index) -> Self {
 		let note = sheet.get_note(idx).expect("tried to input interval for dead note");
 		match note.pitch {
-			Pitch::Relative(root, interval) => Self {
+			Pitch::Relative(_, interval) => Self {
 				internal: InternalState {
 					text: interval.to_string(),
 					idx,

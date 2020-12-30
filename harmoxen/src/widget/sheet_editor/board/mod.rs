@@ -1,24 +1,19 @@
+use crate::data::{
+	icp,
+	layout::Layout,
+	sheet::{Index, Interval, Note, Pitch, Sheet},
+	Frame2, Line, Point, Rect, Vec2,
+};
 use crate::state::{sheet_editor::Message, Message as RootMessage};
 use crate::util::coord::Coord;
 use crate::{
 	backend,
-	widget::{context_menu, text_input, ContextMenu},
-};
-use crate::{
-	data::{
-		icp,
-		layout::Layout,
-		sheet::{Index, Interval, Note, Pitch, Sheet},
-		Frame2, Line, Point, Rect, Vec2,
-	},
-	util::intersect,
+	widget::{context_menu, ContextMenu},
 };
 use iced_graphics::{Backend, Defaults, Primitive, Renderer};
 use iced_native::{
-	event, layout as iced_layout, mouse, overlay, Clipboard, Color, Element, Event, Hasher, Length, Rectangle, Size, TextInput,
-	Widget,
+	event, layout as iced_layout, mouse, overlay, Clipboard, Color, Element, Event, Hasher, Length, Rectangle, Size, Widget,
 };
-use iced_winit::conversion::mouse_interaction;
 use std::collections::{HashMap, HashSet};
 use std::time::Instant;
 
@@ -148,7 +143,7 @@ where
 		Length::Fill
 	}
 
-	fn layout(&self, renderer: &Renderer<B>, limits: &iced_layout::Limits) -> iced_layout::Node {
+	fn layout(&self, _renderer: &Renderer<B>, limits: &iced_layout::Limits) -> iced_layout::Node {
 		iced_layout::Node::new(limits.max())
 	}
 
@@ -164,8 +159,8 @@ where
 		iced_layout: iced_native::Layout,
 		cursor_position: iced::Point,
 		messages: &mut Vec<RootMessage>,
-		renderer: &Renderer<B>,
-		clipboard: Option<&dyn Clipboard>,
+		_renderer: &Renderer<B>,
+		_clipboard: Option<&dyn Clipboard>,
 	) -> event::Status {
 		let lbounds = iced_layout.bounds();
 		let lposition: Point = lbounds.position().into();
@@ -280,6 +275,7 @@ where
 				} else if btn == mouse::Button::Right {
 					if let Some(idx) = sheet.get_note_at(pos, coord.to_board_h(NOTE_HEIGHT)) {
 						state.action_effective = true;
+						self.stop_action(messages, &mut history_save);
 						messages.push(Message::NoteDelete(idx).into());
 					} else {
 						state.action = Action::DeleteNotes(pos);
@@ -349,17 +345,16 @@ where
 
 	fn draw(
 		&self,
-		renderer: &mut Renderer<B>,
-		defaults: &Defaults,
+		_renderer: &mut Renderer<B>,
+		_defaults: &Defaults,
 		layout: iced_native::Layout,
-		cursor_position: iced::Point,
-		viewport: &Rectangle,
+		_cursor_position: iced::Point,
+		_viewport: &Rectangle,
 	) -> (Primitive, mouse::Interaction) {
 		let offset = Into::<Point>::into(layout.bounds().position()).to_vec2();
 		let size = layout.bounds().size();
 		let coord = Coord::new(self.frame.clone(), size);
 		let style = self.style.active();
-		let mut mouse_interaction = mouse::Interaction::Idle;
 
 		let primitives = vec![
 			// Draw sheet layout
@@ -386,7 +381,7 @@ where
 					content: Box::new(Primitive::Group { primitives }),
 				}),
 			},
-			mouse_interaction,
+			mouse::Interaction::Idle,
 		)
 	}
 

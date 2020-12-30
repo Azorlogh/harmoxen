@@ -2,6 +2,13 @@
 
 This branch is work in progress, it is dedicated to migrating the software to the Iced library, as well as making it VST-compatible.
 
+### Branch todo:
+
+- Clipboard
+- Undo/Redo
+- Project saving
+
+
 # Harmoxen
 
 This software is an experimental piano roll that has a continuous y axis.
@@ -45,6 +52,7 @@ You can make it can output MPE data through a MIDI port by going into the settin
 
 ## TODO
 
+- Work as a VST
 - Improve UI
 - Support more scale types & .scl import
 - More feedback: display errors/warnings/infos

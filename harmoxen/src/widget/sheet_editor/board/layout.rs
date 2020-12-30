@@ -60,7 +60,7 @@ impl<'a> Board<'a> {
 					// draw bar background
 					primitives_bg.push(Primitive::Quad {
 						bounds: bounds.into(),
-						background: iced_native::Background::Color(background),
+						background,
 						border_width: 0,
 						border_color: Color::TRANSPARENT,
 						border_radius: 0,
