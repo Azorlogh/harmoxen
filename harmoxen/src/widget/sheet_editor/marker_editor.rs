@@ -112,6 +112,7 @@ where
 
 		let captured = match event {
 			Event::Keyboard(keyboard::Event::ModifiersChanged(mods)) => {
+				println!("{:?}", mods);
 				self.state.ctrl = mods.control;
 				false
 			}
@@ -259,8 +260,8 @@ where
 					Primitive::Quad {
 						bounds,
 						background: self.style.active().background,
-						border_width: 0,
-						border_radius: 0,
+						border_width: 0.0,
+						border_radius: 0.0,
 						border_color: Color::TRANSPARENT,
 					},
 					cursors_primitives,

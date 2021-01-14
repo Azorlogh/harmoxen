@@ -10,7 +10,7 @@ use crate::widget;
 use generational_arena::Index;
 use iced::Command;
 use std::time::Instant;
-use std::{cell::RefCell, collections::HashSet, rc::Rc};
+use std::{cell::RefCell, collections::HashSet, sync::Arc};
 
 #[derive(Default)]
 pub struct WStates {
@@ -22,6 +22,7 @@ pub struct WStates {
 	pub cursor: widget::sheet_editor::cursor::State,
 	pub preview: widget::sheet_editor::preview::State,
 	pub interval_input: Option<widget::sheet_editor::interval_input::State>,
+	pub selection: widget::sheet_editor::selection::State,
 }
 
 pub struct State {
@@ -36,7 +37,7 @@ pub struct State {
 	pub tempo: f32,
 	pub curr_marker: usize,
 	pub selection: HashSet<Index>,
-	pub clipboard: Rc<RefCell<Clipboard>>,
+	pub clipboard: Clipboard,
 }
 impl Default for State {
 	fn default() -> State {
@@ -60,10 +61,10 @@ impl Default for State {
 			is_playing: false,
 			last_tick: Instant::now(),
 			layout: Layout::default(),
-			tempo: 172.0,
+			tempo: 120.0,
 			curr_marker: 0,
 			selection: HashSet::new(),
-			clipboard: Rc::new(RefCell::new(Clipboard::new())),
+			clipboard: Clipboard::new(),
 		}
 	}
 }

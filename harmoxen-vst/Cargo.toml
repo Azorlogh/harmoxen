@@ -8,15 +8,19 @@ edition = "2018"
 
 [dependencies]
 harmoxen = { path = "../harmoxen" }
-iced = { git = "https://github.com/hecrj/iced.git", branch = "master" }
-iced_winit = { git = "https://github.com/hecrj/iced.git", branch = "master" }
-iced_wgpu = { git = "https://github.com/hecrj/iced.git", branch = "master" }
-iced_native = { git = "https://github.com/hecrj/iced.git", branch = "master" }
+iced = "0.2"
+iced_baseview = { git = "https://github.com/BillyDM/iced_baseview", branch = "main"}
+iced_native = "0.3"
+iced_wgpu = "0.3"
+baseplug = { git = "https://github.com/wrl/baseplug.git", branch="trunk" }
+baseview = { git = "https://github.com/RustAudio/baseview", branch = "master" }
+raw-window-handle = "0.3"
+serde = { version = "1.0", features = ["derive"] }
 futures = "0.3"
 vst = "0.2"
 log = "0.4"
 log-panics = "2.0.0"
 
 [lib]
-name = "harmoxen"
+name = "harmoxen_vst"
 crate-type = ["cdylib"]

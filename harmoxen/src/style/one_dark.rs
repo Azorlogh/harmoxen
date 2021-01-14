@@ -29,9 +29,9 @@ impl container::StyleSheet for Container {
 		container::Style {
 			text_color: Some(FG),
 			background: BG_0.into(),
-			border_width: 0,
+			border_width: 0.0,
 			border_color: Color::TRANSPARENT.into(),
-			border_radius: 0,
+			border_radius: 0.0,
 		}
 	}
 }
@@ -41,8 +41,8 @@ impl button::StyleSheet for Button {
 	fn active(&self) -> button::Style {
 		button::Style {
 			background: BG_1.into(),
-			border_radius: 0,
-			border_width: 0,
+			border_radius: 0.0,
+			border_width: 0.0,
 			border_color: BG_1,
 			text_color: FG,
 			..button::Style::default()
@@ -70,7 +70,7 @@ impl pick_list::StyleSheet for PickList {
 		pick_list::Menu {
 			text_color: FG,
 			background: BG_0.into(),
-			border_width: 0,
+			border_width: 0.0,
 			border_color: BG_1.into(),
 			selected_background: BG_3.into(),
 			selected_text_color: FG.into(),
@@ -81,10 +81,10 @@ impl pick_list::StyleSheet for PickList {
 		pick_list::Style {
 			text_color: FG,
 			background: BG_0.into(),
-			border_width: 0,
+			border_width: 0.0,
 			border_color: BG_1.into(),
 
-			border_radius: 0,
+			border_radius: 0.0,
 			icon_size: 1.0,
 		}
 	}
@@ -102,13 +102,13 @@ impl range_slider::StyleSheet for RangeSlider {
 	fn active(&self) -> range_slider::Style {
 		range_slider::Style {
 			background: BG_1.into(),
-			border_radius: 0,
-			border_width: 1,
+			border_radius: 0.0,
+			border_width: 1.0,
 			border_color: BG_2,
 			bar_color: BG_2,
 			bar_highlight: BG_3,
-			bar_border_radius: 0,
-			bar_border_width: 0,
+			bar_border_radius: 0.0,
+			bar_border_width: 0.0,
 			bar_border_color: BG_5,
 			handle_color: BG_2,
 			handle_highlight: BG_3,
@@ -121,8 +121,8 @@ impl tab::StyleSheet for Tab {
 	fn active(&self) -> tab::Style {
 		tab::Style {
 			background: BG_0.into(),
-			border_radius: 0,
-			border_width: 0,
+			border_radius: 0.0,
+			border_width: 0.0,
 			border_color: BG_1,
 		}
 	}
@@ -146,7 +146,7 @@ fn context_menu() -> pick_list::Menu {
 	pick_list::Menu {
 		text_color: FG,
 		background: BG_2.into(),
-		border_width: 0,
+		border_width: 0.0,
 		border_color: BG_1.into(),
 		selected_background: BG_3.into(),
 		selected_text_color: FG.into(),

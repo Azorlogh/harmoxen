@@ -20,11 +20,17 @@ pub use style::Theme;
 
 pub use state::Message;
 
-use iced_winit::{application::Application, Color, Mode, Program};
+use iced_baseview::{Application, Color, WindowSubs};
 
-impl Program for State {
-	type Renderer = iced_wgpu::Renderer;
+impl Application for State {
+	type Flags = Sender<backend::Event>;
 	type Message = Message;
+	type Executor = iced_futures::executor::Tokio;
+
+	fn new(to_server: Self::Flags) -> (State, Command<Self::Message>) {
+		let a: State = State::new(to_server);
+		(a, Command::none())
+	}
 
 	fn update(&mut self, msg: Message) -> Command<Message> {
 		self.update(msg)
@@ -33,21 +39,8 @@ impl Program for State {
 	fn view(&mut self) -> Element<Message> {
 		ui::build(self)
 	}
-}
 
-impl Application for State {
-	type Flags = Sender<backend::Event>;
-
-	fn new(to_server: Self::Flags) -> (State, Command<Self::Message>) {
-		let a: State = State::new(to_server);
-		(a, Command::none())
-	}
-
-	fn title(&self) -> String {
-		String::from("Harmoxen on Iced")
-	}
-
-	fn subscription(&self) -> Subscription<Self::Message> {
+	fn subscription(&self, _: &mut WindowSubs<Self::Message>) -> Subscription<Self::Message> {
 		let is_playing = self.sheet_editor.is_playing;
 		let is_scrolling = self.sheet_editor.is_scrolling;
 		let mut subscriptions = vec![];
@@ -64,15 +57,7 @@ impl Application for State {
 		Subscription::batch(subscriptions)
 	}
 
-	fn mode(&self) -> Mode {
-		Mode::Windowed
-	}
-
 	fn background_color(&self) -> Color {
 		Color::WHITE
-	}
-
-	fn scale_factor(&self) -> f64 {
-		1.0
 	}
 }

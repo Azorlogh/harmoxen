@@ -8,9 +8,9 @@ mod osc;
 mod svf;
 use osc::Osc;
 
-pub const ATTACK: f32 = 0.1;
-pub const DECAY: f32 = 0.1;
-pub const SUSTAIN: f32 = 0.8;
+pub const ATTACK: f32 = 0.003;
+pub const DECAY: f32 = 0.5;
+pub const SUSTAIN: f32 = 0.5;
 pub const RELEASE: f32 = 0.1;
 
 struct Voice {
@@ -95,7 +95,7 @@ impl Synth {
 		self.voices.retain(|voice| voice.adsr.state != adsr::Dead);
 
 		out = self.lowpass.eval(out);
-		out = self.limiter.eval(out);
+		out = self.limiter.eval(out * 0.2);
 		out * 0.8
 	}
 }

@@ -3,7 +3,7 @@ use crate::util::coord::Coord;
 use iced_graphics::{Backend, Defaults, Primitive, Renderer};
 use iced_native::{
 	event,
-	keyboard::{self, ModifiersState},
+	keyboard::{self, Modifiers},
 	layout,
 	mouse::{self, ScrollDelta},
 	Clipboard, Element, Event, Hasher, Layout, Length, Rectangle, Widget,
@@ -11,7 +11,7 @@ use iced_native::{
 
 #[derive(Default)]
 pub struct State {
-	mods: ModifiersState,
+	mods: Modifiers,
 	cursor: Point,
 	xmove: f32,
 	ymove: f32,

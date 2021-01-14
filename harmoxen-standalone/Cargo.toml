@@ -1,19 +1,17 @@
 [package]
-name = "harmoxen-iced"
+name = "harmoxen-standalone"
 version = "0.1.0"
 authors = ["Azorlogh <bott.alix@gmail.com>"]
 edition = "2018"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
 harmoxen = { path = "../harmoxen" }
-iced = { git = "https://github.com/hecrj/iced.git", branch = "master" }
-iced_winit = { git = "https://github.com/hecrj/iced.git", branch = "master" }
-iced_wgpu = { git = "https://github.com/hecrj/iced.git", branch = "master" }
-iced_native = { git = "https://github.com/hecrj/iced.git", branch = "master" }
-iced_futures = { git = "https://github.com/hecrj/iced.git", branch = "master" }
+iced = "0.2"
+iced_baseview = { git = "https://github.com/BillyDM/iced_baseview", branch = "main"}
+iced_native = "0.3"
+iced_wgpu = "0.3"
 futures = "0.3"
 cpal = "0.12.1"
 midir = "0.7.0"
 nalgebra = "0.22.0"
+baseview = { git = "https://github.com/RustAudio/baseview", branch = "master" }

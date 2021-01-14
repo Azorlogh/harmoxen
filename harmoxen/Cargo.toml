@@ -7,12 +7,13 @@ edition = "2018"
 [lib]
 
 [dependencies]
-iced = { git = "https://github.com/hecrj/iced.git", branch = "master", features = [ "debug", "tokio", "canvas" ]}
-iced_native = { git = "https://github.com/hecrj/iced.git", branch = "master" }
-iced_wgpu = { git = "https://github.com/hecrj/iced.git", branch = "master" }
-iced_winit = { git = "https://github.com/hecrj/iced.git", branch = "master" }
-iced_graphics = { git = "https://github.com/hecrj/iced.git", branch = "master" }
-iced_style = { git = "https://github.com/hecrj/iced.git", branch = "master" }
+iced = { version = "0.2", features = [ "debug", "tokio", "canvas" ]}
+iced_baseview = { git = "https://github.com/BillyDM/iced_baseview", branch = "main"}
+iced_futures = "0.2"
+iced_graphics = "0.1"
+iced_native = "0.3"
+iced_style = "0.2"
+iced_wgpu = "0.3"
 serde = { version = "1.0.116", features = ["derive"] }
 generational-arena = { version = "0.2.8", features = ["serde"] }
 lyon_geom = "0.16.2"

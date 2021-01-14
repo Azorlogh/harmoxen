@@ -1,10 +1,10 @@
 use derive_more::Display;
-use std::rc::Rc;
+use std::sync::Arc;
 
 #[derive(Clone, Default)]
 pub struct State {
 	pub backend: Backend,
-	pub mpe_port_names: Rc<Vec<String>>,
+	pub mpe_port_names: Arc<Vec<String>>,
 }
 
 #[derive(Clone, Display)]

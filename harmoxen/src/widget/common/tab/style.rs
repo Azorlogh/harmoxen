@@ -3,8 +3,8 @@ use iced::{Background, Color};
 #[derive(Debug, Clone, Copy)]
 pub struct Style {
 	pub background: Background,
-	pub border_radius: u16,
-	pub border_width: u16,
+	pub border_radius: f32,
+	pub border_width: f32,
 	pub border_color: Color,
 }
 
@@ -12,8 +12,8 @@ impl std::default::Default for Style {
 	fn default() -> Self {
 		Style {
 			background: Background::Color([0.87, 0.87, 0.87].into()),
-			border_radius: 0,
-			border_width: 1,
+			border_radius: 0.0,
+			border_width: 1.0,
 			border_color: [0.7, 0.7, 0.7].into(),
 		}
 	}

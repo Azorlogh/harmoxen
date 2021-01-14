@@ -15,3 +15,6 @@ pub use preview::Preview;
 
 pub mod interval_input;
 pub use interval_input::IntervalInput;
+
+pub mod selection;
+pub use selection::Selection;

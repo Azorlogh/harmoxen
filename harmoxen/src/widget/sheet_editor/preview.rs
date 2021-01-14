@@ -123,8 +123,8 @@ where
 					bounds: Rect::from_point_size(Point::new(bounds.x, bounds.y + s_pos), Size::new(bounds.height, 1.0)).into(),
 					background: Color::WHITE.into(),
 					border_color: Color::TRANSPARENT,
-					border_radius: 0,
-					border_width: 0,
+					border_radius: 0.0,
+					border_width: 0.0,
 				}),
 			}
 		} else {
@@ -137,8 +137,8 @@ where
 						bounds,
 						background: self.style.active().background,
 						border_color: Color::TRANSPARENT.into(),
-						border_radius: 0,
-						border_width: 0,
+						border_radius: 0.0,
+						border_width: 0.0,
 					},
 					cursor,
 				],
