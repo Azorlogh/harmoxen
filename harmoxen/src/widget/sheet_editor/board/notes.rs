@@ -48,6 +48,9 @@ impl<'a> Board<'a> {
 					color = style.note_highlight;
 				}
 			}
+			if self.selection.contains(&index) {
+				color = style.note_selected;
+			}
 			match self.state.action {
 				Action::Scale(id, _) if id == index => {
 					color = style.note_highlight;

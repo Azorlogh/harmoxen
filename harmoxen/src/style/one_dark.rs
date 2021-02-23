@@ -11,9 +11,6 @@ const BG_5: Color = color(0x707070);
 
 const BG_FEATURE: Color = color(0x356160);
 
-const FEATURE: Color = color(0x02BC71);
-const FEATURE_HL: Color = color(0x69FFA2);
-
 const FG: Color = color(0xEEEEEE);
 
 const RED: Color = color(0xE06C75);
@@ -22,6 +19,11 @@ const YELLOW: Color = color(0xE5C07B);
 const BLUE: Color = color(0x61AFEF);
 const MAGENTA: Color = color(0xC678DD);
 const CYAN: Color = color(0x56B6C2);
+
+const FEATURE: Color = GREEN;
+const FEATURE_HL: Color = BLUE;
+
+const FEATURE_ALT: Color = RED;
 
 pub struct Container;
 impl container::StyleSheet for Container {
@@ -166,6 +168,7 @@ pub mod sheet_editor {
 			board::Style {
 				note_color: FEATURE,
 				note_highlight: FEATURE_HL,
+				note_selected: FEATURE_ALT,
 				background_dark: BG_1.into(),
 				background_light: BG_0.into(),
 				root_line_color: BG_FEATURE,

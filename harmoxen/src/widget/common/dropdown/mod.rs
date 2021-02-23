@@ -137,10 +137,6 @@ where
 					Renderer::Font::default(),
 					Size::new(f32::INFINITY, f32::INFINITY),
 				);
-
-				// println!("{:?}", width);
-
-				// width.round() as u32
 				24
 			}
 			_ => 0,

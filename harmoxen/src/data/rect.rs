@@ -21,6 +21,11 @@ impl Rect<f32> {
 		Self { x0, y0, x1, y1 }
 	}
 
+	pub fn abs(&self) -> Rect {
+		let Rect { x0, y0, x1, y1 } = *self;
+		Rect::new(x0.min(x1), y0.min(y1), x0.max(x1), y0.max(y1))
+	}
+
 	/// Creates a new [`Rect`] with its top-left corner in the given
 	/// [`Point`] and with the provided [`Size`].
 	///
@@ -118,11 +123,14 @@ impl Rect<f32> {
 	///
 	/// [`Rect`]: struct.Rect.html
 	pub fn intersection(&self, other: &Rect<f32>) -> Option<Rect<f32>> {
-		let x0 = self.x0.max(other.x0);
-		let y0 = self.y0.max(other.y0);
+		let r0 = self.abs();
+		let r1 = other.abs();
 
-		let x1 = self.x1.min(other.x1);
-		let y1 = self.y1.min(other.y1);
+		let x0 = r0.x0.max(r1.x0);
+		let y0 = r0.y0.max(r1.y0);
+
+		let x1 = r0.x1.min(r1.x1);
+		let y1 = r0.y1.min(r1.y1);
 
 		if (x1 - x0) > 0.0 && (y1 - y0) > 0.0 {
 			Some(Rect { x0, y0, x1, y1 })

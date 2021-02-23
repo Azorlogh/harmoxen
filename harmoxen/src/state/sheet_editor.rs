@@ -156,6 +156,9 @@ impl State {
 			Message::DeleteMarker(idx) => {
 				self.layout.delete_marker(idx);
 			}
+			Message::SetSelection(selection) => {
+				self.selection = selection;
+			}
 		}
 		Command::none()
 	}
@@ -182,6 +185,7 @@ pub enum Message {
 	SelectMarker(usize),
 	MoveMarker(f32),
 	DeleteMarker(usize),
+	SetSelection(HashSet<Index>),
 }
 
 impl From<Message> for RootMessage {

@@ -1,3 +1,4 @@
+use crate::consts::NOTE_HEIGHT;
 use crate::data::{
 	icp,
 	layout::Layout,
@@ -17,7 +18,6 @@ use iced_native::{
 use std::collections::{HashMap, HashSet};
 use std::time::Instant;
 
-const NOTE_HEIGHT: f32 = 24.0;
 const NOTE_SCALE_KNOB: f32 = 32.0;
 
 // mod interval_input;
@@ -227,6 +227,7 @@ where
 										freq: sheet.get_freq(note.pitch),
 									}))));
 								}
+								messages.push(Message::SetSelection(HashSet::new()).into());
 							}
 							Hover::Move(idx) => {
 								if selection.len() > 0 {
@@ -281,6 +282,7 @@ where
 						state.action = Action::DeleteNotes(pos);
 						messages.push(Message::CloseIntervalInput.into());
 					}
+					messages.push(Message::SetSelection(HashSet::new()).into());
 				}
 			}
 			Event::Mouse(mouse::Event::CursorMoved { .. }) => {

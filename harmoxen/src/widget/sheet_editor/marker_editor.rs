@@ -112,7 +112,6 @@ where
 
 		let captured = match event {
 			Event::Keyboard(keyboard::Event::ModifiersChanged(mods)) => {
-				println!("{:?}", mods);
 				self.state.ctrl = mods.control;
 				false
 			}

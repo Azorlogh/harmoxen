@@ -71,8 +71,13 @@ pub fn build(state: &mut State, theme: Theme) -> Element<RootMessage> {
 			[(true, false), (true, true)],
 			|| Message::SetScrolling.into(),
 		))
-		// .push(Selection::new(&mut state.wstates.selection))
-		;
+		.push(Selection::new(
+			&mut state.wstates.selection,
+			&state.sheet,
+			&state.frame,
+			&state.selection,
+		));
+
 	if let Some(wstate) = &mut state.wstates.interval_input {
 		editing_area = editing_area.push(IntervalInput::new(wstate, &state.sheet, &state.frame));
 	}

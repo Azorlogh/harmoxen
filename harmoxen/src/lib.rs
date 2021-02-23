@@ -7,6 +7,7 @@ use std::sync::mpsc::Sender;
 use std::time::Duration;
 
 pub mod backend;
+pub mod consts;
 pub mod data;
 mod state;
 mod style;
