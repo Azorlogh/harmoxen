@@ -70,7 +70,7 @@ impl<'a> MarkerEditor<'a> {
 pub fn get_hover(x: f32, coord: Coord, layout: &Layout) -> Option<usize> {
 	let extent = coord.to_board_w(8.0);
 	let offset = coord.to_board_w(4.0);
-	for (i, marker) in layout.markers.iter().enumerate() {
+	for (i, marker) in layout.markers.iter().enumerate().rev() {
 		if x > marker.at - offset && x < marker.at + extent + offset {
 			return Some(i);
 		}

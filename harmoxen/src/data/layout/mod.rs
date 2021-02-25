@@ -57,7 +57,7 @@ impl Layout {
 	pub fn get_marker_at(&self, at: f32, exclude: Option<usize>) -> &Marker {
 		let mut closest = &Self::INITIAL_MARKER;
 		for (i, marker) in self.markers.iter().enumerate() {
-			if Some(i) != exclude && marker.at <= at && marker.at > closest.at {
+			if Some(i) != exclude && marker.at <= at && marker.at >= closest.at {
 				closest = marker;
 			}
 		}
