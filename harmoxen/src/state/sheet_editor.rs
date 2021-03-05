@@ -156,8 +156,25 @@ impl State {
 			Message::DeleteMarker(idx) => {
 				self.layout.delete_marker(idx);
 			}
+			Message::SelectAll => {
+				self.selection = self.sheet.indices.iter().copied().collect();
+			}
 			Message::SetSelection(selection) => {
 				self.selection = selection;
+			}
+			Message::Cut => {
+				self.clipboard.cut(&mut self.sheet, &mut self.selection);
+			}
+			Message::Copy => {
+				self.clipboard.copy(&mut self.sheet, &mut self.selection);
+			}
+			Message::Paste => {
+				self.clipboard.paste(&mut self.sheet, &mut self.selection);
+			}
+			Message::Delete => {
+				for idx in self.selection.drain() {
+					self.sheet.remove_note(idx);
+				}
 			}
 		}
 		Command::none()
@@ -185,7 +202,12 @@ pub enum Message {
 	SelectMarker(usize),
 	MoveMarker(f32),
 	DeleteMarker(usize),
+	SelectAll,
 	SetSelection(HashSet<Index>),
+	Cut,
+	Copy,
+	Paste,
+	Delete,
 }
 
 impl From<Message> for RootMessage {

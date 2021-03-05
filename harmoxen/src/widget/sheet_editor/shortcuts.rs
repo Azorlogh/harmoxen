@@ -43,9 +43,32 @@ where
 		_clipboard: Option<&dyn Clipboard>,
 	) -> event::Status {
 		let captured = match event {
-			Event::Keyboard(keyboard::Event::KeyPressed { key_code: key, .. }) => match key {
+			Event::Keyboard(keyboard::Event::KeyPressed {
+				key_code: key,
+				modifiers: mods,
+			}) => match key {
 				KeyCode::Space => {
 					messages.push(Message::Play.into());
+					true
+				}
+				KeyCode::A if mods.control => {
+					messages.push(Message::SelectAll.into());
+					true
+				}
+				KeyCode::X if mods.control => {
+					messages.push(Message::Cut.into());
+					true
+				}
+				KeyCode::C if mods.control => {
+					messages.push(Message::Copy.into());
+					true
+				}
+				KeyCode::V if mods.control => {
+					messages.push(Message::Paste.into());
+					true
+				}
+				KeyCode::Delete => {
+					messages.push(Message::Delete.into());
 					true
 				}
 				_ => false,
