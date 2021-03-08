@@ -27,6 +27,7 @@ pub fn build(state: &mut State) -> Element<Message> {
 							vec![
 								("New", Message::ProjectNew),
 								("Open", Message::ProjectOpen),
+								("Save As", Message::ProjectSaveAs),
 								("Save", Message::ProjectSave),
 							],
 						)
