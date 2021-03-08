@@ -25,13 +25,27 @@ pub struct WStates {
 	pub selection: widget::sheet_editor::selection::State,
 }
 
+pub enum PlayingState {
+	Stopped,
+	Playing(f32), // origin
+}
+
+impl PlayingState {
+	pub fn is_playing(&self) -> bool {
+		match self {
+			PlayingState::Stopped => false,
+			PlayingState::Playing(_) => true,
+		}
+	}
+}
+
 pub struct State {
 	pub wstates: WStates,
 	pub frame: Frame2,
 	pub is_scrolling: bool,
 	pub sheet: Sheet,
 	pub cursor: f32,
-	pub is_playing: bool,
+	pub playing_state: PlayingState,
 	pub last_tick: Instant,
 	pub layout: Layout,
 	pub tempo: f32,
@@ -58,7 +72,7 @@ impl Default for State {
 			is_scrolling: false,
 			sheet,
 			cursor: 0.0,
-			is_playing: false,
+			playing_state: PlayingState::Stopped,
 			last_tick: Instant::now(),
 			layout: Layout::default(),
 			tempo: 120.0,
@@ -90,17 +104,18 @@ impl State {
 				self.is_scrolling = widget::scroll_view::tick(&mut self.wstates.scroll_view, &mut self.frame, dt);
 			}
 			Message::Play => {
-				if self.is_playing {
+				if let PlayingState::Playing(origin) = self.playing_state {
 					to_backend.send(backend::Event::PlayStop).ok();
-					self.cursor = 0.0;
+					self.cursor = origin;
+					self.playing_state = PlayingState::Stopped
 				} else {
+					self.playing_state = PlayingState::Playing(self.cursor);
 					to_backend.send(backend::Event::SetTempo(self.tempo)).unwrap();
 					to_backend
 						.send(backend::Event::PlayStart(self.sheet.clone(), self.cursor))
 						.ok();
 					self.last_tick = Instant::now();
 				}
-				self.is_playing ^= true;
 			}
 			Message::CursorTick(now) => {
 				self.cursor += now.duration_since(self.last_tick).as_secs_f32() * (self.tempo / 60.0);
