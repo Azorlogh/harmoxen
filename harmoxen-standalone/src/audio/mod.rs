@@ -71,8 +71,13 @@ where
 						engine.process_event(event);
 					}
 
-					engine.update(data.len() / nb_channels as usize);
+					let data_len = data.len() / nb_channels as usize;
+					let mut i = 0;
 					for frame in data.chunks_mut(nb_channels) {
+						if i % 256 == 0 {
+							engine.update((data_len - i).min(256));
+						}
+						i += 1;
 						let value = cpal::Sample::from::<f32>(&(engine.next_sample() as f32));
 						for sample in frame.iter_mut() {
 							*sample = value;

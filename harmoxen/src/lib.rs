@@ -42,7 +42,7 @@ impl Application for State {
 	}
 
 	fn subscription(&self, _: &mut WindowSubs<Self::Message>) -> Subscription<Self::Message> {
-		let is_playing = self.sheet_editor.is_playing;
+		let is_playing = self.sheet_editor.playing_state.is_playing();
 		let is_scrolling = self.sheet_editor.is_scrolling;
 		let mut subscriptions = vec![];
 		if is_playing {
