@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::data::layout::Layout;
 use crate::data::sheet::Sheet;
-use crate::state::sheet_editor;
+use crate::state::{sheet_editor, State};
 use generational_arena::Index;
 use std::collections::HashSet;
 
@@ -15,11 +15,11 @@ pub struct Project {
 }
 
 impl Project {
-	pub fn from_state(sheet_editor: &sheet_editor::State) -> Project {
+	pub fn from_state(sheet_editor: &sheet_editor::State, tempo: f32) -> Project {
 		let layout = sheet_editor.layout.clone();
 		let sheet = sheet_editor.sheet.clone();
 		let selection = sheet_editor.selection.clone();
-		let tempo = sheet_editor.tempo;
+		let tempo = tempo;
 		Project {
 			sheet,
 			layout,
@@ -28,10 +28,10 @@ impl Project {
 		}
 	}
 
-	pub fn open(self, sheet_editor: &mut sheet_editor::State) {
-		sheet_editor.layout = self.layout;
-		sheet_editor.sheet = self.sheet;
-		sheet_editor.selection = self.selection;
-		sheet_editor.tempo = self.tempo;
+	pub fn open(self, state: &mut State) {
+		state.sheet_editor.layout = self.layout;
+		state.sheet_editor.sheet = self.sheet;
+		state.sheet_editor.selection = self.selection;
+		state.tempo = self.tempo;
 	}
 }

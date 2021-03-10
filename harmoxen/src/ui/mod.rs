@@ -1,7 +1,7 @@
 use crate::state::{CurrentEditor, State};
 use crate::widget::*;
 use crate::Message;
-use iced::{Align, Container, Element, Length};
+use iced::{Align, Container, Element, Length, Space, TextInput};
 
 mod layout_editor;
 mod settings_editor;
@@ -42,7 +42,8 @@ pub fn build(state: &mut State) -> Element<Message> {
 						Tab::new(state.current_editor == CurrentEditor::SettingsEditor, Text::new("Settings"))
 							.on_press(Message::OpenSettings)
 							.style(state.theme),
-					),
+					)
+					.push(Space::new(Length::Fill, Length::Shrink)),
 			)
 			.push(editor_ui)
 			.into(),

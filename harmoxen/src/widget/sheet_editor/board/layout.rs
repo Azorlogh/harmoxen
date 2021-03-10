@@ -1,7 +1,6 @@
 use super::{Board, Style};
 use crate::data::{layout::*, Rect, Size};
 use crate::util::coord::Coord;
-use iced::canvas::{Frame, Path, Stroke};
 use iced::{Color, Vector};
 use iced_graphics::Primitive;
 

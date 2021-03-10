@@ -15,6 +15,7 @@ pub use project::Project;
 pub struct WStates {
 	pub file_dropdown: widget::dropdown::State<Message>,
 	pub settings_button: widget::button::State,
+	pub tempo_input: widget::text_input::State,
 }
 
 #[derive(PartialEq)]
@@ -30,6 +31,7 @@ pub struct State {
 	pub layout_editor: layout_editor::State,
 	pub settings_editor: settings_editor::State,
 	pub current_editor: CurrentEditor,
+	pub tempo: f32,
 	pub history: History,
 	pub save_path: Option<PathBuf>,
 	pub up_to_date: bool,
@@ -40,13 +42,15 @@ pub struct State {
 impl State {
 	pub fn new(to_backend: Sender<backend::Event>) -> State {
 		let sheet_editor = sheet_editor::State::default();
-		let project = Project::from_state(&sheet_editor);
+		let tempo = 120.0;
+		let project = Project::from_state(&sheet_editor, tempo);
 		State {
 			wstates: Default::default(),
 			sheet_editor: sheet_editor::State::default(),
 			layout_editor: layout_editor::State::default(),
 			settings_editor: settings_editor::State::default(),
 			current_editor: CurrentEditor::SheetEditor,
+			tempo,
 			history: History::new(project),
 			save_path: None,
 			up_to_date: true,
@@ -64,11 +68,20 @@ impl State {
 	}
 }
 
+pub struct UpdateCtx<'a> {
+	to_backend: &'a mut Sender<backend::Event>,
+	tempo: f32,
+}
+
 impl State {
-	pub fn update(self: &mut State, msg: Message) -> Command<Message> {
+	pub fn update(&mut self, msg: Message) -> Command<Message> {
 		match msg {
 			Message::SheetEditor(msg) => {
-				self.sheet_editor.update(msg, &mut self.to_backend);
+				let ctx = UpdateCtx {
+					to_backend: &mut self.to_backend,
+					tempo: self.tempo,
+				};
+				self.sheet_editor.update(msg, ctx);
 			}
 			Message::LayoutEditor(msg) => {
 				self.layout_editor.update(msg);
@@ -82,7 +95,7 @@ impl State {
 					if let Ok(project_str) = std::fs::read_to_string(path) {
 						let project = ron::from_str::<Project>(&project_str);
 						if let Ok(project) = project {
-							project.open(&mut self.sheet_editor);
+							project.open(self);
 						}
 					}
 				}
@@ -112,6 +125,9 @@ impl State {
 			Message::ApplyLayout => {
 				self.apply_layout().ok();
 			}
+			Message::SetTempo(tempo) => {
+				self.tempo = tempo;
+			}
 		};
 		Command::none()
 	}
@@ -124,7 +140,7 @@ impl State {
 	where
 		P: AsRef<std::path::Path>,
 	{
-		let project = Project::from_state(&self.sheet_editor);
+		let project = Project::from_state(&self.sheet_editor, self.tempo);
 		let project_str = ron::to_string(&project).unwrap();
 		std::fs::write(path, project_str).ok();
 	}
@@ -142,6 +158,6 @@ pub enum Message {
 	ApplyLayout,
 	SheetEditor(sheet_editor::Message),
 	LayoutEditor(layout_editor::Message),
-	// Icp(data::icp::Event),
 	Backend(crate::backend::Event),
+	SetTempo(f32),
 }

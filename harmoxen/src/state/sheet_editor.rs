@@ -1,3 +1,4 @@
+use super::UpdateCtx;
 use crate::backend;
 use crate::data::{
 	self,
@@ -9,8 +10,8 @@ use crate::state::Message as RootMessage;
 use crate::widget;
 use generational_arena::Index;
 use iced::Command;
+use std::collections::HashSet;
 use std::time::Instant;
-use std::{cell::RefCell, collections::HashSet, sync::Arc};
 
 #[derive(Default)]
 pub struct WStates {
@@ -34,7 +35,6 @@ pub struct State {
 	pub is_playing: bool,
 	pub last_tick: Instant,
 	pub layout: Layout,
-	pub tempo: f32,
 	pub curr_marker: usize,
 	pub selection: HashSet<Index>,
 	pub clipboard: Clipboard,
@@ -61,7 +61,6 @@ impl Default for State {
 			is_playing: false,
 			last_tick: Instant::now(),
 			layout: Layout::default(),
-			tempo: 120.0,
 			curr_marker: 0,
 			selection: HashSet::new(),
 			clipboard: Clipboard::new(),
@@ -69,10 +68,8 @@ impl Default for State {
 	}
 }
 
-use std::sync::mpsc::Sender;
-
 impl State {
-	pub fn update(&mut self, msg: Message, to_backend: &mut Sender<backend::Event>) -> Command<Message> {
+	pub fn update(&mut self, msg: Message, ctx: UpdateCtx) -> Command<Message> {
 		match msg {
 			Message::FrameChanged(frame) => {
 				self.frame = frame;
@@ -91,11 +88,11 @@ impl State {
 			}
 			Message::Play => {
 				if self.is_playing {
-					to_backend.send(backend::Event::PlayStop).ok();
+					ctx.to_backend.send(backend::Event::PlayStop).ok();
 					self.cursor = 0.0;
 				} else {
-					to_backend.send(backend::Event::SetTempo(self.tempo)).unwrap();
-					to_backend
+					ctx.to_backend.send(backend::Event::SetTempo(ctx.tempo)).unwrap();
+					ctx.to_backend
 						.send(backend::Event::PlayStart(self.sheet.clone(), self.cursor))
 						.ok();
 					self.last_tick = Instant::now();
@@ -103,7 +100,7 @@ impl State {
 				self.is_playing ^= true;
 			}
 			Message::CursorTick(now) => {
-				self.cursor += now.duration_since(self.last_tick).as_secs_f32() * (self.tempo / 60.0);
+				self.cursor += now.duration_since(self.last_tick).as_secs_f32() * (ctx.tempo / 60.0);
 				self.cursor %= self.sheet.get_size();
 				self.last_tick = now;
 			}
