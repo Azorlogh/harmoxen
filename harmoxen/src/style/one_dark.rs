@@ -30,7 +30,7 @@ impl container::StyleSheet for Container {
 	fn style(&self) -> container::Style {
 		container::Style {
 			text_color: Some(FG),
-			background: BG_0.into(),
+			background: BG_1.into(),
 			border_width: 0.0,
 			border_color: Color::TRANSPARENT.into(),
 			border_radius: 0.0,
@@ -82,7 +82,7 @@ impl pick_list::StyleSheet for PickList {
 	fn active(&self) -> pick_list::Style {
 		pick_list::Style {
 			text_color: FG,
-			background: BG_0.into(),
+			background: BG_1.into(),
 			border_width: 0.0,
 			border_color: BG_1.into(),
 
@@ -96,6 +96,62 @@ impl pick_list::StyleSheet for PickList {
 			background: BG_3.into(),
 			..self.active()
 		}
+	}
+}
+
+pub struct Tab;
+impl tab::StyleSheet for Tab {
+	fn active(&self) -> tab::Style {
+		tab::Style {
+			background: BG_1.into(),
+			border_radius: 0.0,
+			border_width: 0.0,
+			border_color: BG_1,
+		}
+	}
+
+	fn hovered(&self) -> tab::Style {
+		tab::Style {
+			background: BG_3.into(),
+			..self.active()
+		}
+	}
+
+	fn selected(&self) -> tab::Style {
+		tab::Style {
+			background: BG_3.into(),
+			..self.active()
+		}
+	}
+}
+
+pub struct TextInput;
+impl text_input::StyleSheet for TextInput {
+	fn active(&self) -> text_input::Style {
+		text_input::Style {
+			background: BG_0.into(),
+			border_radius: 1.0,
+			border_width: 1.0,
+			border_color: BG_2,
+		}
+	}
+	fn focused(&self) -> text_input::Style {
+		text_input::Style {
+			background: BG_1.into(),
+			..self.active()
+		}
+	}
+
+	fn placeholder_color(&self) -> Color {
+		BG_3
+	}
+
+	fn value_color(&self) -> Color {
+		FG
+	}
+
+	fn selection_color(&self) -> Color {
+		BG_4
 	}
 }
 
@@ -114,32 +170,6 @@ impl range_slider::StyleSheet for RangeSlider {
 			bar_border_color: BG_5,
 			handle_color: BG_2,
 			handle_highlight: BG_3,
-		}
-	}
-}
-
-pub struct Tab;
-impl tab::StyleSheet for Tab {
-	fn active(&self) -> tab::Style {
-		tab::Style {
-			background: BG_0.into(),
-			border_radius: 0.0,
-			border_width: 0.0,
-			border_color: BG_1,
-		}
-	}
-
-	fn hovered(&self) -> tab::Style {
-		tab::Style {
-			background: BG_3.into(),
-			..self.active()
-		}
-	}
-
-	fn selected(&self) -> tab::Style {
-		tab::Style {
-			background: BG_3.into(),
-			..self.active()
 		}
 	}
 }

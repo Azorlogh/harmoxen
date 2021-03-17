@@ -1,5 +1,5 @@
 use crate::{backend, widget, Theme};
-use iced::Command;
+use iced::{text_input, Command};
 use std::path::PathBuf;
 use std::sync::mpsc::Sender;
 
@@ -15,7 +15,7 @@ pub use project::Project;
 pub struct WStates {
 	pub file_dropdown: widget::dropdown::State<Message>,
 	pub settings_button: widget::button::State,
-	pub tempo_input: widget::text_input::State,
+	pub tempo_input: widget::parse::State<widget::text_input::State, String>,
 }
 
 #[derive(PartialEq)]

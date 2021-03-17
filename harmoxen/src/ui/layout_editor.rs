@@ -1,9 +1,12 @@
-use crate::data::layout::{
-	freq_input::{self, FreqInput},
-	time_input::{self, TimeInput},
-};
 use crate::state::layout_editor::State;
 use crate::state::{layout_editor::Message, Message as RootMessage};
+use crate::{
+	data::layout::{
+		freq_input::{self, FreqInput},
+		time_input::{self, TimeInput},
+	},
+	Theme,
+};
 use iced::{text_input, Button, Column, Container, Element, Length, PickList, Row, Text, TextInput};
 
 fn textbox<'a, F>(
@@ -11,28 +14,35 @@ fn textbox<'a, F>(
 	placeholder: &'static str,
 	text: &str,
 	on_change: F,
-) -> TextInput<'a, RootMessage>
+) -> Element<'a, RootMessage>
 where
 	F: Fn(String) -> RootMessage + 'static,
 {
-	TextInput::new(state, placeholder, text, on_change).padding(5)
+	Container::new(TextInput::new(state, placeholder, text, on_change).padding(5))
+		.width(Length::FillPortion(1))
+		.padding(1)
+		.into()
 }
 
-pub fn build(state: &mut State) -> Element<RootMessage> {
+pub fn build(state: &mut State, theme: Theme) -> Element<RootMessage> {
 	let editor = Column::new()
 		.push(
 			Row::new()
-				.push(PickList::new(
-					&mut state.time_pick_list,
-					&[
-						time_input::Mode::None,
-						time_input::Mode::Regular,
-						time_input::Mode::Formula,
-						time_input::Mode::Poly,
-					][..],
-					Some(state.time.mode()),
-					|mode| Message::SetTimeMode(mode).into(),
-				))
+				.push(
+					PickList::new(
+						&mut state.time_pick_list,
+						&[
+							time_input::Mode::None,
+							time_input::Mode::Regular,
+							time_input::Mode::Formula,
+							time_input::Mode::Poly,
+						][..],
+						Some(state.time.mode()),
+						|mode| Message::SetTimeMode(mode).into(),
+					)
+					.style(theme)
+					.width(Length::Units(175)),
+				)
 				.push({
 					let [state0, state1, state2] = &mut state.wstates_time;
 					match &state.time {
@@ -72,17 +82,21 @@ pub fn build(state: &mut State) -> Element<RootMessage> {
 		)
 		.push(
 			Row::new()
-				.push(PickList::new(
-					&mut state.freq_pick_list,
-					&[
-						freq_input::Mode::None,
-						freq_input::Mode::Equal,
-						freq_input::Mode::Enumeration,
-						freq_input::Mode::HarmonicSegment,
-					][..],
-					Some(state.freq.mode()),
-					|mode| Message::SetFreqMode(mode).into(),
-				))
+				.push(
+					PickList::new(
+						&mut state.freq_pick_list,
+						&[
+							freq_input::Mode::None,
+							freq_input::Mode::Equal,
+							freq_input::Mode::Enumeration,
+							freq_input::Mode::HarmonicSegment,
+						][..],
+						Some(state.freq.mode()),
+						|mode| Message::SetFreqMode(mode).into(),
+					)
+					.style(theme)
+					.width(Length::Units(175)),
+				)
 				.push({
 					let [state0, state1, state2] = &mut state.wstates_freq;
 					match &state.freq {
@@ -116,11 +130,19 @@ pub fn build(state: &mut State) -> Element<RootMessage> {
 					}
 				}),
 		)
-		.push(Button::new(&mut state.apply_btn_state, Text::new("Apply")).on_press(RootMessage::ApplyLayout));
+		.push(
+			Button::new(&mut state.apply_btn_state, Text::new("Apply"))
+				.on_press(RootMessage::ApplyLayout)
+				.style(theme),
+		);
 
 	Row::new()
-		.push(Container::new(editor).width(Length::Fill))
-		.push(Button::new(&mut state.close_btn_state, Text::new("X")).on_press(RootMessage::OpenSheet))
+		.push(Container::new(editor).width(Length::Fill).style(theme))
+		.push(
+			Button::new(&mut state.close_btn_state, Text::new("X"))
+				.on_press(RootMessage::OpenSheet)
+				.style(theme),
+		)
 		.padding(5)
 		.into()
 }

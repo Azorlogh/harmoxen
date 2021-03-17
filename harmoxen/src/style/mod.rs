@@ -57,6 +57,7 @@ impl_style!(button, Button);
 impl_style!(pick_list, PickList);
 impl_style!(range_slider, RangeSlider);
 impl_style!(tab, Tab);
+impl_style!(text_input, TextInput);
 
 mod sheet_editor {
 	use super::{
