@@ -53,7 +53,7 @@ impl button::StyleSheet for Button {
 
 	fn hovered(&self) -> button::Style {
 		button::Style {
-			background: BG_2.into(),
+			background: BG_3.into(),
 			..self.active()
 		}
 	}

@@ -116,7 +116,8 @@ impl State {
 			}
 			Message::CursorTick(now) => {
 				self.cursor += now.duration_since(self.last_tick).as_secs_f32() * (ctx.tempo / 60.0);
-				self.cursor %= self.sheet.get_size();
+				let wrap_size = self.sheet.get_size().ceil();
+				self.cursor %= wrap_size;
 				self.last_tick = now;
 			}
 			Message::SetCursor(at) => {

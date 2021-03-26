@@ -143,8 +143,9 @@ impl Engine {
 			let range = Range(self.cursor, self.cursor + length);
 			self.cursor += length;
 			let mut events = self.sheet.get_events(range);
-			if self.cursor > self.sheet.get_size() {
-				self.cursor %= self.sheet.get_size();
+			let wrap_size = self.sheet.get_size().ceil();
+			if self.cursor > wrap_size {
+				self.cursor %= wrap_size;
 				events.extend(self.sheet.get_events(Range(0.0, self.cursor)));
 			}
 			self.synth.process_events(&events);
