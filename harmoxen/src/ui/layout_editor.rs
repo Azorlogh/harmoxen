@@ -14,17 +14,18 @@ fn textbox<'a, F>(
 	placeholder: &'static str,
 	text: &str,
 	on_change: F,
+	theme: Theme,
 ) -> Element<'a, RootMessage>
 where
 	F: Fn(String) -> RootMessage + 'static,
 {
-	Container::new(TextInput::new(state, placeholder, text, on_change).padding(5))
+	Container::new(TextInput::new(state, placeholder, text, on_change).padding(5).style(theme))
 		.width(Length::FillPortion(1))
 		.padding(1)
 		.into()
 }
 
-pub fn build(state: &mut State, theme: Theme) -> Element<RootMessage> {
+pub fn build<'a>(state: &mut State, theme: Theme) -> Element<RootMessage> {
 	let editor = Column::new()
 		.push(
 			Row::new()
@@ -48,34 +49,66 @@ pub fn build(state: &mut State, theme: Theme) -> Element<RootMessage> {
 					match &state.time {
 						TimeInput::None => Into::<Element<RootMessage>>::into(Text::new("The time axis will be free")),
 						TimeInput::Regular { ndiv, nbeats } => Row::new()
-							.push(textbox(state0, "# divisions", &ndiv, |text| {
-								Message::SetTimeField(0, text).into()
-							}))
-							.push(textbox(state1, "# beats", &nbeats, |text| {
-								Message::SetTimeField(1, text).into()
-							}))
+							.push(textbox(
+								state0,
+								"# divisions",
+								&ndiv,
+								|text| Message::SetTimeField(0, text).into(),
+								theme,
+							))
+							.push(textbox(
+								state1,
+								"# beats",
+								&nbeats,
+								|text| Message::SetTimeField(1, text).into(),
+								theme,
+							))
 							.into(),
 						TimeInput::Formula { ndiv, nbeats, formula } => Row::new()
-							.push(textbox(state0, "# divisions", &ndiv, |text| {
-								Message::SetTimeField(0, text).into()
-							}))
-							.push(textbox(state1, "# beats", &nbeats, |text| {
-								Message::SetTimeField(1, text).into()
-							}))
-							.push(textbox(state2, "F: i -> x", &formula, |text| {
-								Message::SetTimeField(2, text).into()
-							}))
+							.push(textbox(
+								state0,
+								"# divisions",
+								&ndiv,
+								|text| Message::SetTimeField(0, text).into(),
+								theme,
+							))
+							.push(textbox(
+								state1,
+								"# beats",
+								&nbeats,
+								|text| Message::SetTimeField(1, text).into(),
+								theme,
+							))
+							.push(textbox(
+								state2,
+								"F: i -> x",
+								&formula,
+								|text| Message::SetTimeField(2, text).into(),
+								theme,
+							))
 							.into(),
 						TimeInput::Poly { ndiv0, ndiv1, nbeats } => Row::new()
-							.push(textbox(state0, "# divisions (a)", &ndiv0, |text| {
-								Message::SetTimeField(0, text).into()
-							}))
-							.push(textbox(state1, "# divisions (b)", &ndiv1, |text| {
-								Message::SetTimeField(1, text).into()
-							}))
-							.push(textbox(state2, "# beats", &nbeats, |text| {
-								Message::SetTimeField(2, text).into()
-							}))
+							.push(textbox(
+								state0,
+								"# divisions (a)",
+								&ndiv0,
+								|text| Message::SetTimeField(0, text).into(),
+								theme,
+							))
+							.push(textbox(
+								state1,
+								"# divisions (b)",
+								&ndiv1,
+								|text| Message::SetTimeField(1, text).into(),
+								theme,
+							))
+							.push(textbox(
+								state2,
+								"# beats",
+								&nbeats,
+								|text| Message::SetTimeField(2, text).into(),
+								theme,
+							))
 							.into(),
 					}
 				}),
@@ -102,30 +135,66 @@ pub fn build(state: &mut State, theme: Theme) -> Element<RootMessage> {
 					match &state.freq {
 						FreqInput::None => Into::<Element<RootMessage>>::into(Text::new("The frequency axis will be free")),
 						FreqInput::Equal { base, interval, ndiv } => Row::new()
-							.push(textbox(state0, "base frequency", &base, |text| {
-								Message::SetFreqField(0, text).into()
-							}))
-							.push(textbox(state1, "interval", &interval, |text| {
-								Message::SetFreqField(1, text).into()
-							}))
-							.push(textbox(state2, "# divisions", &ndiv, |text| {
-								Message::SetFreqField(2, text).into()
-							}))
+							.push(textbox(
+								state0,
+								"base frequency",
+								&base,
+								|text| Message::SetFreqField(0, text).into(),
+								theme,
+							))
+							.push(textbox(
+								state1,
+								"interval",
+								&interval,
+								|text| Message::SetFreqField(1, text).into(),
+								theme,
+							))
+							.push(textbox(
+								state2,
+								"# divisions",
+								&ndiv,
+								|text| Message::SetFreqField(2, text).into(),
+								theme,
+							))
 							.into(),
 						FreqInput::Enumeration { base, values } => Row::new()
-							.push(textbox(state0, "base frequency", &base, |text| {
-								Message::SetFreqField(0, text).into()
-							}))
-							.push(textbox(state1, "values", &values, |text| {
-								Message::SetFreqField(1, text).into()
-							}))
+							.push(textbox(
+								state0,
+								"base frequency",
+								&base,
+								|text| Message::SetFreqField(0, text).into(),
+								theme,
+							))
+							.push(textbox(
+								state1,
+								"values",
+								&values,
+								|text| Message::SetFreqField(1, text).into(),
+								theme,
+							))
 							.into(),
 						FreqInput::HarmonicSegment { base, from, to } => Row::new()
-							.push(textbox(state0, "base frequency", &base, |text| {
-								Message::SetFreqField(0, text).into()
-							}))
-							.push(textbox(state1, "from", &from, |text| Message::SetFreqField(1, text).into()))
-							.push(textbox(state2, "to", &to, |text| Message::SetFreqField(2, text).into()))
+							.push(textbox(
+								state0,
+								"base frequency",
+								&base,
+								|text| Message::SetFreqField(0, text).into(),
+								theme,
+							))
+							.push(textbox(
+								state1,
+								"from",
+								&from,
+								|text| Message::SetFreqField(1, text).into(),
+								theme,
+							))
+							.push(textbox(
+								state2,
+								"to",
+								&to,
+								|text| Message::SetFreqField(2, text).into(),
+								theme,
+							))
 							.into(),
 					}
 				}),
@@ -133,6 +202,7 @@ pub fn build(state: &mut State, theme: Theme) -> Element<RootMessage> {
 		.push(
 			Button::new(&mut state.apply_btn_state, Text::new("Apply"))
 				.on_press(RootMessage::ApplyLayout)
+				.width(Length::Fill)
 				.style(theme),
 		);
 
