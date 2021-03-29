@@ -220,7 +220,10 @@ where
 						match state.hover {
 							Hover::Idle => {
 								let note = layout.quantize_note(Note::new(pos, state.note_len));
-								if sheet.get_note_at(Point::new(note.start, note.y(&sheet)), 0.01).is_none() {
+								if sheet
+									.get_note_at(Point::new(note.start + 1e-4, note.y(&sheet)), 0.01)
+									.is_none()
+								{
 									messages.push(Message::NoteAdd(note, true).into());
 									messages.push(RootMessage::Backend(backend::Event::ICP(icp::Event::NotePlay(icp::Note {
 										id: 2000,

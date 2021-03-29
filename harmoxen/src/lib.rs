@@ -61,4 +61,13 @@ impl Application for State {
 	fn background_color(&self) -> Color {
 		Color::WHITE
 	}
+
+	fn renderer_settings() -> iced_baseview::renderer::Settings {
+		iced_baseview::renderer::Settings {
+			default_font: None,
+			default_text_size: 20,
+			antialiasing: Some(iced_baseview::renderer::Antialiasing::MSAAx4),
+			..iced_baseview::renderer::Settings::default()
+		}
+	}
 }

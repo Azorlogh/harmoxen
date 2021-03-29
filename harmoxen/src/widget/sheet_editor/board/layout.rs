@@ -1,11 +1,15 @@
 use super::{Board, Style};
 use crate::data::{layout::*, Rect, Size};
 use crate::util::coord::Coord;
+use iced::canvas::{Frame, Path, Stroke};
 use iced::{Color, Vector};
 use iced_graphics::Primitive;
 
 impl<'a> Board<'a> {
 	pub fn draw_layout(&self, size: Size, coord: &Coord, layout: &Layout, style: Style) -> Primitive {
+		let mut primitives_bg = vec![];
+		let mut primitives_fg = vec![];
+
 		let view_width = coord.frame.x.view.size();
 		let view_height = coord.frame.y.view.size();
 
@@ -22,9 +26,7 @@ impl<'a> Board<'a> {
 			}
 		}
 
-		let mut primitives = vec![];
-
-		// draw each patterns
+		// draw each pattern
 		for i in 0..markers.len() {
 			let s_start = coord.to_screen_x(markers[i].at);
 			let s_end = markers.get(i + 1).map(|x| coord.to_screen_x(x.at)).unwrap_or(size.width);
@@ -55,15 +57,16 @@ impl<'a> Board<'a> {
 					};
 					let bounds = Rect::new(s_bar_start, 0.0, s_bar_end, size.height);
 
-					let mut pattern_primitives = vec![];
-
-					pattern_primitives.push(Primitive::Quad {
+					// draw bar background
+					primitives_bg.push(Primitive::Quad {
 						bounds: bounds.into(),
 						background,
+						border_width: 0.0,
 						border_color: Color::TRANSPARENT,
 						border_radius: 0.0,
-						border_width: 0.0,
 					});
+
+					let mut frame = Frame::new(size);
 
 					if view_width < 64.0 {
 						for beat in 0..*nbeats {
@@ -71,48 +74,41 @@ impl<'a> Board<'a> {
 							if view_width < 24.0 {
 								for pos in positions {
 									let s_div = s_beat_start + coord.to_screen_w(*pos);
-									pattern_primitives.push(Primitive::Quad {
-										bounds: Rect::new(
-											s_div - (4.0 / view_width).min(1.0),
-											0.0,
-											s_div + (4.0 / view_width).min(1.0),
-											size.height,
-										)
-										.into(),
-										background: Color::from_rgba(0.4, 0.4, 0.4, 0.3).into(),
-										border_color: Color::TRANSPARENT,
-										border_radius: 0.0,
-										border_width: 0.0,
-									});
+									// draw subdiv
+									frame.stroke(
+										&Path::line([s_div, 0.0].into(), [s_div, size.height].into()),
+										Stroke {
+											width: 2f32,
+											color: Color::from_rgba(0.4, 0.4, 0.4, 0.5).into(),
+											..Default::default()
+										},
+									);
 								}
 							}
-							pattern_primitives.push(Primitive::Quad {
-								bounds: Rect::new(
-									s_beat_start - (16.0 / view_width).min(2.0),
-									0.0,
-									s_beat_start + (16.0 / view_width).min(2.0),
-									size.height,
-								)
-								.into(),
-								background: Color::from_rgba(0.4, 0.4, 0.4, 0.5).into(),
-								border_color: Color::TRANSPARENT,
-								border_radius: 0.0,
-								border_width: 0.0,
-							});
+							// draw beat
+							frame.stroke(
+								&Path::line([s_beat_start, 0.0].into(), [s_beat_start, size.height].into()),
+								Stroke {
+									width: 4f32,
+									color: Color::from_rgba(0.4, 0.4, 0.4, 0.8).into(),
+									..Default::default()
+								},
+							);
 						}
 					}
-					primitives.push(Primitive::Clip {
+
+					primitives_fg.push(Primitive::Clip {
 						bounds: bounds.into(),
 						offset: Vector::new(0, 0),
-						content: Box::new(Primitive::Group {
-							primitives: pattern_primitives,
-						}),
+						content: Box::new(frame.into_geometry().into_primitive()),
 					});
 				}
 			}
 
 			// draw frequency snap lines
 			if let Some(pattern) = &pattern.freq {
+				let mut frame = Frame::new(size);
+
 				let period = pattern.period();
 				let min_freq = 2f32.powf(coord.frame.y.view.0);
 				let max_freq = 2f32.powf(coord.frame.y.view.1);
@@ -126,19 +122,14 @@ impl<'a> Board<'a> {
 					let mut root_color = style.root_line_color;
 					root_color.a = 1.0;
 					if s_base > 0.0 && s_base < size.height {
-						primitives.push(Primitive::Quad {
-							bounds: Rect::new(
-								s_start.max(0.0),
-								s_base - 2.0 / view_height,
-								s_end.min(size.width),
-								s_base + 2.0 / view_height,
-							)
-							.into(),
-							background: root_color.into(),
-							border_color: Color::TRANSPARENT,
-							border_radius: 0.0,
-							border_width: 0.0,
-						});
+						frame.stroke(
+							&Path::line([s_start.max(0.0), s_base].into(), [s_end.min(size.width), s_base].into()),
+							Stroke {
+								width: 4.0,
+								color: root_color,
+								..Default::default()
+							},
+						);
 					}
 
 					// draw scale lines
@@ -146,25 +137,24 @@ impl<'a> Board<'a> {
 						for val in pattern.values.iter().skip(1) {
 							let s_pos = coord.to_screen_y((base * val).log2());
 							if s_pos > 0.0 && s_pos < size.height {
-								primitives.push(Primitive::Quad {
-									bounds: Rect::new(
-										s_start.max(0.0),
-										s_pos - 1.0 / view_height,
-										s_end.min(size.width),
-										s_pos + 1.0 / view_height,
-									)
-									.into(),
-									background: Color::from_rgba(0.4, 0.4, 0.4, 0.5).into(),
-									border_color: Color::TRANSPARENT,
-									border_radius: 0.0,
-									border_width: 0.0,
-								});
+								frame.stroke(
+									&Path::line([s_start.max(0.0), s_pos].into(), [s_end.min(size.width), s_pos].into()),
+									Stroke {
+										width: 2.0,
+										color: Color::from_rgba(0.4, 0.4, 0.4, 0.5),
+										..Default::default()
+									},
+								);
 							}
 						}
 					}
 				}
+				primitives_fg.push(frame.into_geometry().into_primitive());
 			}
 		}
+		let mut primitives = vec![];
+		primitives.extend(primitives_bg);
+		primitives.extend(primitives_fg);
 		Primitive::Group { primitives }
 	}
 }
