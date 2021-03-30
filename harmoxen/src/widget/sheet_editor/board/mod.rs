@@ -230,7 +230,9 @@ where
 										freq: sheet.get_freq(note.pitch),
 									}))));
 								}
-								messages.push(Message::SetSelection(HashSet::new()).into());
+								if selection.len() > 0 {
+									messages.push(Message::SetSelection(HashSet::new()).into());
+								}
 							}
 							Hover::Move(idx) => {
 								if selection.len() > 0 {

@@ -101,6 +101,6 @@ pub fn build(state: &mut State, theme: Theme) -> Element<RootMessage> {
 						.push(Row::new().push(editing_area).push(y_scrollbar)),
 				),
 		)
-		.push(Shortcuts)
+		.push(sheet_editor::Shortcuts)
 		.into()
 }

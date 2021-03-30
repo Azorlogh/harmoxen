@@ -63,7 +63,7 @@ pub fn build(state: &mut State) -> Element<Message> {
 		CurrentEditor::LayoutEditor => editor_ui,
 	};
 
-	Container::new(ui)
+	Container::new(Stack::new().push(ui).push(Shortcuts))
 		.style(state.theme)
 		.width(Length::Fill)
 		.height(Length::Fill)

@@ -71,15 +71,23 @@ impl State {
 pub struct UpdateCtx<'a> {
 	to_backend: &'a mut Sender<backend::Event>,
 	tempo: f32,
+	project_changed: &'a mut bool,
+}
+impl<'a> UpdateCtx<'a> {
+	fn project_changed(&mut self) {
+		*self.project_changed = true;
+	}
 }
 
 impl State {
 	pub fn update(&mut self, msg: Message) -> Command<Message> {
+		let mut project_changed = false;
 		match msg {
 			Message::SheetEditor(msg) => {
 				let ctx = UpdateCtx {
 					to_backend: &mut self.to_backend,
 					tempo: self.tempo,
+					project_changed: &mut project_changed,
 				};
 				self.sheet_editor.update(msg, ctx);
 			}
@@ -127,8 +135,27 @@ impl State {
 			}
 			Message::SetTempo(tempo) => {
 				self.tempo = tempo;
+				project_changed = true
+			}
+			Message::Undo => {
+				if let Some(project) = self.history.undo() {
+					project.open(self);
+					self.up_to_date = false;
+				}
+			}
+			Message::Redo => {
+				if let Some(project) = self.history.redo() {
+					project.open(self);
+					self.up_to_date = false;
+				}
 			}
 		};
+
+		if project_changed {
+			let project = Project::from_state(&self.sheet_editor, self.tempo);
+			self.history.save(project);
+		}
+
 		Command::none()
 	}
 
@@ -155,6 +182,8 @@ pub enum Message {
 	OpenSheet,
 	OpenSettings,
 	OpenLayout,
+	Undo,
+	Redo,
 	ApplyLayout,
 	SheetEditor(sheet_editor::Message),
 	LayoutEditor(layout_editor::Message),

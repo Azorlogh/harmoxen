@@ -83,7 +83,8 @@ impl Default for State {
 }
 
 impl State {
-	pub fn update(&mut self, msg: Message, ctx: UpdateCtx) -> Command<Message> {
+	pub fn update(&mut self, msg: Message, mut ctx: UpdateCtx) -> Command<Message> {
+		println!("{:?}", msg);
 		match msg {
 			Message::FrameChanged(frame) => {
 				self.frame = frame;
@@ -132,21 +133,26 @@ impl State {
 					let rect = note.rect(&self.sheet, 0.0);
 					self.wstates.board.set_action_move(idx, rect);
 				}
+				ctx.project_changed();
 			}
 			Message::NoteMove(idx, pos) => {
 				self.sheet.move_note(idx, pos.x, pos.y);
+				ctx.project_changed();
 			}
 			Message::NoteResize(idx, len) => {
 				let note = self.sheet.get_note_mut(idx).expect("tried to resize dead note");
 				note.length = len;
+				ctx.project_changed();
 			}
 			Message::NoteDelete(idx) => {
 				self.sheet.remove_note(idx);
 				self.wstates.interval_input = None;
+				ctx.project_changed();
 			}
 			Message::NoteSetPitch(idx, pitch) => {
 				let note = self.sheet.get_note_mut(idx).expect("tried to change pitch of dead note");
 				note.pitch = pitch;
+				ctx.project_changed();
 			}
 			Message::OpenIntervalInput(idx) => {
 				self.wstates.interval_input = Some(widget::sheet_editor::interval_input::State::new(&self.sheet, idx));
@@ -159,35 +165,44 @@ impl State {
 				new_marker.at = at;
 				let idx = self.layout.add_marker(new_marker);
 				self.curr_marker = idx;
+				ctx.project_changed();
 			}
 			Message::SelectMarker(idx) => {
 				self.curr_marker = idx;
+				ctx.project_changed();
 			}
 			Message::MoveMarker(at) => {
 				self.curr_marker = self.layout.set_marker_time(self.curr_marker, at);
+				ctx.project_changed();
 			}
 			Message::DeleteMarker(idx) => {
 				self.layout.delete_marker(idx);
+				ctx.project_changed();
 			}
 			Message::SelectAll => {
 				self.selection = self.sheet.indices.iter().copied().collect();
+				ctx.project_changed();
 			}
 			Message::SetSelection(selection) => {
 				self.selection = selection;
+				ctx.project_changed();
 			}
 			Message::Cut => {
 				self.clipboard.cut(&mut self.sheet, &mut self.selection);
+				ctx.project_changed();
 			}
 			Message::Copy => {
 				self.clipboard.copy(&mut self.sheet, &mut self.selection);
 			}
 			Message::Paste => {
 				self.clipboard.paste(&mut self.sheet, &mut self.selection);
+				ctx.project_changed();
 			}
 			Message::Delete => {
 				for idx in self.selection.drain() {
 					self.sheet.remove_note(idx);
 				}
+				ctx.project_changed();
 			}
 		}
 		Command::none()

@@ -27,17 +27,17 @@ impl History {
 		}
 	}
 
-	pub fn undo(&mut self) -> Project {
+	pub fn undo(&mut self) -> Option<Project> {
 		if self.cursor > 0 {
 			self.cursor -= 1;
 		}
-		self.states[self.cursor].clone()
+		self.states.get(self.cursor).cloned()
 	}
 
-	pub fn redo(&mut self) -> Project {
+	pub fn redo(&mut self) -> Option<Project> {
 		if self.cursor < self.states.len() {
 			self.cursor += 1;
 		}
-		self.states[self.cursor].clone()
+		self.states.get(self.cursor).cloned()
 	}
 }
