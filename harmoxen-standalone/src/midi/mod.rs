@@ -9,13 +9,13 @@ use std::thread;
 use std::time::{Duration, Instant};
 
 pub fn launch(port: MidiOutputPort) -> Result<Sender<Event>, Box<dyn Error>> {
-	let (sender, receiver) = channel();
+	let (to_backend, from_server) = channel();
 	thread::spawn(move || {
-		if let Err(err) = run(receiver, port) {
+		if let Err(err) = run(from_server, port) {
 			println!("Error with the mpe server: {}", err);
 		}
 	});
-	Ok(sender)
+	Ok(to_backend)
 }
 
 const UPDATE_RATE: f32 = 0.04;
@@ -62,6 +62,7 @@ pub fn run(receiver: Receiver<Event>, port: MidiOutputPort) -> Result<(), Box<dy
 					Event::Shutdown => {
 						running = false;
 					}
+					_ => {}
 				}
 			}
 			if engine.active {
@@ -109,6 +110,7 @@ impl Engine {
 	}
 
 	pub fn setup_mpe(&mut self) -> Result<(), Box<dyn Error>> {
+		println!("test!!");
 		self.conn.send(&[0xB0, 127, 15])?;
 		self.conn.send(&[0xB0, 124, 0])?; // omni off
 		self.conn.send(&[0xB0, 127, 0])?; // poly on

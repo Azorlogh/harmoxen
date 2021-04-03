@@ -103,14 +103,12 @@ impl State {
 			}
 			Message::Play => {
 				if let PlayingState::Playing(origin) = self.playing_state {
-					ctx.to_backend.send(backend::Event::PlayStop).ok();
+					ctx.to_backend(backend::Event::PlayStop);
 					self.cursor = origin;
 					self.playing_state = PlayingState::Stopped;
 				} else {
-					ctx.to_backend.send(backend::Event::SetTempo(ctx.tempo)).unwrap();
-					ctx.to_backend
-						.send(backend::Event::PlayStart(self.sheet.clone(), self.cursor))
-						.ok();
+					ctx.to_backend(backend::Event::SetTempo(ctx.tempo));
+					ctx.to_backend(backend::Event::PlayStart(self.sheet.clone(), self.cursor));
 					self.playing_state = PlayingState::Playing(self.cursor);
 					self.last_tick = Instant::now();
 				}

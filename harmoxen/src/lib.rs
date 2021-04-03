@@ -23,8 +23,19 @@ pub use state::Message;
 
 use iced_baseview::{Application, Color, WindowSubs};
 
+#[derive(Debug, Clone)]
+pub enum Backend {
+	Audio,
+	Midi(usize),
+}
+
+pub enum Event {
+	ChangeBackend(Backend),
+	ToBackend(backend::Event),
+}
+
 impl Application for State {
-	type Flags = Sender<backend::Event>;
+	type Flags = Sender<Event>;
 	type Message = Message;
 	type Executor = iced_futures::executor::Tokio;
 

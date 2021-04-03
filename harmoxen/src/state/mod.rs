@@ -36,11 +36,11 @@ pub struct State {
 	pub save_path: Option<PathBuf>,
 	pub up_to_date: bool,
 	pub theme: Theme,
-	pub to_backend: Sender<backend::Event>,
+	pub to_server: Sender<crate::Event>,
 }
 
 impl State {
-	pub fn new(to_backend: Sender<backend::Event>) -> State {
+	pub fn new(to_server: Sender<crate::Event>) -> State {
 		let sheet_editor = sheet_editor::State::default();
 		let tempo = 120.0;
 		let project = Project::from_state(&sheet_editor, tempo);
@@ -55,7 +55,7 @@ impl State {
 			save_path: None,
 			up_to_date: true,
 			theme: Theme::default(),
-			to_backend,
+			to_server,
 		}
 	}
 
@@ -69,11 +69,14 @@ impl State {
 }
 
 pub struct UpdateCtx<'a> {
-	to_backend: &'a mut Sender<backend::Event>,
+	to_server: &'a mut Sender<crate::Event>,
 	tempo: f32,
 	project_changed: &'a mut bool,
 }
 impl<'a> UpdateCtx<'a> {
+	fn to_backend(&mut self, evt: backend::Event) {
+		self.to_server.send(crate::Event::ToBackend(evt)).ok();
+	}
 	fn project_changed(&mut self) {
 		*self.project_changed = true;
 	}
@@ -85,7 +88,7 @@ impl State {
 		match msg {
 			Message::SheetEditor(msg) => {
 				let ctx = UpdateCtx {
-					to_backend: &mut self.to_backend,
+					to_server: &mut self.to_server,
 					tempo: self.tempo,
 					project_changed: &mut project_changed,
 				};
@@ -128,7 +131,10 @@ impl State {
 				self.current_editor = CurrentEditor::LayoutEditor;
 			}
 			Message::Backend(evt) => {
-				self.to_backend.send(evt).unwrap();
+				self.to_server.send(crate::Event::ToBackend(evt)).unwrap();
+			}
+			Message::ChangeBackend(backend) => {
+				self.to_server.send(crate::Event::ChangeBackend(backend));
 			}
 			Message::ApplyLayout => {
 				self.apply_layout().ok();
@@ -188,5 +194,6 @@ pub enum Message {
 	SheetEditor(sheet_editor::Message),
 	LayoutEditor(layout_editor::Message),
 	Backend(crate::backend::Event),
+	ChangeBackend(crate::Backend),
 	SetTempo(f32),
 }
