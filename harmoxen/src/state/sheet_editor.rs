@@ -84,7 +84,7 @@ impl Default for State {
 
 impl State {
 	pub fn update(&mut self, msg: Message, mut ctx: UpdateCtx) -> Command<Message> {
-		println!("{:?}", msg);
+		// println!("{:?}", msg);
 		match msg {
 			Message::FrameChanged(frame) => {
 				self.frame = frame;

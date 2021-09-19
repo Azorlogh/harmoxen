@@ -12,8 +12,10 @@ pub fn build(state: &mut State) -> Element<Message> {
 	let editor_ui = match state.current_editor {
 		CurrentEditor::SheetEditor => sheet_editor::build(&mut state.sheet_editor, state.theme),
 		CurrentEditor::LayoutEditor => layout_editor::build(&mut state.layout_editor, state.theme),
-		CurrentEditor::SettingsEditor => settings_editor::build(&mut state.settings_editor),
+		CurrentEditor::SettingsEditor => settings_editor::build(&mut state.settings_editor, state.theme),
 	};
+
+	let theme = state.theme;
 
 	let ui = match state.current_editor {
 		CurrentEditor::SheetEditor | CurrentEditor::SettingsEditor => Column::new()
@@ -45,8 +47,7 @@ pub fn build(state: &mut State) -> Element<Message> {
 							.style(state.theme),
 					)
 					.push(Space::new(Length::Fill, Length::Shrink))
-					.push({
-						let theme = state.theme.clone();
+					.push(
 						Container::new(Parse::new(
 							&mut state.wstates.tempo_input,
 							move |wstate, data| TextInput::new(wstate, "tempo", &data, |s| s).style(theme).padding(5),
@@ -54,8 +55,8 @@ pub fn build(state: &mut State) -> Element<Message> {
 							|s| s.parse::<f32>().ok().map(|tempo| Message::SetTempo(tempo)),
 						))
 						.height(Length::Shrink)
-						.width(Length::Units(128))
-					}),
+						.width(Length::Units(128)),
+					),
 			)
 			.push(Space::new(Length::Fill, Length::Units(5)))
 			.push(editor_ui)
@@ -64,7 +65,7 @@ pub fn build(state: &mut State) -> Element<Message> {
 	};
 
 	Container::new(Stack::new().push(ui).push(Shortcuts))
-		.style(state.theme)
+		.style(theme)
 		.width(Length::Fill)
 		.height(Length::Fill)
 		.into()

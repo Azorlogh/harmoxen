@@ -14,6 +14,7 @@ iced_graphics = "0.1"
 iced_native = "0.3"
 iced_style = "0.2"
 iced_wgpu = "0.3"
+iced_audio = "0.7"
 serde = { version = "1.0.116", features = ["derive"] }
 generational-arena = { version = "0.2.8", features = ["serde"] }
 lyon_geom = "0.16.2"

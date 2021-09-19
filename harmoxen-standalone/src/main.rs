@@ -3,20 +3,28 @@ use std::sync::mpsc::*;
 mod audio;
 mod midi;
 
+use harmoxen::{Backend, Event};
+
 fn main() {
-	// let server_sender = audio::launch().unwrap();
+	let (to_server, from_frontend) = channel::<Event>();
 
-	let (to_server, from_frontend) = channel::<harmoxen::Event>();
+	std::thread::spawn(move || {
+		let mut backend: Box<dyn Backend> = Box::new(audio::AudioBackend::new());
 
-	std::thread::spawn(|| {
-
-
-		
-		let output = midir::MidiOutput::new("harmoxen MIDI output").unwrap();
-		let port = output.ports().drain(..).skip(1).next().unwrap();
-		print!("{:?}", output.port_name(&port));
-
-		let server_sender = midi::launch(port).unwrap();
+		while let Ok(event) = from_frontend.recv() {
+			match event {
+				Event::ChangeBackend(harmoxen::BackendId::Audio) => {
+					backend = Box::new(audio::AudioBackend::new());
+				}
+				Event::ChangeBackend(harmoxen::BackendId::Midi(port)) => {
+					let output = midir::MidiOutput::new("harmoxen MIDI output").unwrap();
+					let port = output.ports().drain(..).skip(port).next().unwrap();
+					print!("{:?}", output.port_name(&port));
+					backend = Box::new(midi::MidiBackend::new(port));
+				}
+				Event::ToBackend(evt) => backend.send(evt),
+			}
+		}
 	});
 
 	start_ui(to_server);
@@ -33,7 +41,7 @@ fn start_ui(to_server: Sender<harmoxen::Event>) {
 			size: Size::new(500.0, 300.0),
 			scale: WindowScalePolicy::SystemScaleFactor,
 		},
-		flags: to_server,
+		flags: harmoxen::Flags { to_server },
 	};
 	iced_baseview::IcedWindow::<harmoxen::State>::open_blocking(settings);
 	// application::run::<harmoxen::State, executor::Tokio, iced_wgpu::window::Compositor>(

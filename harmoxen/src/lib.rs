@@ -9,11 +9,11 @@ use std::time::Duration;
 pub mod backend;
 pub mod consts;
 pub mod data;
-mod state;
+pub mod state;
 mod style;
 mod ui;
 mod util;
-mod widget;
+pub mod widget;
 
 pub use backend::Event as BackendEvent;
 pub use state::State;
@@ -24,24 +24,36 @@ pub use state::Message;
 use iced_baseview::{Application, Color, WindowSubs};
 
 #[derive(Debug, Clone)]
-pub enum Backend {
+pub enum BackendId {
 	Audio,
 	Midi(usize),
 }
+impl Default for BackendId {
+	fn default() -> Self {
+		BackendId::Audio
+	}
+}
+
+pub trait Backend {
+	fn send(&mut self, evt: BackendEvent);
+}
 
 pub enum Event {
-	ChangeBackend(Backend),
+	ChangeBackend(BackendId),
 	ToBackend(backend::Event),
 }
 
+pub struct Flags {
+	pub to_server: Sender<Event>,
+}
+
 impl Application for State {
-	type Flags = Sender<Event>;
+	type Flags = Flags;
 	type Message = Message;
 	type Executor = iced_futures::executor::Tokio;
 
-	fn new(to_server: Self::Flags) -> (State, Command<Self::Message>) {
-		let a: State = State::new(to_server);
-		(a, Command::none())
+	fn new(flags: Self::Flags) -> (State, Command<Self::Message>) {
+		(State::new(flags.to_server), Command::none())
 	}
 
 	fn update(&mut self, msg: Message) -> Command<Message> {

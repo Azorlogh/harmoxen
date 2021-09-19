@@ -8,14 +8,25 @@ use std::sync::mpsc::*;
 use std::thread;
 use std::time::{Duration, Instant};
 
-pub fn launch(port: MidiOutputPort) -> Result<Sender<Event>, Box<dyn Error>> {
-	let (to_backend, from_server) = channel();
-	thread::spawn(move || {
-		if let Err(err) = run(from_server, port) {
-			println!("Error with the mpe server: {}", err);
-		}
-	});
-	Ok(to_backend)
+pub struct MidiBackend {
+	to_backend: Sender<Event>,
+}
+
+impl MidiBackend {
+	pub fn new(port: MidiOutputPort) -> Self {
+		let (to_backend, from_server) = channel();
+		thread::spawn(move || {
+			if let Err(err) = run(from_server, port) {
+				println!("Error with the mpe server: {}", err);
+			}
+		});
+		Self { to_backend }
+	}
+}
+impl super::Backend for MidiBackend {
+	fn send(&mut self, evt: Event) {
+		self.to_backend.send(evt).unwrap()
+	}
 }
 
 const UPDATE_RATE: f32 = 0.04;

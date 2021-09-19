@@ -134,7 +134,8 @@ impl State {
 				self.to_server.send(crate::Event::ToBackend(evt)).unwrap();
 			}
 			Message::ChangeBackend(backend) => {
-				self.to_server.send(crate::Event::ChangeBackend(backend));
+				self.settings_editor.backend_id = backend.clone();
+				self.to_server.send(crate::Event::ChangeBackend(backend)).unwrap();
 			}
 			Message::ApplyLayout => {
 				self.apply_layout().ok();
@@ -194,6 +195,6 @@ pub enum Message {
 	SheetEditor(sheet_editor::Message),
 	LayoutEditor(layout_editor::Message),
 	Backend(crate::backend::Event),
-	ChangeBackend(crate::Backend),
+	ChangeBackend(crate::BackendId),
 	SetTempo(f32),
 }

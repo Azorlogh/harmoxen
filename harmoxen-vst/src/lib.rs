@@ -89,14 +89,14 @@ impl baseplug::PluginUI for Gain {
 	}
 
 	fn ui_open(parent: RawWindowHandle) -> WindowOpenResult<Self::Handle> {
-		let (server_sender, server_receiver) = std::sync::mpsc::channel::<BackendEvent>();
+		let (to_server, from_frontend) = std::sync::mpsc::channel::<harmoxen::Event>();
 		let settings = iced_baseview::Settings {
 			window: WindowOpenOptions {
 				title: String::from("iced-baseplug-examples harmoxen"),
 				size: Size::new(Self::ui_size().0 as f64, Self::ui_size().1 as f64),
 				scale: WindowScalePolicy::SystemScaleFactor,
 			},
-			flags: server_sender,
+			flags: harmoxen::Flags { to_server },
 		};
 
 		iced_baseview::IcedWindow::<harmoxen::State>::open_parented(&ValidRawWindowHandle { thing: parent }, settings);

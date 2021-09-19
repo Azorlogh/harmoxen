@@ -9,43 +9,30 @@ use harmoxen::backend::Event;
 // use crate::util::*;
 use harmoxen::data::{icp, sheet::*, Range};
 
-pub struct MidiBackend {
+pub struct AudioBackend {
+	to_backend: Sender<Event>,
 	stream: Box<dyn StreamTrait>,
 }
 
-impl MidiBackend {
-	pub fn new() -> MidiBackend {
-		MidiBackend {
+impl AudioBackend {
+	pub fn new() -> AudioBackend {
+		let (to_backend, from_server) = channel();
+		AudioBackend {
+			to_backend,
 			stream: run(from_server),
-		}
-	}
-
-	pub fn shutdown() {
-		self.stream.pause();
-	}
-			to_backend
-				.send(event)
-				.map_err(|e| format!("connection to audio backend closed unexpectedly: {}", e))
-				.unwrap();
 		}
 	}
 }
 
-pub fn launch(from_server) -> Result<Sender<Event>, Box<dyn Error>> {
-	let (to_server, from_frontend) = channel();
-	let (to_backend, from_server) = channel();
-	let mut stream = run(from_server);
-	while let Ok(event) = from_frontend.recv() {
-		if let Event::Shutdown = event {
-			stream.pause();
-			break;
-		}
-		to_backend
-			.send(event)
-			.map_err(|e| format!("connection to audio backend closed unexpectedly: {}", e))
-			.unwrap();
+impl super::Backend for AudioBackend {
+	fn send(&mut self, evt: Event) {
+		self.to_backend.send(evt).unwrap();
 	}
-	Ok(to_server)
+}
+impl Drop for AudioBackend {
+	fn drop(&mut self) {
+		self.stream.pause();
+	}
 }
 
 pub fn run(mut receiver: Receiver<Event>) -> Box<dyn StreamTrait> {
@@ -88,9 +75,9 @@ where
 				&config,
 				move |data, _| {
 					while let Ok(event) = receiver.try_recv() {
+						println!("{:?}", event);
 						engine.process_event(event);
 					}
-
 					let data_len = data.len() / nb_channels as usize;
 					let mut i = 0;
 					for frame in data.chunks_mut(nb_channels) {
