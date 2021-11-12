@@ -1,18 +1,19 @@
-## Warning
-
-This branch is work in progress, it is dedicated to migrating the software to the Iced library, as well as making it VST-compatible.
-
-
 # Harmoxen
 
-This software is an experimental piano roll that has a continuous y axis.
+This software is an experimental piano roll that has continuous x and y axes.
 Notes can be placed at any frequency, or at any interval from another note.
 
-**This is mostly an experiment.** \
-It may never go anywhere, or it may become somehow useful one day.
+
+### Disclaimer
+
+**This is a personal experiment.** \
+It will probably never go anywhere, but I hope to learn from it and hopefully bring useful insights in the xenharmonic music space.
 
 **It is barely usable in its current state.** \
 You can still play around with it but many parts are missing.
+
+![Screenshot](/assets/screenshot.png)
+
 
 ## Goals
 
@@ -39,7 +40,7 @@ How to use:
 - Navigate the board with the scrollbars, or with the mouse wheel (Ctrl/Shift/Alt to change the behavior of the wheel)
 - Play the sheet with the spacebar
 
-The layout of the piano roll can be altered in many different ways using the `Layout` button.
+Right click on a layout marker (little flag on the cursor bar) to access its settings.
 Layout markers can be added by right clicking the cursor bar.
 
 You can make it can output MPE data through a MIDI port by going into the settings.
@@ -49,7 +50,7 @@ You can make it can output MPE data through a MIDI port by going into the settin
 - Work as a VST
 - Improve UI
 - Support more scale types & .scl import
-- More feedback: display errors/warnings/infos
+- More UI feedback: display errors/warnings/infos
 - Control note volume/other note attributes
 - Support bending pitch/other note attributes
 
